@@ -59,10 +59,10 @@ export default function OrdersScreen() {
           <EmptyState
             icon={Icon.bag(40, t.textTer, true)}
             title="Пока нет броней"
-            description="Когда забронируете первый набор, здесь появятся активные и завершённые брони."
+            description="Когда забронируете первую позицию, здесь появятся активные и завершённые брони."
             action={
               <PillButton variant="outline" onClick={() => router.push("/")}>
-                Найти наборы
+                Найти позиции
               </PillButton>
             }
           />

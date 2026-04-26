@@ -121,7 +121,7 @@ export default function BizProfileScreen() {
             </div>
             {isTelegramAccountIncomplete(user) && <AccountLinkingPrompt tone="business" persistent />}
             <PillButtonBiz onClick={() => router.push("/biz/offers/new")} size="md">
-              Создать набор
+              Создать позицию
             </PillButtonBiz>
             <PillButton variant="outline" onClick={switchToBuyer}>
               Перейти в покупателя

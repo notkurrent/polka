@@ -271,7 +271,7 @@ export default function ActiveOrderScreen() {
             </PillButton>
           ) : (
             <PillButton onClick={() => router.push("/")} variant="outline" size="lg">
-              Найти еще наборы
+              Найти ещё позиции
             </PillButton>
           )}
           {active && (

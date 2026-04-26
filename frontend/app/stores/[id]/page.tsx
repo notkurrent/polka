@@ -40,11 +40,11 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
     district: "Алматы",
     address: partner.address,
     hours: partner.hours,
-    about: partner.description || "Свежие наборы по сниженной цене. Забронируйте и заберите в указанное время.",
+    about: partner.description || "Свежие позиции по сниженной цене. Забронируйте и заберите в указанное время.",
     offers: (partnerDetail?.offers || []).map((offer) => ({
       id: String(offer.id),
       title: offer.name,
-      desc: offer.type === "MAGIC_BOX" ? "Сюрприз-набор от заведения" : "Готовый набор",
+      desc: offer.type === "MAGIC_BOX" ? "Сюрприз-позиция от заведения" : "Готовая позиция",
       original: offer.old_price,
       now: offer.new_price,
       pickup: partner.hours,
@@ -187,12 +187,12 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
 
         {/* offers */}
         <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, marginBottom: 10 }}>Доступные наборы</div>
+          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, marginBottom: 10 }}>Доступные позиции</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {store.offers.length === 0 && (
               <EmptyState
                 icon={Icon.bag(34, t.textTer)}
-                title="Пока нет доступных наборов"
+                title="Пока нет доступных позиций"
                 description="Когда заведение добавит офферы, они появятся здесь."
                 compact
               />

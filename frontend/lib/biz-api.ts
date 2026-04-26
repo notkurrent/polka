@@ -60,7 +60,7 @@ export function orderPrice(order: PartnerOrder) {
 }
 
 export function orderTitle(order: PartnerOrder) {
-  return orderOffer(order)?.name ?? "Набор";
+  return orderOffer(order)?.name ?? "Позиция";
 }
 
 export function formatOrderDate(value?: string) {

@@ -62,7 +62,7 @@ export default function LandingPage() {
               textWrap: "pretty",
             }}
           >
-            Наборы еды.
+            Позиции еды.
             <br />
             <span style={{ color: t.primaryDeep, background: t.primarySoft, padding: "0 8px", borderRadius: 8 }}>
               По сниженной цене.
@@ -75,7 +75,7 @@ export default function LandingPage() {
               textWrap: "pretty",
             }}
           >
-            Polka помогает выбрать оффер заведения, забронировать набор и забрать его по коду в указанное время.
+            Polka помогает выбрать оффер заведения, забронировать позицию и забрать её по коду в указанное время.
           </p>
         </div>
 
@@ -92,7 +92,7 @@ export default function LandingPage() {
           </div>
           <div className="landing-steps">
             {[
-              { title: "Выберите оффер", body: "На главном экране появятся реальные наборы от заведений рядом." },
+              { title: "Выберите оффер", body: "На главном экране появятся реальные позиции от заведений рядом." },
               { title: "Забронируйте", body: "После брони заказ будет доступен в разделе броней." },
               { title: "Заберите по коду", body: "Покажите код сотруднику заведения в указанное время." },
             ].map((item, i) => (

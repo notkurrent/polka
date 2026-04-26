@@ -48,7 +48,7 @@ export default function BizAnalyticsScreen() {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <StatTile value={`${stats.conversion}%`} label="Конверсия в выдачу" />
-              <StatTile value={stats.activeOffers} label="Активных наборов" />
+              <StatTile value={stats.activeOffers} label="Активных позиций" />
             </div>
 
             <div style={{ background: t.bg, border: `1px solid ${t.divider}`, borderRadius: 12, overflow: "hidden" }}>

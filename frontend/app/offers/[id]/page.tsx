@@ -46,7 +46,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       router.push(`/orders/${order.id}`);
     } catch (err) {
       console.error("Booking error", err);
-      setError(err instanceof Error ? err.message : "Не удалось забронировать набор");
+      setError(err instanceof Error ? err.message : "Не удалось забронировать позицию");
     } finally {
       setIsReserving(false);
     }
@@ -66,7 +66,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         stock: offer.stock,
       });
     }
-    setCartFeedback(isInCart ? "Набор уже в корзине." : "Добавили в корзину.");
+    setCartFeedback(isInCart ? "Позиция уже в корзине." : "Добавили в корзину.");
   };
 
   useEffect(() => {
