@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.env
+.agents/
+skills-lock.json
+backend/venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.tsbuildinfo
+.DS_Store
+postgres_data/

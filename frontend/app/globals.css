@@ -1,0 +1,176 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  color-scheme: light;
+
+  --tg-js-safe-area-top: 0px;
+  --tg-js-safe-area-bottom: 0px;
+  --tg-js-safe-area-left: 0px;
+  --tg-js-safe-area-right: 0px;
+  --tg-js-content-safe-area-top: 0px;
+  --tg-js-content-safe-area-bottom: 0px;
+  --tg-js-content-safe-area-left: 0px;
+  --tg-js-content-safe-area-right: 0px;
+  --tg-android-controls-safe-top: 0px;
+  --tg-android-controls-safe-bottom: 0px;
+
+  /* Combined safe areas for Telegram Mini App.
+     env(safe-area-inset-*) covers iOS browser chrome.
+     Telegram CSS/JS insets cover Mini App controls. Android can report zero
+     content inset while Close/Menu controls still overlay the WebView. */
+  --app-platform-safe-top: max(env(safe-area-inset-top), var(--tg-safe-area-inset-top, 0px), var(--tg-js-safe-area-top));
+  --app-platform-safe-bottom: max(env(safe-area-inset-bottom), var(--tg-safe-area-inset-bottom, 0px), var(--tg-js-safe-area-bottom));
+  --app-platform-safe-left: max(env(safe-area-inset-left), var(--tg-safe-area-inset-left, 0px), var(--tg-js-safe-area-left));
+  --app-platform-safe-right: max(env(safe-area-inset-right), var(--tg-safe-area-inset-right, 0px), var(--tg-js-safe-area-right));
+  --app-content-safe-top: max(var(--tg-content-safe-area-inset-top, 0px), var(--tg-js-content-safe-area-top), var(--tg-android-controls-safe-top));
+  --app-content-safe-bottom: max(var(--tg-content-safe-area-inset-bottom, 0px), var(--tg-js-content-safe-area-bottom), var(--tg-android-controls-safe-bottom));
+  --app-content-safe-left: max(var(--tg-content-safe-area-inset-left, 0px), var(--tg-js-content-safe-area-left));
+  --app-content-safe-right: max(var(--tg-content-safe-area-inset-right, 0px), var(--tg-js-content-safe-area-right));
+  --app-safe-top: calc(var(--app-platform-safe-top) + var(--app-content-safe-top));
+  --app-safe-bottom: calc(var(--app-platform-safe-bottom) + var(--app-content-safe-bottom));
+  --app-safe-left: calc(var(--app-platform-safe-left) + var(--app-content-safe-left));
+  --app-safe-right: calc(var(--app-platform-safe-right) + var(--app-content-safe-right));
+  --app-shell-max-width: 430px;
+}
+
+html[data-telegram-webapp="true"] {
+  --app-shell-max-width: 100vw;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+    color-scheme: light;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100dvh;
+}
+
+button,
+a,
+input,
+textarea,
+select,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid rgba(26, 58, 36, 0.34);
+  outline-offset: 3px;
+}
+
+.auth-underline-input {
+  border-bottom-color: var(--auth-input-border);
+  transition: border-color 160ms ease;
+}
+
+.auth-underline-input:focus,
+.auth-underline-input:focus-visible {
+  border-bottom-color: var(--auth-input-focus);
+  outline: none;
+}
+
+.auth-underline-input::placeholder {
+  color: #8C9691;
+  opacity: 0.78;
+}
+
+/* Блокируем тянучку (Bounce effect) в iOS Safari/Телеграме */
+html,
+body {
+  overscroll-behavior-y: none;
+  overflow: hidden; /* Экранный скролл живёт внутри app-shell/pages, чтобы TMA не ловил bounce. */
+}
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: var(--app-shell-max-width);
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  position: relative;
+  background: var(--background);
+  box-sizing: border-box;
+}
+
+.screen-scroll,
+.screen-scroll-with-tabbar,
+.screen-scroll-with-bottom-action {
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  box-sizing: border-box;
+}
+
+.screen-scroll-with-tabbar {
+  padding-bottom: calc(88px + var(--app-safe-bottom));
+}
+
+.screen-scroll-with-bottom-action {
+  padding-bottom: calc(112px + var(--app-safe-bottom));
+}
+
+@media (min-width: 768px) {
+  body {
+    background: #eef2ee;
+  }
+
+  .app-shell {
+    box-shadow: 0 18px 70px rgba(17, 23, 20, 0.14);
+  }
+}
+
+html[data-telegram-webapp="true"] body {
+  background: var(--background);
+}
+
+html[data-telegram-webapp="true"] .app-shell {
+  max-width: none;
+  box-shadow: none;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

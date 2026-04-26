@@ -1,0 +1,110 @@
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
+import { tokens, Icon, FONT } from "@/components/ui/primitives";
+import { useAppStore } from "@/store/app";
+
+export function TabBar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const t = tokens();
+  const fontFn = FONT ? FONT() : "system-ui";
+  const { cart } = useAppStore();
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  let active = "feed";
+  if (pathname.includes("/orders")) active = "orders";
+  if (pathname.includes("/favorites")) active = "favorites";
+  if (pathname.includes("/profile")) active = "profile";
+
+  const unread = {
+    orders: cartCount > 0,
+  };
+
+  const tabs: Array<{ id: string; label: string; icon: keyof typeof Icon; route: string }> = [
+    { id: "feed", label: "Главная", icon: "home", route: "/" },
+    { id: "orders", label: "Брони", icon: "bag", route: "/orders" },
+    { id: "favorites", label: "Избранное", icon: "heart", route: "/favorites" },
+    { id: "profile", label: "Профиль", icon: "user", route: "/profile" },
+  ];
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: "50%",
+        right: "auto",
+        width: "min(100vw, var(--app-shell-max-width))",
+        transform: "translateX(-50%)",
+        background: "rgba(255,255,255,0.96)",
+        backdropFilter: "blur(12px)",
+        borderTop: `1px solid ${t.divider}`,
+        zIndex: 50,
+        display: "flex",
+        justifyContent: "space-around",
+        alignItems: "flex-start",
+        paddingTop: "8px",
+        paddingRight: "8px",
+        paddingBottom: "calc(16px + var(--app-safe-bottom))",
+        paddingLeft: "8px",
+        height: "auto",
+        minHeight: 76,
+        boxSizing: "border-box",
+        fontFamily: fontFn,
+      }}
+    >
+      {tabs.map((tab) => {
+        const on = active === tab.id;
+        const c = on ? t.primaryDeep : t.textTer;
+        const IconFn = Icon[tab.icon];
+
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            aria-label={tab.label}
+            aria-current={on ? "page" : undefined}
+            onClick={() => router.push(tab.route)}
+            style={{
+              flex: 1,
+              minHeight: 52,
+              border: "none",
+              background: on ? t.primarySoft : "transparent",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              color: c,
+              padding: "6px 0",
+              borderRadius: 14,
+              position: "relative",
+              touchAction: "manipulation",
+            }}
+          >
+            <div style={{ position: "relative" }}>
+              {tab.icon === "heart" && on ? IconFn(22, t.danger, true) : IconFn(22, c)}
+              {unread[tab.id as keyof typeof unread] && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -2,
+                    right: -4,
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: t.danger,
+                    border: "2px solid #fff",
+                  }}
+                />
+              )}
+            </div>
+            <span style={{ fontSize: 10, fontWeight: on ? 700 : 500 }}>{tab.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

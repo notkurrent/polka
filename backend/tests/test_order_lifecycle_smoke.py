@@ -1,0 +1,274 @@
+from __future__ import annotations
+
+from decimal import Decimal
+from uuid import uuid4
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import delete
+from sqlmodel import select
+
+from app.database import AsyncSessionLocal
+from app.main import app
+from app.models import Offer, Order, Partner, Rating, User
+
+
+ALMATY_LAT = 43.238949
+ALMATY_LON = 76.889709
+TEST_PASSWORD = "password123"
+
+
+def auth_headers(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
+
+
+async def web_register(client: AsyncClient, phone: str, name: str) -> tuple[str, dict]:
+    response = await client.post(
+        "/auth/web/register",
+        json={"phone": phone, "name": name, "password": TEST_PASSWORD},
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["access_token"]
+    assert payload["user"]["has_password"] is True
+    return payload["access_token"], payload["user"]
+
+
+async def register_partner(client: AsyncClient, token: str, name: str) -> dict:
+    response = await client.post(
+        "/partner-api/register",
+        headers=auth_headers(token),
+        json={
+            "name": name,
+            "type": "bakery",
+            "address": "проспект Достык, 52, Алматы",
+            "description": "Smoke test partner",
+            "hours": "09:00-21:00",
+            "lat": ALMATY_LAT,
+            "lon": ALMATY_LON,
+        },
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+async def create_offer(
+    client: AsyncClient,
+    token: str,
+    *,
+    name: str,
+    stock: int,
+) -> dict:
+    response = await client.post(
+        "/partner-api/offers",
+        headers=auth_headers(token),
+        json={
+            "type": "MAGIC_BOX",
+            "name": name,
+            "old_price": str(Decimal("4200.00")),
+            "new_price": str(Decimal("1600.00")),
+            "stock": stock,
+        },
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+async def cleanup_smoke_data(phone_prefix: str) -> None:
+    async with AsyncSessionLocal() as session:
+        user_ids = (
+            await session.execute(select(User.id).where(User.phone.like(f"{phone_prefix}%")))
+        ).scalars().all()
+        if not user_ids:
+            return
+
+        partner_ids = (
+            await session.execute(select(Partner.id).where(Partner.user_id.in_(user_ids)))
+        ).scalars().all()
+        offer_ids = []
+        order_ids = []
+        if partner_ids:
+            offer_ids = (
+                await session.execute(select(Offer.id).where(Offer.partner_id.in_(partner_ids)))
+            ).scalars().all()
+        if offer_ids:
+            order_ids = (
+                await session.execute(select(Order.id).where(Order.offer_id.in_(offer_ids)))
+            ).scalars().all()
+        buyer_order_ids = (
+            await session.execute(select(Order.id).where(Order.user_id.in_(user_ids)))
+        ).scalars().all()
+        order_ids = list({*order_ids, *buyer_order_ids})
+
+        if order_ids:
+            await session.execute(delete(Rating).where(Rating.order_id.in_(order_ids)))
+            await session.execute(delete(Order).where(Order.id.in_(order_ids)))
+        if offer_ids:
+            await session.execute(delete(Offer).where(Offer.id.in_(offer_ids)))
+        if partner_ids:
+            await session.execute(delete(Partner).where(Partner.id.in_(partner_ids)))
+        await session.execute(delete(User).where(User.id.in_(user_ids)))
+        await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_order_lifecycle_smoke() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7799{run_id}"
+    buyer_phone = f"{phone_prefix}01"
+    partner_phone = f"{phone_prefix}02"
+    other_partner_phone = f"{phone_prefix}03"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            buyer_token, buyer = await web_register(client, buyer_phone, f"Smoke Buyer {run_id}")
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Smoke Partner {run_id}")
+            other_partner_token, _other_partner_user = await web_register(
+                client,
+                other_partner_phone,
+                f"Other Smoke Partner {run_id}",
+            )
+
+            me_response = await client.get("/users/me", headers=auth_headers(buyer_token))
+            assert me_response.status_code == 200
+            assert me_response.json()["id"] == buyer["id"]
+
+            partner = await register_partner(client, partner_token, f"Smoke Bakery {run_id}")
+            await register_partner(client, other_partner_token, f"Other Smoke Bakery {run_id}")
+
+            offer = await create_offer(
+                client,
+                partner_token,
+                name=f"Smoke Magic Box {run_id}",
+                stock=2,
+            )
+            nearby_response = await client.get(
+                "/offers/nearby",
+                params={"lat": ALMATY_LAT, "lon": ALMATY_LON, "radius": 5000, "search": run_id},
+            )
+            assert nearby_response.status_code == 200
+            assert any(item["offer"]["id"] == offer["id"] for item in nearby_response.json())
+
+            order_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+                json={"offer_id": offer["id"]},
+            )
+            assert order_response.status_code == 200, order_response.text
+            order = order_response.json()
+            assert order["status"] == "RESERVED"
+            assert order["partner"]["id"] == partner["id"]
+            assert len(order["code"]) == 4
+
+            offer_after_order = await client.get(f"/offers/{offer['id']}")
+            assert offer_after_order.status_code == 200
+            assert offer_after_order.json()["offer"]["stock"] == 1
+
+            buyer_complete_response = await client.patch(
+                f"/orders/{order['id']}",
+                headers=auth_headers(buyer_token),
+                json={"status": "Completed"},
+            )
+            assert buyer_complete_response.status_code == 403
+
+            partner_orders_response = await client.get(
+                "/partner-api/orders",
+                headers=auth_headers(partner_token),
+            )
+            assert partner_orders_response.status_code == 200
+            assert any(item["id"] == order["id"] for item in partner_orders_response.json())
+
+            wrong_partner_response = await client.post(
+                "/partner-api/orders/verify-code",
+                headers=auth_headers(other_partner_token),
+                json={"order_id": order["id"], "code": order["code"]},
+            )
+            assert wrong_partner_response.status_code == 403
+
+            verify_response = await client.post(
+                "/partner-api/orders/verify-code",
+                headers=auth_headers(partner_token),
+                json={"order_id": order["id"], "code": order["code"]},
+            )
+            assert verify_response.status_code == 200, verify_response.text
+            assert verify_response.json()["status"] == "COMPLETED"
+
+            rating_response = await client.post(
+                f"/orders/{order['id']}/rating",
+                headers=auth_headers(buyer_token),
+                json={"score": 5, "tags": ["fresh"], "comment": "Smoke ok"},
+            )
+            assert rating_response.status_code == 200, rating_response.text
+
+            duplicate_rating_response = await client.post(
+                f"/orders/{order['id']}/rating",
+                headers=auth_headers(buyer_token),
+                json={"score": 4, "tags": [], "comment": ""},
+            )
+            assert duplicate_rating_response.status_code == 400
+
+            collision_offer = await create_offer(
+                client,
+                partner_token,
+                name=f"Smoke Collision Box {run_id}",
+                stock=1,
+            )
+            collision_order_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+                json={"offer_id": collision_offer["id"]},
+            )
+            assert collision_order_response.status_code == 200
+            collision_order = collision_order_response.json()
+            async with AsyncSessionLocal() as session:
+                db_collision_order = await session.get(Order, collision_order["id"])
+                assert db_collision_order is not None
+                db_collision_order.code = order["code"]
+                session.add(db_collision_order)
+                await session.commit()
+
+            collision_verify_response = await client.post(
+                "/partner-api/orders/verify-code",
+                headers=auth_headers(partner_token),
+                json={"code": order["code"]},
+            )
+            assert collision_verify_response.status_code == 200, collision_verify_response.text
+            assert collision_verify_response.json()["id"] == collision_order["id"]
+            assert collision_verify_response.json()["status"] == "COMPLETED"
+
+            cancel_offer = await create_offer(
+                client,
+                partner_token,
+                name=f"Smoke Cancel Box {run_id}",
+                stock=1,
+            )
+            cancel_order_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+                json={"offer_id": cancel_offer["id"]},
+            )
+            assert cancel_order_response.status_code == 200
+            cancel_order = cancel_order_response.json()
+
+            out_of_stock_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+                json={"offer_id": cancel_offer["id"]},
+            )
+            assert out_of_stock_response.status_code == 400
+            assert out_of_stock_response.json()["detail"] == "Out of stock"
+
+            cancel_response = await client.patch(
+                f"/orders/{cancel_order['id']}",
+                headers=auth_headers(buyer_token),
+                json={"status": "Expired"},
+            )
+            assert cancel_response.status_code == 200, cancel_response.text
+            assert cancel_response.json()["status"] == "EXPIRED"
+
+            cancel_offer_after = await client.get(f"/offers/{cancel_offer['id']}")
+            assert cancel_offer_after.status_code == 200
+            assert cancel_offer_after.json()["offer"]["stock"] == 1
+        finally:
+            await cleanup_smoke_data(phone_prefix)
