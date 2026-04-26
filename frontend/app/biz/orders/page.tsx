@@ -93,7 +93,7 @@ export default function BizOrdersPage() {
   };
 
   return (
-    <AppScreenBiz style={{ background: t.surface, fontFamily: fontFn }}>
+    <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Заказы" />
 
       <div style={{ padding: "16px 16px" }}>

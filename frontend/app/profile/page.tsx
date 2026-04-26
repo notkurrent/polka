@@ -35,7 +35,6 @@ export default function ProfileScreen() {
   const menuItems = [
     { label: "Уведомления", path: "/profile/notifications" },
     { label: "Способы оплаты", path: "/profile/payment" },
-    { label: "Адреса доставки", path: "/profile/addresses" },
     { label: "Помощь и поддержка", path: "/profile/support" },
     { label: "О сервисе", path: "/profile/about" },
   ];
@@ -168,7 +167,7 @@ export default function ProfileScreen() {
             Бизнес-кабинет
           </PillButton>
 
-          <PillButton onClick={handleLogout} variant="muted" size="md">
+          <PillButton onClick={handleLogout} variant="dangerOutline" size="md">
             Выйти
           </PillButton>
         </div>

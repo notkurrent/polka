@@ -26,9 +26,13 @@ interface AppState {
   favorites: string[];
   onboardingDone: boolean;
   selectedMode: SelectedMode | null;
+  activeUserId: number | null;
+  selectedModeByUser: Record<string, SelectedMode>;
   accountLinkPromptDismissed: boolean;
   accountCompletionPromptDismissed: boolean;
   setLocation: (loc: UserLocation) => void;
+  activateUserMode: (userId: number) => void;
+  deactivateUserMode: () => void;
   setSelectedMode: (mode: SelectedMode | null) => void;
   clearSelectedMode: () => void;
   dismissAccountLinkPrompt: () => void;
@@ -49,12 +53,38 @@ export const useAppStore = create<AppState>()(
       favorites: [],
       onboardingDone: false,
       selectedMode: null,
+      activeUserId: null,
+      selectedModeByUser: {},
       accountLinkPromptDismissed: false,
       accountCompletionPromptDismissed: false,
       setLocation: (loc) => set({ location: loc }),
       setOnboardingDone: (done) => set({ onboardingDone: done }),
-      setSelectedMode: (mode) => set({ selectedMode: mode }),
-      clearSelectedMode: () => set({ selectedMode: null }),
+      activateUserMode: (userId) =>
+        set((state) => ({
+          activeUserId: userId,
+          selectedMode: state.selectedModeByUser[String(userId)] ?? null,
+        })),
+      deactivateUserMode: () => set({ activeUserId: null, selectedMode: null }),
+      setSelectedMode: (mode) =>
+        set((state) => {
+          const key = state.activeUserId == null ? null : String(state.activeUserId);
+          if (!key) return { selectedMode: mode };
+          const selectedModeByUser = { ...state.selectedModeByUser };
+          if (mode) {
+            selectedModeByUser[key] = mode;
+          } else {
+            delete selectedModeByUser[key];
+          }
+          return { selectedMode: mode, selectedModeByUser };
+        }),
+      clearSelectedMode: () =>
+        set((state) => {
+          const key = state.activeUserId == null ? null : String(state.activeUserId);
+          if (!key) return { selectedMode: null };
+          const selectedModeByUser = { ...state.selectedModeByUser };
+          delete selectedModeByUser[key];
+          return { selectedMode: null, selectedModeByUser };
+        }),
       dismissAccountLinkPrompt: () => set({ accountLinkPromptDismissed: true }),
       dismissAccountCompletionPrompt: () => set({ accountCompletionPromptDismissed: true }),
       addToCart: (item) =>
@@ -91,6 +121,8 @@ export const useAppStore = create<AppState>()(
         cart: state.cart,
         onboardingDone: state.onboardingDone,
         selectedMode: state.selectedMode,
+        activeUserId: state.activeUserId,
+        selectedModeByUser: state.selectedModeByUser,
         accountLinkPromptDismissed: state.accountLinkPromptDismissed,
         accountCompletionPromptDismissed: state.accountCompletionPromptDismissed,
       }),

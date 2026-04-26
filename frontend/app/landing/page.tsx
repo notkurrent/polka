@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isTelegramAuthContext } from "@/lib/auth-routing";
+import { useTelegramAuthPage } from "@/lib/auth-routing";
 import { tokens, Icon, FONT, PillButton } from "@/components/ui/primitives";
 
 export default function LandingPage() {
   const router = useRouter();
   const t = tokens();
-  const [isTelegramPage, setIsTelegramPage] = useState<boolean | null>(null);
+  const isTelegramPage = useTelegramAuthPage();
 
   useEffect(() => {
-    const isTelegram = isTelegramAuthContext();
-    setIsTelegramPage(isTelegram);
-    if (isTelegram) router.replace("/");
-  }, [router]);
+    if (isTelegramPage) router.replace("/");
+  }, [isTelegramPage, router]);
 
   if (isTelegramPage !== false) {
     return <div style={{ minHeight: "100dvh", background: t.bg }} />;

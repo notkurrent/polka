@@ -3,10 +3,65 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
 import { tokens, FONT } from "@/components/ui/primitives";
-import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
+import { bizApi, partnerErrorMessage, type AddressSuggestion } from "@/lib/biz-api";
 import { Skeleton } from "@/components/ui/Skeleton";
+
+type ScheduleDay = {
+  short: string;
+  name: string;
+  enabled: boolean;
+  from: string;
+  to: string;
+};
+
+const DEFAULT_FROM = "09:00";
+const DEFAULT_TO = "21:00";
+const WEEK_DAYS: Array<Pick<ScheduleDay, "short" | "name">> = [
+  { short: "Пн", name: "Понедельник" },
+  { short: "Вт", name: "Вторник" },
+  { short: "Ср", name: "Среда" },
+  { short: "Чт", name: "Четверг" },
+  { short: "Пт", name: "Пятница" },
+  { short: "Сб", name: "Суббота" },
+  { short: "Вс", name: "Воскресенье" },
+];
+
+function defaultSchedule(): ScheduleDay[] {
+  return WEEK_DAYS.map((day, index) => ({
+    ...day,
+    enabled: index < 5,
+    from: DEFAULT_FROM,
+    to: DEFAULT_TO,
+  }));
+}
+
+function scheduleFromHours(hours: string): ScheduleDay[] {
+  const schedule = defaultSchedule();
+  const timeMatch = hours.match(/(\d{2}:\d{2})\s*[-–]\s*(\d{2}:\d{2})/);
+  if (!timeMatch) return schedule;
+
+  return schedule.map((day) => ({
+    ...day,
+    from: timeMatch[1],
+    to: timeMatch[2],
+  }));
+}
+
+function formatSchedule(schedule: ScheduleDay[]) {
+  const enabled = schedule.filter((day) => day.enabled);
+  if (!enabled.length) return "Выходной";
+
+  const sameTime = enabled.every((day) => day.from === enabled[0].from && day.to === enabled[0].to);
+  const allWeekdays = enabled.length === 5 && enabled.every((day, index) => index < 5 && day.short === WEEK_DAYS[index].short);
+  const allWeek = enabled.length === 7;
+
+  if (sameTime && allWeek) return `Ежедневно ${enabled[0].from}-${enabled[0].to}`;
+  if (sameTime && allWeekdays) return `Пн-Пт ${enabled[0].from}-${enabled[0].to}`;
+  return enabled.map((day) => `${day.short} ${day.from}-${day.to}`).join("; ");
+}
 
 export default function BizProfileEditPage() {
   const router = useRouter();
@@ -20,6 +75,9 @@ export default function BizProfileEditPage() {
     hours: "09:00-21:00",
     description: "",
   });
+  const [schedule, setSchedule] = useState<ScheduleDay[]>(defaultSchedule);
+  const [addressQuery, setAddressQuery] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState<AddressSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -27,24 +85,63 @@ export default function BizProfileEditPage() {
   useEffect(() => {
     bizApi
       .profile()
-      .then((profile) =>
+      .then((profile) => {
+        const hours = profile.hours || "09:00-21:00";
         setData({
           name: profile.name || "",
           category: profile.category || "Кофейня",
           address: profile.address || "",
-          hours: profile.hours || "09:00-21:00",
+          hours,
           description: profile.description || "",
-        }),
-      )
+        });
+        setAddressQuery(profile.address || "");
+        setSelectedAddress(
+          profile.address
+            ? {
+                label: profile.address,
+                lat: profile.lat ?? 43.238949,
+                lon: profile.lon ?? 76.889709,
+              }
+            : null,
+        );
+        setSchedule(scheduleFromHours(hours));
+      })
       .catch((err) => setError(partnerErrorMessage(err)))
       .finally(() => setLoading(false));
   }, []);
 
   const categories = ["Кофейня", "Пекарня", "Ресторан", "Кондитерская", "Столовая"];
+  const formattedHours = formatSchedule(schedule);
+  const shouldSearchAddress = addressQuery.trim().length >= 3 && selectedAddress?.label !== addressQuery.trim();
+  const { data: addressSuggestions, isLoading: isAddressLoading, error: addressError } = useSWR(
+    shouldSearchAddress ? ["partner-address-suggestions", addressQuery.trim()] : null,
+    ([, value]) => bizApi.addressSuggestions(value),
+    { keepPreviousData: true },
+  );
+
+  const toggleDay = (index: number) => {
+    setSchedule((current) =>
+      current.map((day, dayIndex) => (dayIndex === index ? { ...day, enabled: !day.enabled } : day)),
+    );
+  };
+
+  const updateTime = (index: number, field: "from" | "to", value: string) => {
+    setSchedule((current) =>
+      current.map((day, dayIndex) => (dayIndex === index ? { ...day, [field]: value } : day)),
+    );
+  };
 
   const save = async () => {
     if (!data.name.trim() || !data.address.trim()) {
       setError("Название и адрес обязательны.");
+      return;
+    }
+    if (!selectedAddress || selectedAddress.label !== data.address.trim()) {
+      setError("Выберите адрес из подсказок, чтобы сохранить реальную точку в Алматы.");
+      return;
+    }
+    if (!schedule.some((day) => day.enabled)) {
+      setError("Выберите хотя бы один рабочий день.");
       return;
     }
     setSaving(true);
@@ -53,11 +150,11 @@ export default function BizProfileEditPage() {
       await bizApi.updateProfile({
         name: data.name.trim(),
         category: data.category,
-        address: data.address.trim(),
-        hours: data.hours.trim(),
+        address: selectedAddress.label,
+        hours: formattedHours,
         description: data.description.trim(),
-        lat: 43.238949,
-        lon: 76.889709,
+        lat: selectedAddress.lat,
+        lon: selectedAddress.lon,
       });
       router.push("/biz/profile");
     } catch (err) {
@@ -113,13 +210,163 @@ export default function BizProfileEditPage() {
               </div>
             </div>
 
-            <Field label="Адрес">
-              <input name="partner-address" aria-label="Адрес" value={data.address} onChange={(event) => setData({ ...data, address: event.target.value })} style={inputStyle(t, fontFn)} />
-            </Field>
+            <div>
+              <Label>Адрес</Label>
+              <div style={{ marginTop: 6, position: "relative" }}>
+                <input
+                  name="partner-address"
+                  aria-label="Адрес"
+                  value={addressQuery}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setAddressQuery(value);
+                    setData({ ...data, address: value });
+                    setSelectedAddress(null);
+                    setError("");
+                  }}
+                  placeholder="Начните вводить адрес в Алматы"
+                  autoComplete="off"
+                  style={inputStyle(t, fontFn)}
+                />
+                {shouldSearchAddress && (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      border: `1px solid ${t.divider}`,
+                      borderRadius: 12,
+                      background: "#fff",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {isAddressLoading && (
+                      <div style={{ padding: "12px 14px", fontSize: 13, color: t.textSec }}>
+                        Ищем адреса...
+                      </div>
+                    )}
+                    {addressError && (
+                      <div style={{ padding: "12px 14px", fontSize: 13, color: t.danger }}>
+                        Не удалось загрузить адреса. Попробуйте ещё раз.
+                      </div>
+                    )}
+                    {!isAddressLoading && !addressError && (addressSuggestions || []).length === 0 && (
+                      <div style={{ padding: "12px 14px", fontSize: 13, color: t.textSec }}>
+                        Адрес не найден. Уточните улицу или номер дома.
+                      </div>
+                    )}
+                    {!addressError && (addressSuggestions || []).map((suggestion) => (
+                      <button
+                        key={`${suggestion.place_id ?? suggestion.label}-${suggestion.lat}-${suggestion.lon}`}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAddress(suggestion);
+                          setAddressQuery(suggestion.label);
+                          setData({ ...data, address: suggestion.label });
+                          setError("");
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "12px 14px",
+                          border: "none",
+                          borderBottom: `1px solid ${t.divider}`,
+                          background: "#fff",
+                          color: t.text,
+                          textAlign: "left",
+                          fontSize: 13,
+                          lineHeight: 1.35,
+                          fontFamily: fontFn,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {suggestion.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.45, color: selectedAddress ? t.primaryDeep : t.textSec }}>
+                {selectedAddress ? "Адрес выбран из карты Алматы." : "Сохранить можно только адрес из подсказок."}
+              </div>
+            </div>
 
-            <Field label="Часы работы">
-              <input name="partner-hours" aria-label="Часы работы" value={data.hours} onChange={(event) => setData({ ...data, hours: event.target.value })} style={inputStyle(t, fontFn)} />
-            </Field>
+            <div>
+              <Label>Часы работы</Label>
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                {schedule.map((day, index) => (
+                  <div
+                    key={day.short}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "44px minmax(0, 1fr) auto",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "10px 12px",
+                      border: `1px solid ${day.enabled ? t.primary : t.divider}`,
+                      borderRadius: 12,
+                      background: day.enabled ? t.primarySoft : t.bg,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={day.enabled}
+                      aria-label={`${day.name}: ${day.enabled ? "рабочий день" : "выходной"}`}
+                      onClick={() => toggleDay(index)}
+                      style={{
+                        width: 44,
+                        height: 28,
+                        borderRadius: 9999,
+                        border: "none",
+                        background: day.enabled ? t.primaryDeep : t.divider,
+                        position: "relative",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          background: "#fff",
+                          position: "absolute",
+                          top: 3,
+                          left: day.enabled ? 19 : 3,
+                          transition: "left 140ms ease",
+                        }}
+                      />
+                    </button>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: t.text }}>{day.name}</div>
+                      {!day.enabled && <div style={{ marginTop: 2, fontSize: 12, color: t.textSec }}>Выходной</div>}
+                    </div>
+                    {day.enabled && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <input
+                          type="time"
+                          inputMode="numeric"
+                          name={`${day.short}-from`}
+                          aria-label={`${day.name}, начало работы`}
+                          value={day.from}
+                          onChange={(event) => updateTime(index, "from", event.target.value)}
+                          style={timeInputStyle(t, fontFn)}
+                        />
+                        <span style={{ color: t.textSec, fontSize: 12 }}>-</span>
+                        <input
+                          type="time"
+                          inputMode="numeric"
+                          name={`${day.short}-to`}
+                          aria-label={`${day.name}, конец работы`}
+                          value={day.to}
+                          onChange={(event) => updateTime(index, "to", event.target.value)}
+                          style={timeInputStyle(t, fontFn)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 12, lineHeight: 1.45, color: t.textSec }}>
+                В профиле будет показано: <strong style={{ color: t.text }}>{formattedHours}</strong>
+              </div>
+            </div>
 
             <Field label="Описание">
               <textarea
@@ -174,6 +421,23 @@ function inputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties
     borderRadius: 10,
     fontSize: 14,
     fontFamily: fontFn,
+    boxSizing: "border-box",
+  };
+}
+
+function timeInputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties {
+  return {
+    width: 78,
+    minHeight: 40,
+    padding: "8px 6px",
+    border: `1px solid ${t.divider}`,
+    borderRadius: 10,
+    background: "#fff",
+    color: t.text,
+    fontSize: 13,
+    fontWeight: 700,
+    fontFamily: fontFn,
+    textAlign: "center",
     boxSizing: "border-box",
   };
 }

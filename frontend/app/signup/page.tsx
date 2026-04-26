@@ -6,7 +6,7 @@ import { tokens, FONT, PillButton } from "@/components/ui/primitives";
 import AppHeader from "@/components/AppHeader";
 import { ApiError, api, getApiErrorMessage } from "@/lib/api";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
-import { isTelegramAuthContext } from "@/lib/auth-routing";
+import { useTelegramAuthPage } from "@/lib/auth-routing";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import { useAuthStore, type User } from "@/store/auth";
 import { useAppStore } from "@/store/app";
@@ -30,7 +30,7 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(0);
-  const [isTelegramPage, setIsTelegramPage] = useState<boolean | null>(null);
+  const isTelegramPage = useTelegramAuthPage();
 
   const validationError = useMemo(() => {
     if (!isPhoneComplete(phone)) return "Введите номер телефона полностью";
@@ -47,10 +47,8 @@ export default function SignupPage() {
     (step === 2 && canSubmit);
 
   useEffect(() => {
-    const isTelegram = isTelegramAuthContext();
-    setIsTelegramPage(isTelegram);
-    if (isTelegram) router.replace("/");
-  }, [router]);
+    if (isTelegramPage) router.replace("/");
+  }, [isTelegramPage, router]);
 
   const handleNext = () => {
     setError("");

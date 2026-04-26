@@ -120,7 +120,7 @@ export default function SearchPage() {
       </div>
 
       {!debouncedQuery ? (
-        <div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <div
             style={{
               fontSize: 11,
@@ -161,6 +161,41 @@ export default function SearchPage() {
                 {c.label}
               </button>
             ))}
+          </div>
+          <div
+            style={{
+              flex: 1,
+              minHeight: 260,
+              padding: "36px 28px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              color: t.textSec,
+            }}
+          >
+            <div
+              style={{
+                width: 76,
+                height: 76,
+                borderRadius: "50%",
+                background: t.surface,
+                border: `1px solid ${t.divider}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 18,
+              }}
+            >
+              {Icon.search(32, t.textTer)}
+            </div>
+            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>
+              Найдите позицию рядом
+            </div>
+            <div style={{ maxWidth: 300, marginTop: 10, fontSize: 14, lineHeight: 1.5 }}>
+              Введите название заведения, еды или выберите популярную категорию выше.
+            </div>
           </div>
         </div>
       ) : (

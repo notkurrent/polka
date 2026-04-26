@@ -370,9 +370,9 @@ export default function AppScreenBuyerPage() {
                     border: `1px solid ${t.divider}`,
                     overflow: "hidden",
                   }}
-                >
+                  >
                   <EmptyState
-                    icon={Icon.search(34, t.textTer)}
+                    icon={Icon.bag(34, t.textTer)}
                     title={filter === "all" ? "Пока ничего рядом" : "По этому фильтру пусто"}
                     description={
                       filter === "all"

@@ -33,7 +33,7 @@ export default function BizProfileScreen() {
   };
 
   return (
-    <div className="screen-scroll-with-tabbar" style={{ background: t.surface, fontFamily: fontFn }}>
+    <div className="screen-scroll-with-tabbar" style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Заведение" />
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         {isLoading && (
@@ -126,7 +126,7 @@ export default function BizProfileScreen() {
             <PillButton variant="outline" onClick={switchToBuyer}>
               Перейти в покупателя
             </PillButton>
-            <PillButton variant="muted" onClick={handleLogout}>
+            <PillButton variant="dangerOutline" onClick={handleLogout}>
               Выйти
             </PillButton>
           </>

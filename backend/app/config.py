@@ -3,7 +3,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_JWT_SECRET = "super_secret_key"
+DEFAULT_JWT_SECRET = "dev_only_default_jwt_secret_32_bytes_minimum"
 DEFAULT_TELEGRAM_BOT_TOKEN = "mock_token"
 
 

@@ -36,7 +36,7 @@ export interface StripePlaceholderProps {
 export interface PillButtonProps {
   children?: React.ReactNode;
   onClick?: () => void;
-  variant?: "primary" | "ghost" | "outline" | "dark" | "muted" | "danger";
+  variant?: "primary" | "ghost" | "outline" | "dark" | "muted" | "danger" | "dangerOutline";
   size?: "sm" | "md" | "lg";
   full?: boolean;
   disabled?: boolean;
@@ -279,6 +279,7 @@ export function PillButton({
     dark: { bg: t.primaryDeep, color: "#fff", border: "none" },
     muted: { bg: t.surface, color: t.text, border: `1px solid ${t.divider}` },
     danger: { bg: "#FDE8E8", color: t.danger, border: "none" },
+    dangerOutline: { bg: "#fff", color: t.danger, border: `1.5px solid ${t.danger}` },
   };
   const v = variants[variant];
   const isDisabled = disabled || loading;

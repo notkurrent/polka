@@ -29,9 +29,18 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
-      setAuth: (user, token) => set({ user, accessToken: token }),
-      setUser: (user) => set({ user }),
-      clearAuth: () => set({ user: null, accessToken: null }),
+      setAuth: (user, token) => {
+        useAppStore.getState().activateUserMode(user.id);
+        set({ user, accessToken: token });
+      },
+      setUser: (user) => {
+        useAppStore.getState().activateUserMode(user.id);
+        set({ user });
+      },
+      clearAuth: () => {
+        useAppStore.getState().deactivateUserMode();
+        set({ user: null, accessToken: null });
+      },
       logout: () => {
         useAppStore.getState().clearSelectedMode();
         set({ user: null, accessToken: null });

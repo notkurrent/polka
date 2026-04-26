@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
-import { authEntryRoute, isTelegramAuthContext } from "@/lib/auth-routing";
+import { authEntryRoute, useTelegramAuthPage } from "@/lib/auth-routing";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import type { User } from "@/store/auth";
 
@@ -28,15 +28,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isTelegramPage, setIsTelegramPage] = useState<boolean | null>(null);
+  const isTelegramPage = useTelegramAuthPage();
 
   const canSubmit = isPhoneComplete(phone) && password.length > 0 && !isSubmitting;
 
   useEffect(() => {
-    const isTelegram = isTelegramAuthContext();
-    setIsTelegramPage(isTelegram);
-    if (isTelegram) router.replace("/");
-  }, [router]);
+    if (isTelegramPage) router.replace("/");
+  }, [isTelegramPage, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

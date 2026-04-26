@@ -6,7 +6,7 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import type { PartnerDetail } from "@/lib/api-types";
 import { useAppStore } from "@/store/app";
-import { tokens, Icon, StripePlaceholder, Badge } from "@/components/ui/primitives";
+import { tokens, Icon, StripePlaceholder, Badge, FONT } from "@/components/ui/primitives";
 import { TabBar } from "@/components/TabBar";
 import AppHeader from "@/components/AppHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -16,6 +16,7 @@ import { formatPositionsCount } from "@/lib/utils";
 
 export default function FavoritesScreen() {
   const t = tokens();
+  const fontFn = FONT ? FONT() : "system-ui";
   const router = useRouter();
   const { favorites, toggleFavorite } = useAppStore();
 
@@ -26,7 +27,18 @@ export default function FavoritesScreen() {
   const stores = favStores || [];
 
   return (
-    <div className="screen-scroll-with-tabbar" style={{ background: t.bg }}>
+    <div
+      className="screen-scroll-with-tabbar"
+      style={{
+        width: "100%",
+        background: t.bg,
+        fontFamily: fontFn,
+        color: t.text,
+        WebkitFontSmoothing: "antialiased",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <AppHeader
         title="Избранное"
         hideBack
@@ -35,11 +47,14 @@ export default function FavoritesScreen() {
       />
 
       {favorites.length === 0 ? (
-        <EmptyState
-          icon={Icon.heart(42, t.textTer)}
-          title="Пока пусто"
-          description="Добавляйте заведения в избранное, чтобы быстро возвращаться к любимым местам и следить за новыми позициями."
-        />
+        <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+          <EmptyState
+            icon={Icon.heart(42, t.textTer)}
+            title="Пока пусто"
+            description="Добавляйте заведения в избранное, чтобы быстро возвращаться к любимым местам и следить за новыми позициями."
+            action={<span aria-hidden="true" style={{ display: "block", height: 48 }} />}
+          />
+        </div>
       ) : isLoading ? (
         <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           <Skeleton w="100%" h={90} radius={14} />

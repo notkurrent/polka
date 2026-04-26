@@ -18,8 +18,15 @@ export function AppScreenBiz({ children, style }: { children: React.ReactNode; s
     <div
       className="screen-scroll-with-tabbar"
       style={{
-        display: "flex",
-        flexDirection: "column",
+        width: "100%",
+        height: "100dvh",
+        maxHeight: "100dvh",
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y",
+        display: "block",
         background: "#fff",
         maxWidth: 600,
         margin: "0 auto",
@@ -162,13 +169,14 @@ export function ActionCard({
       style={{
         background: primary ? t.primary : t.bg,
         border: primary ? "none" : `1px solid ${t.divider}`,
-        borderRadius: 16,
-        padding: "16px 12px",
+        borderRadius: 12,
+        padding: "12px 8px",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        minHeight: 104,
+        justifyContent: "flex-start",
+        alignItems: "center",
+        gap: 8,
+        minHeight: 86,
         cursor: "pointer",
         fontFamily: fontFn,
         touchAction: "manipulation",
@@ -176,18 +184,32 @@ export function ActionCard({
     >
       <div
         style={{
-          width: 32,
-          height: 32,
+          width: 30,
+          height: 30,
           borderRadius: 10,
           background: primary ? "rgba(0,0,0,0.05)" : t.surface,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexShrink: 0,
         }}
       >
-        {icon(18, primary ? t.primaryDeep : t.text)}
+        {icon(17, primary ? t.primaryDeep : t.text)}
       </div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: primary ? t.primaryDeep : t.text, letterSpacing: -0.2 }}>
+      <div
+        style={{
+          fontSize: 11,
+          lineHeight: 1.15,
+          fontWeight: 650,
+          color: primary ? t.primaryDeep : t.text,
+          letterSpacing: 0,
+          textAlign: "center",
+          minHeight: 26,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {label}
       </div>
     </button>

@@ -67,7 +67,7 @@ export default function BizDashboardPage() {
   const needsProfile = profileError && partnerErrorMessage(profileError).includes("зарегистрируйте");
 
   return (
-    <AppScreenBiz style={{ background: t.surface }}>
+    <AppScreenBiz style={{ background: t.bg }}>
       <div
         style={{
           paddingTop: "calc(18px + var(--app-safe-top))",
@@ -203,12 +203,39 @@ export default function BizDashboardPage() {
                 </>
               )}
               {!isLoading && activeReservations.length === 0 && (
-                <EmptyState
-                  icon={Icon.list(32, t.textTer)}
-                  title="Активных броней нет"
-                  description="Создайте позицию, и новые заказы появятся здесь."
-                  compact
-                />
+                <div
+                  style={{
+                    minHeight: 72,
+                    padding: "12px 14px",
+                    border: `1px solid ${t.divider}`,
+                    borderRadius: 14,
+                    background: t.bg,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 14,
+                      background: t.surface,
+                      color: t.textTer,
+                      display: "grid",
+                      placeItems: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {Icon.list(22, t.textTer)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 750, color: t.text }}>Активных броней нет</div>
+                    <div style={{ marginTop: 3, fontSize: 12, lineHeight: 1.35, color: t.textSec }}>
+                      Новые заказы появятся после публикации позиции.
+                    </div>
+                  </div>
+                </div>
               )}
               {activeReservations.map((order) => {
                 const row = toReservation(order);
@@ -223,11 +250,11 @@ export default function BizDashboardPage() {
             </div>
           </div>
 
-          <div style={{ padding: "20px 16px 16px" }}>
+          <div style={{ padding: "16px 16px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", marginBottom: 10 }}>
               Быстрые действия
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
               <ActionCard icon={Icon.plus} label="Новая позиция" onClick={() => router.push("/biz/offers/new")} primary />
               <ActionCard icon={Icon.check} label="Принять код" onClick={() => router.push("/biz/scan")} />
               <ActionCard icon={Icon.chart} label="Аналитика" onClick={() => router.push("/biz/analytics")} />

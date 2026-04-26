@@ -30,6 +30,13 @@ export interface ParsedCodePayload {
   orderId?: number;
 }
 
+export interface AddressSuggestion {
+  label: string;
+  lat: number;
+  lon: number;
+  place_id?: number | null;
+}
+
 export function money(value?: number | string | null) {
   const amount = Number(value || 0);
   return `${amount.toLocaleString("ru")} ₸`;
@@ -126,6 +133,8 @@ export function partnerErrorMessage(error: unknown) {
 
 export const bizApi = {
   profile: () => api.get<PartnerPublic>("/partner-api/profile"),
+  addressSuggestions: (query: string) =>
+    api.get<AddressSuggestion[]>(`/partner-api/address-suggestions?q=${encodeURIComponent(query)}`),
   updateProfile: (body: Partial<PartnerPublic>) => api.patch<PartnerPublic>("/partner-api/profile", body),
   offers: () => api.get<OfferPublic[]>("/partner-api/offers"),
   createOffer: (body: unknown) => api.post<OfferPublic>("/partner-api/offers", body),

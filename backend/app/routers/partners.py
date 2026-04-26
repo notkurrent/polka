@@ -1,8 +1,11 @@
 import os
 import re
+import asyncio
 import logging
+import time
 from decimal import Decimal
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import func, text
@@ -31,6 +34,13 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_DEV_LAT = 43.238949
 DEFAULT_DEV_LON = 76.889709
+ALMATY_VIEWBOX = "76.75,43.36,77.05,43.12"
+NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search"
+NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "PolkaMVP/0.1 local-address-search")
+ADDRESS_CACHE_TTL_SECONDS = 300
+ADDRESS_RATE_LIMIT_SECONDS = 1.0
+_address_cache: dict[str, tuple[float, list[dict]]] = {}
+_last_address_lookup_at = 0.0
 
 
 def is_dev_env() -> bool:
@@ -173,6 +183,39 @@ class PartnerProfileUpdate(BaseModel):
     lon: float | None = None
 
 
+class AddressSuggestion(BaseModel):
+    label: str
+    lat: float
+    lon: float
+    place_id: int | None = None
+
+
+def compact_address_label(item: dict) -> str:
+    address = item.get("address") or {}
+    display_name = item.get("display_name", "")
+    name = item.get("name") or address.get("amenity") or address.get("shop") or address.get("building")
+    road = address.get("road") or address.get("pedestrian") or address.get("footway")
+    house_number = address.get("house_number")
+
+    street = ""
+    if road and house_number:
+        street = f"{road}, {house_number}"
+    elif road:
+        street = road
+    elif house_number:
+        street = str(house_number)
+
+    parts = []
+    if name and name != road:
+        parts.append(str(name))
+    if street:
+        parts.append(street)
+
+    if parts:
+        return ", ".join(parts)
+    return display_name
+
+
 @router.get("/profile", response_model=PartnerPublicDTO)
 async def get_partner_profile(
     current_user: User = Depends(get_current_user),
@@ -186,6 +229,65 @@ async def get_partner_profile(
         lat=float(lat) if lat is not None else None,
         lon=float(lon) if lon is not None else None,
     )
+
+
+@router.get("/address-suggestions", response_model=list[AddressSuggestion])
+async def suggest_partner_addresses(
+    q: str,
+    current_user: User = Depends(get_current_user),
+):
+    verify_partner_role(current_user)
+
+    query = q.strip()
+    if len(query) < 3:
+        return []
+
+    cache_key = query.lower()
+    cached = _address_cache.get(cache_key)
+    now = time.monotonic()
+    if cached and now - cached[0] < ADDRESS_CACHE_TTL_SECONDS:
+        return cached[1]
+
+    global _last_address_lookup_at
+    elapsed = now - _last_address_lookup_at
+    if elapsed < ADDRESS_RATE_LIMIT_SECONDS:
+        await asyncio.sleep(ADDRESS_RATE_LIMIT_SECONDS - elapsed)
+
+    params = {
+        "q": f"{query}, Алматы",
+        "format": "jsonv2",
+        "addressdetails": 1,
+        "limit": 5,
+        "countrycodes": "kz",
+        "viewbox": ALMATY_VIEWBOX,
+        "bounded": 1,
+        "accept-language": "ru",
+    }
+    headers = {"User-Agent": NOMINATIM_USER_AGENT}
+
+    try:
+        async with httpx.AsyncClient(timeout=6) as client:
+            response = await client.get(NOMINATIM_SEARCH_URL, params=params, headers=headers)
+            response.raise_for_status()
+            raw_results = response.json()
+    except httpx.HTTPError as exc:
+        logger.warning("address.suggest_failed error=%s", exc.__class__.__name__)
+        raise HTTPException(status_code=502, detail="Address search is unavailable") from exc
+    finally:
+        _last_address_lookup_at = time.monotonic()
+
+    suggestions = [
+        {
+            "label": compact_address_label(item),
+            "lat": float(item["lat"]),
+            "lon": float(item["lon"]),
+            "place_id": item.get("place_id"),
+        }
+        for item in raw_results
+        if item.get("display_name") and item.get("lat") and item.get("lon")
+    ]
+    _address_cache[cache_key] = (time.monotonic(), suggestions)
+    return suggestions
 
 
 @public_router.get("/{partner_id}", response_model=PartnerDetailDTO)

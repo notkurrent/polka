@@ -67,7 +67,7 @@ export default function BizOffersListScreen() {
   };
 
   return (
-    <div className="screen-scroll-with-tabbar" style={{ background: t.surface, fontFamily: fontFn }}>
+    <div className="screen-scroll-with-tabbar" style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz
         title="Мои позиции"
         right={
