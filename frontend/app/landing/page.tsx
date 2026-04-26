@@ -10,10 +10,8 @@ export default function LandingPage() {
 
   return (
     <div
+      className="landing-screen"
       style={{
-        height: "100dvh",
-        width: "100%",
-        overflow: "auto",
         background: t.bg,
         fontFamily: FONT(),
         color: t.text,
@@ -21,20 +19,10 @@ export default function LandingPage() {
       }}
     >
       <div
-        style={{
-          paddingTop: "calc(var(--app-safe-top) + 24px)",
-          paddingRight: "20px",
-          paddingBottom: "calc(var(--app-safe-bottom) + 80px)",
-          paddingLeft: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-          minHeight: "100%",
-          boxSizing: "border-box",
-        }}
+        className="landing-inner"
       >
         {/* logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+        <div className="landing-logo">
           <div
             style={{
               width: 36,
@@ -52,13 +40,11 @@ export default function LandingPage() {
         </div>
 
         {/* hero */}
-        <div style={{ marginTop: 8 }}>
+        <div className="landing-hero">
           <h1
+            className="landing-title"
             style={{
-              fontSize: 34,
               fontWeight: 800,
-              lineHeight: 1.08,
-              letterSpacing: -1,
               color: t.text,
               margin: 0,
               textWrap: "pretty",
@@ -71,11 +57,9 @@ export default function LandingPage() {
             </span>
           </h1>
           <p
+            className="landing-subtitle"
             style={{
-              fontSize: 14,
               color: t.textSec,
-              lineHeight: 1.5,
-              marginTop: 14,
               textWrap: "pretty",
             }}
           >
@@ -83,20 +67,18 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div style={{ marginTop: 4 }}>
+        <div className="landing-how">
           <div
+            className="landing-eyebrow"
             style={{
-              fontSize: 11,
               color: t.textTer,
               textTransform: "uppercase",
-              letterSpacing: 0.6,
-              marginBottom: 8,
               fontWeight: 600,
             }}
           >
             Как это работает
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="landing-steps">
             {[
               { title: "Выберите оффер", body: "На главном экране появятся реальные наборы от заведений рядом." },
               { title: "Забронируйте", body: "После брони заказ будет доступен в разделе броней." },
@@ -104,15 +86,14 @@ export default function LandingPage() {
             ].map((item, i) => (
             <div
               key={i}
+              className="landing-step"
               style={{
-                padding: "14px 16px",
                 background: t.surface,
-                borderRadius: 14,
                 border: `1px solid ${t.divider}`,
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 750, color: t.text }}>{item.title}</div>
-              <div style={{ fontSize: 12, color: t.textSec, marginTop: 4, lineHeight: 1.45 }}>{item.body}</div>
+              <div className="landing-step-title" style={{ fontWeight: 750, color: t.text }}>{item.title}</div>
+              <div className="landing-step-body" style={{ color: t.textSec }}>{item.body}</div>
             </div>
           ))}
           </div>
@@ -121,7 +102,7 @@ export default function LandingPage() {
         <div style={{ flex: 1 }} />
 
         {/* CTAs */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="landing-cta">
           <PillButton onClick={() => router.push("/signup")} size="lg">
             Начать экономить
           </PillButton>

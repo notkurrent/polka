@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { getTelegramLaunchInfo } from "@/lib/auth-routing";
 
 type Insets = {
   top?: number;
@@ -15,7 +16,8 @@ export function TelegramProvider() {
   useEffect(() => {
     if (typeof window !== "undefined" && window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp;
-      const isTelegramLaunch = Boolean(webApp.initData);
+      const launchInfo = getTelegramLaunchInfo();
+      const isTelegramLaunch = launchInfo.hasInitData || launchInfo.isLikelyTelegramWebView;
       if (!isTelegramLaunch) return;
 
       const root = document.documentElement;
@@ -47,6 +49,11 @@ export function TelegramProvider() {
 
       try {
         root.dataset.telegramWebapp = "true";
+        console.info("telegram.webapp_context", {
+          hasTelegramWebApp: launchInfo.hasTelegramWebApp,
+          initDataLength: launchInfo.initDataLength,
+          platform: launchInfo.platform,
+        });
         // Говорим телеграму, что приложение готово к отображению
         webApp.ready?.();
         applyTelegramSafeAreas();

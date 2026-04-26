@@ -4,24 +4,69 @@ import type { User } from "@/store/auth";
 
 type TelegramWebApp = NonNullable<typeof window.Telegram>["WebApp"];
 
+export type TelegramInitDataSource = "webapp" | "query" | "hash" | "missing";
+
 export function getTelegramWebApp(): TelegramWebApp | null {
   if (typeof window === "undefined") return null;
   return window.Telegram?.WebApp ?? null;
 }
 
-export function getTelegramInitData() {
-  const webApp = getTelegramWebApp();
-  if (webApp?.initData) return webApp.initData;
+export function getTelegramLaunchInfo() {
+  if (typeof window === "undefined") {
+    return {
+      hasTelegramWebApp: false,
+      hasInitData: false,
+      initData: "",
+      initDataLength: 0,
+      initDataSource: "missing" as TelegramInitDataSource,
+      platform: "server",
+      isLikelyTelegramWebView: false,
+    };
+  }
 
-  if (typeof window === "undefined") return "";
+  const webApp = getTelegramWebApp();
+  const platform = String(webApp?.platform || "unknown").toLowerCase();
+  if (webApp?.initData) {
+    return {
+      hasTelegramWebApp: true,
+      hasInitData: true,
+      initData: webApp.initData,
+      initDataLength: webApp.initData.length,
+      initDataSource: "webapp" as TelegramInitDataSource,
+      platform,
+      isLikelyTelegramWebView: platform !== "unknown",
+    };
+  }
+
   const search = new URLSearchParams(window.location.search);
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  return search.get("tgWebAppData") || hash.get("tgWebAppData") || "";
+  const queryInitData = search.get("tgWebAppData");
+  const hashInitData = hash.get("tgWebAppData");
+  const initData = queryInitData || hashInitData || "";
+  const initDataSource: TelegramInitDataSource = queryInitData ? "query" : hashInitData ? "hash" : "missing";
+
+  return {
+    hasTelegramWebApp: Boolean(webApp),
+    hasInitData: Boolean(initData),
+    initData,
+    initDataLength: initData.length,
+    initDataSource,
+    platform,
+    isLikelyTelegramWebView: Boolean(webApp) && platform !== "unknown",
+  };
+}
+
+export function getTelegramInitData() {
+  return getTelegramLaunchInfo().initData;
 }
 
 export function isTelegramLaunch() {
-  if (typeof window === "undefined") return false;
-  return Boolean(getTelegramInitData());
+  return getTelegramLaunchInfo().hasInitData;
+}
+
+export function isTelegramAuthContext() {
+  const info = getTelegramLaunchInfo();
+  return info.hasInitData || info.isLikelyTelegramWebView;
 }
 
 export function nextRouteForBuyer(onboardingDone: boolean) {

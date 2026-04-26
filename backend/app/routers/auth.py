@@ -103,11 +103,22 @@ def auth_error(status_code: int, code: str, message: str) -> HTTPException:
     )
 
 
+def telegram_init_data_status(init_data: str) -> dict[str, object]:
+    parsed_data = dict(urllib.parse.parse_qsl(init_data))
+    return {
+        "length": len(init_data),
+        "has_hash": "hash" in parsed_data,
+        "has_user": bool(parsed_data.get("user")),
+        "has_auth_date": "auth_date" in parsed_data,
+    }
+
+
 @router.post("/telegram")
 async def telegram_auth(req: TelegramAuthRequest, session: AsyncSession = Depends(get_session)):
+    init_data_status = telegram_init_data_status(req.initData)
     if not verify_telegram_web_app_data(req.initData):
+        logger.warning("auth.telegram_verify_failed status=%s", init_data_status)
         if os.getenv("ENV", "dev").lower() != "dev":
-            logger.warning("auth.telegram_invalid env=production")
             raise HTTPException(status_code=401, detail="Invalid Telegram init data")
         logger.info("Telegram initData verification failed; skipping in dev mode")
 

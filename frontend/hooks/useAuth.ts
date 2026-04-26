@@ -3,10 +3,28 @@
 import { useEffect, useState } from "react";
 import type { User } from "@/store/auth";
 import { useAuthStore } from "@/store/auth";
-import { api } from "@/lib/api";
-import { getTelegramInitData, isTelegramLaunch } from "@/lib/auth-routing";
+import { api, ApiError } from "@/lib/api";
+import { getTelegramLaunchInfo, isTelegramLaunch } from "@/lib/auth-routing";
 
-type TelegramAuthError = "missing_init_data" | "failed" | null;
+type TelegramAuthError = "missing_init_data" | "failed" | "network" | null;
+
+function logTelegramAuthContext(event: string) {
+  const info = getTelegramLaunchInfo();
+  console.info("telegram.auth_context", {
+    event,
+    hasTelegramWebApp: info.hasTelegramWebApp,
+    initDataLength: info.initDataLength,
+    initDataSource: info.initDataSource,
+    platform: info.platform,
+  });
+}
+
+function classifyTelegramAuthError(error: unknown): Exclude<TelegramAuthError, null> {
+  if (error instanceof ApiError) {
+    return error.status === 401 ? "failed" : "network";
+  }
+  return "network";
+}
 
 export const useAuth = () => {
   const { user, accessToken, setAuth, setUser, clearAuth, logout } = useAuthStore();
@@ -15,18 +33,22 @@ export const useAuth = () => {
 
   useEffect(() => {
     const authWithTelegram = async () => {
-      if (typeof window === "undefined" || !isTelegramLaunch()) return false;
+      if (typeof window === "undefined") return false;
 
-      const initData = getTelegramInitData();
-      if (!initData) {
+      const info = getTelegramLaunchInfo();
+      if (!info.hasInitData && !info.isLikelyTelegramWebView) return false;
+
+      if (!info.initData) {
+        logTelegramAuthContext("missing_init_data");
         setTelegramAuthError("missing_init_data");
         return false;
       }
 
+      logTelegramAuthContext("attempt");
       const data = await api.post<{
         access_token: string;
         user: User;
-      }>("/auth/telegram", { initData });
+      }>("/auth/telegram", { initData: info.initData });
 
       setAuth(data.user, data.access_token);
       setTelegramAuthError(null);
@@ -48,7 +70,7 @@ export const useAuth = () => {
             await authWithTelegram();
           } catch (telegramError) {
             console.warn("Telegram auth retry failed", telegramError);
-            if (isTelegramLaunch()) setTelegramAuthError("failed");
+            if (isTelegramLaunch()) setTelegramAuthError(classifyTelegramAuthError(telegramError));
           }
         } finally {
           setIsLoading(false);
@@ -60,7 +82,7 @@ export const useAuth = () => {
         await authWithTelegram();
       } catch (error) {
         console.warn("Telegram auth failed", error);
-        if (isTelegramLaunch()) setTelegramAuthError("failed");
+        if (isTelegramLaunch()) setTelegramAuthError(classifyTelegramAuthError(error));
       } finally {
         setIsLoading(false);
       }

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { ALMATY_CENTER, formatDistance, NearbyOffer } from "@/lib/api-types";
-import { isTelegramLaunch, nextRouteForBusiness } from "@/lib/auth-routing";
+import { isTelegramAuthContext, isTelegramLaunch, nextRouteForBusiness } from "@/lib/auth-routing";
 import { isTelegramAccountIncomplete } from "@/lib/account-linking";
 import { useAppStore } from "@/store/app";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";
@@ -62,7 +62,7 @@ export default function AppScreenBuyerPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    const isTMA = isTelegramLaunch();
+    const isTMA = isTelegramAuthContext();
 
     if (!isAuthenticated) {
       if (isTMA) {
@@ -80,7 +80,23 @@ export default function AppScreenBuyerPage() {
     }
   }, [authLoading, isAuthenticated, onboardingDone, router, selectedMode, user]);
 
-  if (!authLoading && isTelegramLaunch() && !isAuthenticated && telegramAuthError) {
+  if (!authLoading && isTelegramAuthContext() && !isAuthenticated && telegramAuthError) {
+    const telegramAuthCopy = {
+      missing_init_data: {
+        title: "Откройте Polka через Mini App-кнопку",
+        body: "Telegram не передал данные сессии. Откройте именно Mini App-кнопку в Telegram, не обычную ссылку.",
+      },
+      failed: {
+        title: "Telegram-сессию не удалось проверить",
+        body: "Проверьте, что Mini App привязан к этому боту и на сервере указан правильный TELEGRAM_BOT_TOKEN.",
+      },
+      network: {
+        title: "Не удалось связаться с сервером",
+        body: "Проверьте интернет и попробуйте открыть Mini App ещё раз. Если ошибка повторится, проверьте backend /auth/telegram.",
+      },
+    } as const;
+    const copy = telegramAuthCopy[telegramAuthError];
+
     return (
       <div
         style={{
@@ -96,9 +112,9 @@ export default function AppScreenBuyerPage() {
         }}
       >
         <div style={{ maxWidth: 320 }}>
-          <div style={{ fontSize: 18, fontWeight: 750, marginBottom: 8 }}>Откройте приложение через Telegram Mini App</div>
+          <div style={{ fontSize: 18, fontWeight: 750, marginBottom: 8 }}>{copy.title}</div>
           <div style={{ fontSize: 14, color: t.textSec, lineHeight: 1.45 }}>
-            Не удалось подтвердить Telegram-сессию. Закройте окно и откройте Polka из Telegram ещё раз.
+            {copy.body}
           </div>
         </div>
       </div>
