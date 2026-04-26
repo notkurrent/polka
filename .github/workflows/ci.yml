@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: polka_test
+          POSTGRES_USER: polka
+          POSTGRES_PASSWORD: polka_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U polka -d polka_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+asyncpg://polka:polka_test_password@localhost:5432/polka_test
+      JWT_SECRET: ci_test_secret_not_for_prod
+      TELEGRAM_BOT_TOKEN: ci_mock_token
+      TELEGRAM_WEBAPP_URL: https://thepolka.app
+      TELEGRAM_WEBHOOK_SECRET: ci_webhook_secret
+      CORS_ORIGINS: http://localhost:3000
+      ENV: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Run migrations
+        working-directory: backend
+        run: alembic upgrade head
+      - name: Run backend tests
+        working-directory: backend
+        run: pytest
+      - name: Compile backend
+        working-directory: backend
+        run: python -m compileall app
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      - name: Typecheck frontend
+        working-directory: frontend
+        run: npx tsc --noEmit --pretty false
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint -- --quiet
