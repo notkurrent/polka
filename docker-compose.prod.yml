@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.prod
     container_name: polka-backend-prod
     command: ["bash", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8002}:8000"
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       ENV: production
