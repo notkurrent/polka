@@ -139,7 +139,7 @@ export default function OnboardingScreen() {
                 margin: 0,
               }}
             >
-              Наборы еды.
+              Позиции еды.
               <br />
               <span
                 style={{
@@ -201,7 +201,7 @@ export default function OnboardingScreen() {
                 1
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Найдите набор</div>
+                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Найдите позицию</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
                   Откройте карту и выберите заведение рядом
                 </div>
@@ -286,7 +286,7 @@ export default function OnboardingScreen() {
               >
                 <div style={{ fontSize: 16, fontWeight: 750 }}>Выбирайте оффер</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 6, lineHeight: 1.45 }}>
-                  На главном экране появятся реальные наборы от заведений, когда они будут доступны рядом.
+                  На главном экране появятся реальные позиции от заведений, когда они будут доступны рядом.
                 </div>
               </div>
               <div

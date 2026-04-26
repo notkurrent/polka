@@ -62,7 +62,7 @@ async def upsert_partner(session: AsyncSession, user: User) -> Partner:
             name="Polka Bakery",
             address="проспект Достык, 52, Алматы",
             hours="08:00-21:00",
-            description="Свежая выпечка и готовые наборы рядом с центром Алматы.",
+            description="Свежая выпечка и готовые позиции рядом с центром Алматы.",
             category="bakery",
         )
         session.add(partner)
@@ -71,7 +71,7 @@ async def upsert_partner(session: AsyncSession, user: User) -> Partner:
         partner.name = "Polka Bakery"
         partner.address = "проспект Достык, 52, Алматы"
         partner.hours = "08:00-21:00"
-        partner.description = "Свежая выпечка и готовые наборы рядом с центром Алматы."
+        partner.description = "Свежая выпечка и готовые позиции рядом с центром Алматы."
         partner.category = "bakery"
         session.add(partner)
         await session.flush()
@@ -221,7 +221,7 @@ async def seed() -> None:
                 session,
                 partner=partner,
                 offer_type=OfferType.MAGIC_BOX,
-                name="Обеденный набор",
+                name="Обеденная позиция",
                 old_price="5200.00",
                 new_price="2100.00",
                 stock=5,

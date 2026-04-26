@@ -98,7 +98,7 @@ export default function BizRegisterPage() {
               Заведение готово
             </div>
             <div style={{ fontSize: 13, color: t.textSec, marginTop: 8, lineHeight: 1.5, textWrap: "pretty" }}>
-              Профиль создан. Теперь можно опубликовать первый набор и принимать брони.
+              Профиль создан. Теперь можно опубликовать первую позицию и принимать брони.
             </div>
           </div>
           <Badge tone="solid">Статус · активен</Badge>
@@ -234,7 +234,7 @@ export default function BizRegisterPage() {
             cursor: "pointer",
           }}
         >
-          Я покупатель, перейти к наборам
+          Я покупатель, перейти к позициям
         </button>
       </div>
     </AppScreenBiz>

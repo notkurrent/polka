@@ -12,6 +12,7 @@ import AppHeader from "@/components/AppHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { formatPositionsCount } from "@/lib/utils";
 
 export default function FavoritesScreen() {
   const t = tokens();
@@ -37,7 +38,7 @@ export default function FavoritesScreen() {
         <EmptyState
           icon={Icon.heart(42, t.textTer)}
           title="Пока пусто"
-          description="Добавляйте заведения в избранное, чтобы быстро возвращаться к любимым местам и следить за новыми наборами."
+          description="Добавляйте заведения в избранное, чтобы быстро возвращаться к любимым местам и следить за новыми позициями."
         />
       ) : isLoading ? (
         <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -101,11 +102,11 @@ export default function FavoritesScreen() {
                 >
                   {activeOffers.length > 0 ? (
                     <Badge tone="green" size="sm">
-                      {activeOffers.length} набора от {minPrice} ₸
+                      {formatPositionsCount(activeOffers.length)} от {minPrice} ₸
                     </Badge>
                   ) : (
                     <Badge tone="neutral" size="sm">
-                      Нет активных наборов
+                      Нет активных позиций
                     </Badge>
                   )}
                 </div>

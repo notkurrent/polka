@@ -30,7 +30,7 @@ export default function BizCreateOfferPage() {
   const validate = () => {
     const oldPrice = Number(original);
     const newPrice = Number(price);
-    if (!title.trim()) return "Введите название набора.";
+    if (!title.trim()) return "Введите название позиции.";
     if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
     if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
     if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
@@ -65,13 +65,13 @@ export default function BizCreateOfferPage() {
 
   return (
     <AppScreenBiz>
-      <AppHeaderBiz title="Новый набор" onBack={() => router.back()} />
+      <AppHeaderBiz title="Новая позиция" onBack={() => router.back()} />
       <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <Label>Формат</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
             {[
-              { id: "MAGIC_BOX", label: "Сюрприз", desc: "Случайный набор дня" },
+              { id: "MAGIC_BOX", label: "Сюрприз", desc: "Случайная позиция дня" },
               { id: "SPECIFIC", label: "Состав", desc: "Понятное содержимое" },
             ].map((opt) => (
               <button
@@ -100,7 +100,7 @@ export default function BizCreateOfferPage() {
           <input
             name="offer-title"
             aria-label="Название"
-            placeholder="Например, вечерний набор"
+            placeholder="Например, вечерняя позиция"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             style={inputStyle(t, fontFn)}

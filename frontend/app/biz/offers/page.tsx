@@ -69,11 +69,11 @@ export default function BizOffersListScreen() {
   return (
     <div className="screen-scroll-with-tabbar" style={{ background: t.surface, fontFamily: fontFn }}>
       <AppHeaderBiz
-        title="Мои наборы"
+        title="Мои позиции"
         right={
           <button
             type="button"
-            aria-label="Создать набор"
+            aria-label="Создать позицию"
             onClick={() => router.push("/biz/offers/new")}
             style={{
               width: 44,
@@ -106,8 +106,8 @@ export default function BizOffersListScreen() {
         {!isLoading && !error && (!offers || offers.length === 0) && (
           <EmptyState
             icon={Icon.plus(34, t.textTer)}
-            title="Пока нет наборов"
-            description="Создайте первый набор, чтобы он появился в ленте покупателей."
+            title="Пока нет позиций"
+            description="Создайте первую позицию, чтобы она появилась в ленте покупателей."
             compact
           />
         )}
@@ -128,14 +128,14 @@ export default function BizOffersListScreen() {
                 alignItems: "flex-start",
               }}
             >
-              <StripePlaceholder label="набор" w={60} h={60} radius={10} tone={active ? "mint" : "slate"} />
+              <StripePlaceholder label="позиция" w={60} h={60} radius={10} tone={active ? "mint" : "slate"} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 {isEditing ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <input
                       value={draft.name}
                       name="offer-name"
-                      aria-label="Название набора"
+                      aria-label="Название позиции"
                       onChange={(event) => setDraft({ ...draft, name: event.target.value })}
                       style={inputStyle(t, fontFn)}
                     />
@@ -217,7 +217,7 @@ export default function BizOffersListScreen() {
             lineHeight: 1.5,
           }}
         >
-          Набор исчезает из покупательской ленты, когда остаток становится 0.
+          Позиция исчезает из покупательской ленты, когда остаток становится 0.
         </div>
       </div>
       <BizTabBar />

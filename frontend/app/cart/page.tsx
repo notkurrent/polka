@@ -28,7 +28,7 @@ export default function CartScreen() {
       router.push("/orders");
     } catch (err) {
       console.error("Reservation failed:", err);
-      setError(err instanceof Error ? err.message : "Не удалось забронировать все наборы. Корзина сохранена.");
+      setError(err instanceof Error ? err.message : "Не удалось забронировать все позиции. Корзина сохранена.");
     } finally {
       setLoading(false);
     }
@@ -54,10 +54,10 @@ export default function CartScreen() {
           <EmptyState
             icon={Icon.bag(40, t.textTer, true)}
             title="Корзина пуста"
-            description="Добавьте один или несколько наборов, чтобы забронировать их и получить код выдачи."
+            description="Добавьте одну или несколько позиций, чтобы забронировать их и получить код выдачи."
             action={
               <PillButton variant="outline" onClick={() => router.push("/")}>
-                Найти наборы
+                Найти позиции
               </PillButton>
             }
           />

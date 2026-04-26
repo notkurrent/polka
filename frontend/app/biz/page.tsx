@@ -167,7 +167,7 @@ export default function BizDashboardPage() {
           <div style={{ padding: "14px 16px 0" }}>
             <div style={{ display: "flex", gap: 8 }}>
               <StatTile value={stats.activeOrders} label="Активных броней" />
-              <StatTile value={stats.activeOffers} label="Наборов в ленте" />
+              <StatTile value={stats.activeOffers} label="Позиций в ленте" />
               <StatTile value={money(stats.todayRevenue)} label="Сегодня" accent />
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function BizDashboardPage() {
                 <EmptyState
                   icon={Icon.list(32, t.textTer)}
                   title="Активных броней нет"
-                  description="Создайте набор, и новые заказы появятся здесь."
+                  description="Создайте позицию, и новые заказы появятся здесь."
                   compact
                 />
               )}
@@ -228,7 +228,7 @@ export default function BizDashboardPage() {
               Быстрые действия
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <ActionCard icon={Icon.plus} label="Новый набор" onClick={() => router.push("/biz/offers/new")} primary />
+              <ActionCard icon={Icon.plus} label="Новая позиция" onClick={() => router.push("/biz/offers/new")} primary />
               <ActionCard icon={Icon.check} label="Принять код" onClick={() => router.push("/biz/scan")} />
               <ActionCard icon={Icon.chart} label="Аналитика" onClick={() => router.push("/biz/analytics")} />
               <ActionCard icon={Icon.list} label="Все заказы" onClick={() => router.push("/biz/orders")} />
