@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { isTelegramLaunch, nextRouteForBusiness, nextRouteForBuyer } from "@/lib/auth-routing";
+import { isTelegramAuthContext, nextRouteForBusiness, nextRouteForBuyer } from "@/lib/auth-routing";
 import { isTelegramAccountIncomplete } from "@/lib/account-linking";
 import { useAppStore } from "@/store/app";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";
@@ -24,7 +24,7 @@ export default function ChooseRolePage() {
 
   React.useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated && !isTelegramLaunch()) {
+    if (!isAuthenticated && !isTelegramAuthContext()) {
       router.replace("/landing");
       return;
     }

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { isTelegramLaunch, nextRouteForBusiness } from "@/lib/auth-routing";
+import { isTelegramAuthContext, nextRouteForBusiness } from "@/lib/auth-routing";
 import { useAppStore } from "@/store/app";
 
 export function useBusinessGuard() {
@@ -16,7 +16,7 @@ export function useBusinessGuard() {
     if (isLoading) return;
 
     if (!isAuthenticated) {
-      if (!isTelegramLaunch()) {
+      if (!isTelegramAuthContext()) {
         router.replace("/login");
       }
       return;

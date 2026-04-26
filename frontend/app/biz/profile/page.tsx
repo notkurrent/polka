@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useAppStore } from "@/store/app";
 import { useAuthStore } from "@/store/auth";
 import { hasPassword, hasTelegramIdentity, isTelegramAccountIncomplete } from "@/lib/account-linking";
+import { authEntryRoute } from "@/lib/auth-routing";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";
 
 export default function BizProfileScreen() {
@@ -28,7 +29,7 @@ export default function BizProfileScreen() {
 
   const handleLogout = () => {
     logout();
-    router.push("/landing");
+    router.replace(authEntryRoute());
   };
 
   return (

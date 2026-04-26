@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
 import { hasPassword, hasTelegramIdentity, isTelegramAccountIncomplete } from "@/lib/account-linking";
+import { authEntryRoute } from "@/lib/auth-routing";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";
 import { tokens, Icon, PillButton } from "@/components/ui/primitives";
 import { TabBar } from "@/components/TabBar";
@@ -23,7 +24,7 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     logout();
-    router.push("/landing");
+    router.replace(authEntryRoute());
   };
 
   const openBusinessCabinet = () => {

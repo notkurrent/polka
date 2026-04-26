@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
-import { isTelegramLaunch } from "@/lib/auth-routing";
+import { isTelegramAuthContext } from "@/lib/auth-routing";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -58,7 +58,7 @@ function handleUnauthorized() {
   }
 
   const currentPath = window.location.pathname;
-  if (isTelegramLaunch()) {
+  if (isTelegramAuthContext()) {
     useAuthStore.getState().clearAuth();
     return;
   }

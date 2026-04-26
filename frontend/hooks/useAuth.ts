@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { User } from "@/store/auth";
 import { useAuthStore } from "@/store/auth";
 import { api, ApiError } from "@/lib/api";
-import { getTelegramLaunchInfo, isTelegramLaunch } from "@/lib/auth-routing";
+import { getTelegramLaunchInfo, isTelegramAuthContext } from "@/lib/auth-routing";
 
 type TelegramAuthError = "missing_init_data" | "failed" | "network" | null;
 
@@ -61,7 +61,7 @@ export const useAuth = () => {
           const me = await api.get<User>("/users/me");
           setUser(me);
         } catch {
-          if (isTelegramLaunch()) {
+          if (isTelegramAuthContext()) {
             clearAuth();
           } else {
             logout();
@@ -70,7 +70,7 @@ export const useAuth = () => {
             await authWithTelegram();
           } catch (telegramError) {
             console.warn("Telegram auth retry failed", telegramError);
-            if (isTelegramLaunch()) setTelegramAuthError(classifyTelegramAuthError(telegramError));
+            if (isTelegramAuthContext()) setTelegramAuthError(classifyTelegramAuthError(telegramError));
           }
         } finally {
           setIsLoading(false);
@@ -82,7 +82,7 @@ export const useAuth = () => {
         await authWithTelegram();
       } catch (error) {
         console.warn("Telegram auth failed", error);
-        if (isTelegramLaunch()) setTelegramAuthError(classifyTelegramAuthError(error));
+        if (isTelegramAuthContext()) setTelegramAuthError(classifyTelegramAuthError(error));
       } finally {
         setIsLoading(false);
       }

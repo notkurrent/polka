@@ -1,11 +1,12 @@
 "use client";
 
-import React, { FormEvent, useMemo, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { tokens, FONT, PillButton } from "@/components/ui/primitives";
 import AppHeader from "@/components/AppHeader";
 import { ApiError, api, getApiErrorMessage } from "@/lib/api";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
+import { isTelegramAuthContext } from "@/lib/auth-routing";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import { useAuthStore, type User } from "@/store/auth";
 import { useAppStore } from "@/store/app";
@@ -29,6 +30,7 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(0);
+  const [isTelegramPage, setIsTelegramPage] = useState<boolean | null>(null);
 
   const validationError = useMemo(() => {
     if (!isPhoneComplete(phone)) return "Введите номер телефона полностью";
@@ -43,6 +45,12 @@ export default function SignupPage() {
     (step === 0 && name.trim().length >= 2) ||
     (step === 1 && isPhoneComplete(phone)) ||
     (step === 2 && canSubmit);
+
+  useEffect(() => {
+    const isTelegram = isTelegramAuthContext();
+    setIsTelegramPage(isTelegram);
+    if (isTelegram) router.replace("/");
+  }, [router]);
 
   const handleNext = () => {
     setError("");
@@ -98,6 +106,10 @@ export default function SignupPage() {
   const fieldStyle = authUnderlineInputStyle(t, fontFn);
 
   const labelStyle: React.CSSProperties = { fontSize: 12, color: t.textSec, fontWeight: 600 };
+
+  if (isTelegramPage !== false) {
+    return <div style={{ minHeight: "100dvh", background: t.bg }} />;
+  }
 
   return (
     <div

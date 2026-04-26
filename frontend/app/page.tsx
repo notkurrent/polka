@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { ALMATY_CENTER, formatDistance, NearbyOffer } from "@/lib/api-types";
-import { isTelegramAuthContext, isTelegramLaunch, nextRouteForBusiness } from "@/lib/auth-routing";
+import { isTelegramAuthContext, nextRouteForBusiness } from "@/lib/auth-routing";
 import { isTelegramAccountIncomplete } from "@/lib/account-linking";
 import { useAppStore } from "@/store/app";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";

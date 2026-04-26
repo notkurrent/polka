@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { tokens, FONT, PillButton } from "@/components/ui/primitives";
 import AppHeader from "@/components/AppHeader";
@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
+import { authEntryRoute, isTelegramAuthContext } from "@/lib/auth-routing";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import type { User } from "@/store/auth";
 
@@ -27,8 +28,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTelegramPage, setIsTelegramPage] = useState<boolean | null>(null);
 
   const canSubmit = isPhoneComplete(phone) && password.length > 0 && !isSubmitting;
+
+  useEffect(() => {
+    const isTelegram = isTelegramAuthContext();
+    setIsTelegramPage(isTelegram);
+    if (isTelegram) router.replace("/");
+  }, [router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,6 +60,10 @@ export default function LoginPage() {
     }
   };
 
+  if (isTelegramPage !== false) {
+    return <div style={{ minHeight: "100dvh", background: t.bg }} />;
+  }
+
   return (
     <div
       style={{
@@ -65,7 +77,7 @@ export default function LoginPage() {
         paddingBottom: "max(24px, env(safe-area-inset-bottom))",
       }}
     >
-      <AppHeader title="Вход" onBack={() => router.push("/landing")} />
+      <AppHeader title="Вход" onBack={() => router.push(authEntryRoute())} />
 
       <form
         onSubmit={handleSubmit}

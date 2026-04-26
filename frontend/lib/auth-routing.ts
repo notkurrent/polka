@@ -69,6 +69,10 @@ export function isTelegramAuthContext() {
   return info.hasInitData || info.isLikelyTelegramWebView;
 }
 
+export function authEntryRoute() {
+  return isTelegramAuthContext() ? "/" : "/landing";
+}
+
 export function nextRouteForBuyer(onboardingDone: boolean) {
   return onboardingDone ? "/" : "/onboarding";
 }
