@@ -27,6 +27,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
     container_name: polka-frontend-prod
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3002}:3000"
     environment:
       BACKEND_URL: http://backend:8000
       NEXT_PUBLIC_API_URL: /api
@@ -44,6 +46,7 @@ services:
   caddy:
     image: caddy:2-alpine
     container_name: polka-caddy-prod
+    profiles: ["caddy"]
     ports:
       - "80:80"
       - "443:443"
