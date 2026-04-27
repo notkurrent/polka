@@ -36,7 +36,7 @@ services:
     volumes:
       - ./backend:/app
     env_file:
-      - ./backend/.env
+      - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://polka:polka_dev_password@postgres:5432/polka
     depends_on:
