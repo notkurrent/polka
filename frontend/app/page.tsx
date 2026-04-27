@@ -11,14 +11,28 @@ import { isTelegramAccountIncomplete } from "@/lib/account-linking";
 import { useAppStore } from "@/store/app";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";
 import { TabBar } from "@/components/TabBar";
-import { tokens, Icon, FONT, StripePlaceholder, Badge, PriceTag, GridMap, PillButton } from "@/components/ui/primitives";
+import {
+  tokens,
+  Icon,
+  FONT,
+  StripePlaceholder,
+  Badge,
+  PriceTag,
+  GridMap,
+  PillButton,
+} from "@/components/ui/primitives";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-function mapPinPosition(lat: number | null | undefined, lon: number | null | undefined, centerLat: number, centerLon: number) {
+function mapPinPosition(
+  lat: number | null | undefined,
+  lon: number | null | undefined,
+  centerLat: number,
+  centerLon: number,
+) {
   if (lat == null || lon == null) return null;
   return {
     x: clamp(50 + (lon - centerLon) * 900, 10, 90),
@@ -54,10 +68,14 @@ export default function AppScreenBuyerPage() {
   const lat = location?.lat || ALMATY_CENTER.lat;
   const lon = location?.lon || ALMATY_CENTER.lon;
 
-  const { data: nearbyOffers, isLoading: isOffersLoading, error } = useSWR<NearbyOffer[]>(
+  const {
+    data: nearbyOffers,
+    isLoading: isOffersLoading,
+    error,
+  } = useSWR<NearbyOffer[]>(
     isAuthenticated && selectedMode === "buyer" ? `/offers/nearby?lat=${lat}&lon=${lon}&radius=5000` : null,
     (url: string) => api.get<NearbyOffer[]>(url),
-    { keepPreviousData: true }
+    { keepPreviousData: true },
   );
 
   useEffect(() => {
@@ -113,9 +131,7 @@ export default function AppScreenBuyerPage() {
       >
         <div style={{ maxWidth: 320 }}>
           <div style={{ fontSize: 18, fontWeight: 750, marginBottom: 8 }}>{copy.title}</div>
-          <div style={{ fontSize: 14, color: t.textSec, lineHeight: 1.45 }}>
-            {copy.body}
-          </div>
+          <div style={{ fontSize: 14, color: t.textSec, lineHeight: 1.45 }}>{copy.body}</div>
         </div>
       </div>
     );
@@ -139,9 +155,10 @@ export default function AppScreenBuyerPage() {
     partnerLat: o.partner.lat,
     partnerLon: o.partner.lon,
     distanceText: formatDistance(o.distance),
-    pickup: o.partner.hours,
+    pickup: o.offer.pickup_time || o.partner.hours,
     qty: o.offer.stock,
     title: o.offer.name,
+    desc: o.offer.description || undefined,
     original: o.offer.old_price,
     now: o.offer.new_price,
     label: o.offer.type === "MAGIC_BOX" ? "Сюрприз" : undefined,
@@ -350,160 +367,159 @@ export default function AppScreenBuyerPage() {
 
           {error ? (
             <ErrorState message="Не удалось загрузить предложения рядом. Проверьте соединение и попробуйте ещё раз." />
-          ) : (isOffersLoading || (!nearbyOffers && !error)) && !error
-            ? Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${t.divider}` }}>
-                  <Skeleton w="100%" h={140} radius={0} />
-                  <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-                    <Skeleton w={200} h={16} />
-                    <Skeleton w={140} h={12} />
-                    <Skeleton w={100} h={20} />
-                  </div>
+          ) : (isOffersLoading || (!nearbyOffers && !error)) && !error ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${t.divider}` }}>
+                <Skeleton w="100%" h={140} radius={0} />
+                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Skeleton w={200} h={16} />
+                  <Skeleton w={140} h={12} />
+                  <Skeleton w={100} h={20} />
                 </div>
-              ))
-            : visibleOffers.length === 0
-              ? (
+              </div>
+            ))
+          ) : visibleOffers.length === 0 ? (
+            <div
+              style={{
+                background: t.bg,
+                borderRadius: 18,
+                border: `1px solid ${t.divider}`,
+                overflow: "hidden",
+              }}
+            >
+              <EmptyState
+                icon={Icon.bag(34, t.textTer)}
+                title={filter === "all" ? "Пока ничего рядом" : "По этому фильтру пусто"}
+                description={
+                  filter === "all"
+                    ? "Когда рядом появятся новые позиции, они отобразятся здесь. Попробуйте позже или измените район."
+                    : "Сбросьте фильтр или посмотрите другие категории — возможно, рядом есть другие предложения."
+                }
+                compact
+                action={
+                  filter === "all" ? undefined : (
+                    <PillButton variant="outline" onClick={() => setFilter("all")}>
+                      Показать все
+                    </PillButton>
+                  )
+                }
+              />
+            </div>
+          ) : (
+            visibleOffers.map((offer) => (
+              <div key={offer.id} style={{ display: "contents" }}>
                 <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => router.push(`/offers/${offer.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") router.push(`/offers/${offer.id}`);
+                  }}
                   style={{
+                    width: "100%",
+                    textAlign: "left",
                     background: t.bg,
                     borderRadius: 18,
-                    border: `1px solid ${t.divider}`,
                     overflow: "hidden",
+                    border: `1px solid ${t.divider}`,
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: 0,
+                    color: t.text,
                   }}
-                  >
-                  <EmptyState
-                    icon={Icon.bag(34, t.textTer)}
-                    title={filter === "all" ? "Пока ничего рядом" : "По этому фильтру пусто"}
-                    description={
-                      filter === "all"
-                        ? "Когда рядом появятся новые позиции, они отобразятся здесь. Попробуйте позже или измените район."
-                        : "Сбросьте фильтр или посмотрите другие категории — возможно, рядом есть другие предложения."
-                    }
-                    compact
-                    action={
-                      filter === "all" ? undefined : (
-                        <PillButton
-                          variant="outline"
-                          onClick={() => setFilter("all")}
-                        >
-                          Показать все
-                        </PillButton>
-                      )
-                    }
-                  />
-                </div>
-              )
-            : visibleOffers.map((offer) => (
-                <div key={offer.id} style={{ display: "contents" }}>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => router.push(`/offers/${offer.id}`)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") router.push(`/offers/${offer.id}`);
-                    }}
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      background: t.bg,
-                      borderRadius: 18,
-                      overflow: "hidden",
-                      border: `1px solid ${t.divider}`,
-                      cursor: "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      padding: 0,
-                      color: t.text,
-                    }}
-                  >
-                    <div style={{ position: "relative" }}>
-                      <StripePlaceholder label={offer.label} h={140} radius={0} tone={offer.tone} />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(offer.storeId);
-                        }}
-                        aria-label={favorites.includes(offer.storeId) ? "Убрать из избранного" : "Добавить в избранное"}
-                        style={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          width: 44,
-                          height: 44,
-                          borderRadius: "50%",
-                          background: "rgba(255,255,255,0.92)",
-                          border: "none",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          backdropFilter: "blur(6px)",
-                        }}
-                      >
-                        {Icon.heart(16, favorites.includes(offer.storeId) ? t.danger : t.text, favorites.includes(offer.storeId))}
-                      </button>
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: 10,
-                          left: 10,
-                          display: "flex",
-                          gap: 6,
-                        }}
-                      >
-                        <Badge tone="dark" size="sm">
-                          <span>●</span>
-                          {offer.pickup}
+                >
+                  <div style={{ position: "relative" }}>
+                    <StripePlaceholder label={offer.label} h={140} radius={0} tone={offer.tone} />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(offer.storeId);
+                      }}
+                      aria-label={favorites.includes(offer.storeId) ? "Убрать из избранного" : "Добавить в избранное"}
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        width: 44,
+                        height: 44,
+                        borderRadius: "50%",
+                        background: "rgba(255,255,255,0.92)",
+                        border: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        backdropFilter: "blur(6px)",
+                      }}
+                    >
+                      {Icon.heart(
+                        16,
+                        favorites.includes(offer.storeId) ? t.danger : t.text,
+                        favorites.includes(offer.storeId),
+                      )}
+                    </button>
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 10,
+                        left: 10,
+                        display: "flex",
+                        gap: 6,
+                      }}
+                    >
+                      <Badge tone="dark" size="sm">
+                        <span>●</span>
+                        {offer.pickup}
+                      </Badge>
+                      {offer.qty <= 2 && (
+                        <Badge tone="amber" size="sm">
+                          Осталось {offer.qty}
                         </Badge>
-                        {offer.qty <= 2 && (
-                          <Badge tone="amber" size="sm">
-                            Осталось {offer.qty}
-                          </Badge>
-                        )}
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ padding: "12px 14px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 0 }}>{offer.title}</div>
+                        <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>
+                          {offer.storeName} · {offer.distanceText}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 3, color: t.textSec, fontSize: 12 }}>
+                        {Icon.clock(12, t.primaryDeep)}
+                        <span style={{ fontWeight: 600, color: t.text }}>{offer.pickup}</span>
                       </div>
                     </div>
-                    <div style={{ padding: "12px 14px" }}>
-                      <div
-                        style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}
-                      >
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 0 }}>{offer.title}</div>
-                          <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>
-                            {offer.storeName} · {offer.distanceText}
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: t.textSec, fontSize: 12 }}>
-                          {Icon.clock(12, t.primaryDeep)}
-                          <span style={{ fontWeight: 600, color: t.text }}>{offer.pickup}</span>
-                        </div>
-                      </div>
-                      <div
+                    <div
+                      style={{
+                        marginTop: 10,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <PriceTag original={offer.original} now={offer.now} size="md" />
+                      <span
                         style={{
-                          marginTop: 10,
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
+                          padding: "5px 10px",
+                          borderRadius: 9999,
+                          fontSize: 11,
+                          background: t.primarySoft,
+                          color: t.primaryDeep,
+                          fontWeight: 700,
                         }}
                       >
-                        <PriceTag original={offer.original} now={offer.now} size="md" />
-                        <span
-                          style={{
-                            padding: "5px 10px",
-                            borderRadius: 9999,
-                            fontSize: 11,
-                            background: t.primarySoft,
-                            color: t.primaryDeep,
-                            fontWeight: 700,
-                          }}
-                        >
-                          −{Math.round((1 - offer.now / offer.original) * 100)}%
-                        </span>
-                      </div>
-	                    </div>
-	                  </div>
+                        −{Math.round((1 - offer.now / offer.original) * 100)}%
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              ))}
+              </div>
+            ))
+          )}
           <div style={{ height: 16 }} />
         </div>
       )}

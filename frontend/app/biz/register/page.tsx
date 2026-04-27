@@ -180,10 +180,13 @@ export default function BizRegisterPage() {
                   marginTop: 6,
                   padding: "10px 12px",
                   border: `1px solid ${t.divider}`,
-                  borderRadius: 10,
-                  fontSize: 14,
+                  borderRadius: 12,
+                  fontSize: 16,
                   fontFamily: FONT(),
                   boxSizing: "border-box",
+                  WebkitAppearance: "none",
+                  appearance: "none",
+                  outline: "none",
                   resize: "vertical",
                 }}
               />
@@ -198,17 +201,22 @@ export default function BizRegisterPage() {
                   marginTop: 6,
                   padding: "10px 12px",
                   border: `1px solid ${t.divider}`,
-                  borderRadius: 10,
-                  fontSize: 14,
+                  borderRadius: 12,
+                  fontSize: 16,
                   fontFamily: FONT(),
                   boxSizing: "border-box",
+                  WebkitAppearance: "none",
+                  appearance: "none",
+                  outline: "none",
                 }}
               />
             )}
           </div>
         ))}
         {error && (
-          <div style={{ color: error.includes("уже создан") ? t.primaryDeep : t.danger, fontSize: 13, fontWeight: 600 }}>
+          <div
+            style={{ color: error.includes("уже создан") ? t.primaryDeep : t.danger, fontSize: 13, fontWeight: 600 }}
+          >
             {error}
           </div>
         )}

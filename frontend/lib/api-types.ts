@@ -16,6 +16,8 @@ export interface OfferPublic {
   partner_id: number;
   type: OfferType;
   name: string;
+  description: string;
+  pickup_time: string;
   old_price: number;
   new_price: number;
   stock: number;

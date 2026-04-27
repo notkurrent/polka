@@ -60,6 +60,7 @@ export default function BizProfileScreen() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 750 }}>{profile.name}</div>
                 <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>{profile.address}</div>
+                <div style={{ fontSize: 12, color: t.textTer, marginTop: 2 }}>{profile.hours}</div>
                 <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
                   <Badge tone="solid" size="sm">
                     Активно
@@ -72,10 +73,17 @@ export default function BizProfileScreen() {
                 </div>
               </div>
             </div>
-            <div style={{ background: t.bg, border: `1px solid ${t.divider}`, borderRadius: 12, overflow: "hidden" }}>
+            <div
+              style={{
+                background: t.bg,
+                border: `1px solid ${t.divider}`,
+                borderRadius: 12,
+                overflow: "hidden",
+                marginTop: 14,
+              }}
+            >
               {[
                 { label: "Редактировать профиль", href: "/biz/profile/edit" },
-                { label: "Часы работы", value: profile.hours, href: "/biz/profile/edit" },
                 { label: "Публичная страница", href: `/stores/${profile.id}` },
               ].map((item, i, arr) => (
                 <button
@@ -98,7 +106,6 @@ export default function BizProfileScreen() {
                   }}
                 >
                   <span style={{ flex: 1 }}>{item.label}</span>
-                  {"value" in item && item.value ? <span style={{ color: t.textSec, marginRight: 8 }}>{item.value}</span> : null}
                   {Icon.chevronR(14, t.textTer)}
                 </button>
               ))}

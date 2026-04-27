@@ -22,6 +22,8 @@ class OfferPublicDTO(BaseModel):
     partner_id: int
     type: OfferType
     name: str
+    description: str
+    pickup_time: str
     old_price: Decimal
     new_price: Decimal
     stock: int

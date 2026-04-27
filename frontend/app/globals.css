@@ -22,12 +22,36 @@
      env(safe-area-inset-*) covers iOS browser chrome.
      Telegram CSS/JS insets cover Mini App controls. Android can report zero
      content inset while Close/Menu controls still overlay the WebView. */
-  --app-platform-safe-top: max(env(safe-area-inset-top), var(--tg-safe-area-inset-top, 0px), var(--tg-js-safe-area-top));
-  --app-platform-safe-bottom: max(env(safe-area-inset-bottom), var(--tg-safe-area-inset-bottom, 0px), var(--tg-js-safe-area-bottom));
-  --app-platform-safe-left: max(env(safe-area-inset-left), var(--tg-safe-area-inset-left, 0px), var(--tg-js-safe-area-left));
-  --app-platform-safe-right: max(env(safe-area-inset-right), var(--tg-safe-area-inset-right, 0px), var(--tg-js-safe-area-right));
-  --app-content-safe-top: max(var(--tg-content-safe-area-inset-top, 0px), var(--tg-js-content-safe-area-top), var(--tg-android-controls-safe-top));
-  --app-content-safe-bottom: max(var(--tg-content-safe-area-inset-bottom, 0px), var(--tg-js-content-safe-area-bottom), var(--tg-android-controls-safe-bottom));
+  --app-platform-safe-top: max(
+    env(safe-area-inset-top),
+    var(--tg-safe-area-inset-top, 0px),
+    var(--tg-js-safe-area-top)
+  );
+  --app-platform-safe-bottom: max(
+    env(safe-area-inset-bottom),
+    var(--tg-safe-area-inset-bottom, 0px),
+    var(--tg-js-safe-area-bottom)
+  );
+  --app-platform-safe-left: max(
+    env(safe-area-inset-left),
+    var(--tg-safe-area-inset-left, 0px),
+    var(--tg-js-safe-area-left)
+  );
+  --app-platform-safe-right: max(
+    env(safe-area-inset-right),
+    var(--tg-safe-area-inset-right, 0px),
+    var(--tg-js-safe-area-right)
+  );
+  --app-content-safe-top: max(
+    var(--tg-content-safe-area-inset-top, 0px),
+    var(--tg-js-content-safe-area-top),
+    var(--tg-android-controls-safe-top)
+  );
+  --app-content-safe-bottom: max(
+    var(--tg-content-safe-area-inset-bottom, 0px),
+    var(--tg-js-content-safe-area-bottom),
+    var(--tg-android-controls-safe-bottom)
+  );
   --app-content-safe-left: max(var(--tg-content-safe-area-inset-left, 0px), var(--tg-js-content-safe-area-left));
   --app-content-safe-right: max(var(--tg-content-safe-area-inset-right, 0px), var(--tg-js-content-safe-area-right));
   --app-safe-top: calc(var(--app-platform-safe-top) + var(--app-content-safe-top));
@@ -69,12 +93,25 @@ select,
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
 [role="button"]:focus-visible {
   outline: 3px solid rgba(26, 58, 36, 0.34);
   outline-offset: 3px;
+  border-radius: inherit;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+input,
+textarea,
+select {
+  caret-color: var(--foreground); /* Цвет каретки, чтобы всегда было видно моргающую палочку */
 }
 
 .auth-underline-input {
@@ -89,7 +126,7 @@ select:focus-visible,
 }
 
 .auth-underline-input::placeholder {
-  color: #8C9691;
+  color: #8c9691;
   opacity: 0.78;
 }
 
@@ -155,8 +192,12 @@ html[data-telegram-webapp="true"] .app-shell {
 }
 
 @keyframes shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -171,8 +212,14 @@ html[data-telegram-webapp="true"] .app-shell {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .landing-screen {

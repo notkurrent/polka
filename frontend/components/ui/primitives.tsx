@@ -149,7 +149,7 @@ export const tokens = (): Tokens => {
       divider: "#EEF3EE",
       primary: "#5BC88A", // vivid
       primarySoft: "#D4F1DE",
-      primaryDeep: "#1a3a24",
+      primaryDeep: "#1C492B",
       text: "#0D1912",
       textSec: "#5B6660",
       textTer: "#8C9691",
@@ -165,7 +165,7 @@ export const tokens = (): Tokens => {
     divider: "#EEF2EE",
     primary: "#A8E6CF", // pale
     primarySoft: "#E8F5E9",
-    primaryDeep: "#1a3a24",
+    primaryDeep: "#1C492B",
     text: "#111714",
     textSec: "#5B6660",
     textTer: "#8C9691",

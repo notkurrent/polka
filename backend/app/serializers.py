@@ -44,6 +44,8 @@ def build_offer_dto(offer: Offer) -> OfferPublicDTO:
         partner_id=offer.partner_id,
         type=offer.type,
         name=offer.name,
+        description=offer.description,
+        pickup_time=offer.pickup_time,
         old_price=offer.old_price,
         new_price=offer.new_price,
         stock=offer.stock,
@@ -106,7 +108,7 @@ def build_order_detail_dto(order: Order, offer: Offer, partner: Partner) -> Orde
         total=offer.new_price,
         storeName=partner.name,
         address=partner.address,
-        pickup=partner.hours,
+        pickup=offer.pickup_time or partner.hours,
         expiresIn=expires_in,
         items=[item],
     )

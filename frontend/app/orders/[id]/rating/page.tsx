@@ -21,9 +21,11 @@ export default function RatingScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const { data: order, isLoading, error } = useSWR<OrderDetail>(id ? `/orders/${id}` : null, (url: string) =>
-    api.get<OrderDetail>(url),
-  );
+  const {
+    data: order,
+    isLoading,
+    error,
+  } = useSWR<OrderDetail>(id ? `/orders/${id}` : null, (url: string) => api.get<OrderDetail>(url));
 
   const toggle = (tag: string) => setPicked((p) => (p.includes(tag) ? p.filter((x) => x !== tag) : [...p, tag]));
 
@@ -108,7 +110,16 @@ export default function RatingScreen() {
         </div>
 
         {order && !canRate && (
-          <div style={{ padding: 14, borderRadius: 14, background: t.surface, color: t.textSec, fontSize: 14, textAlign: "center" }}>
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              background: t.surface,
+              color: t.textSec,
+              fontSize: 14,
+              textAlign: "center",
+            }}
+          >
             Оценка доступна только после выдачи заказа.
           </div>
         )}
@@ -205,9 +216,12 @@ export default function RatingScreen() {
                   padding: 16,
                   border: `1px solid ${t.divider}`,
                   borderRadius: 16,
-                  fontSize: 14,
+                  fontSize: 16,
                   resize: "none",
                   boxSizing: "border-box",
+                  WebkitAppearance: "none",
+                  appearance: "none",
+                  outline: "none",
                   background: t.surface,
                 }}
               />
@@ -230,7 +244,12 @@ export default function RatingScreen() {
             paddingTop: 24,
           }}
         >
-          <PillButton onClick={handleSubmit} disabled={rating === 0 || !canRate || submitting} variant="primary" size="lg">
+          <PillButton
+            onClick={handleSubmit}
+            disabled={rating === 0 || !canRate || submitting}
+            variant="primary"
+            size="lg"
+          >
             {submitting ? "Отправляем…" : "Отправить отзыв"}
           </PillButton>
           <button

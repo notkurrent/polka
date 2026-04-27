@@ -1,11 +1,10 @@
-import os
 import enum
 import sqlalchemy as sa
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 from sqlalchemy import Column, DateTime
-from sqlmodel import SQLModel, Field, Relationship, Enum, String
+from sqlmodel import SQLModel, Field, Enum
 from geoalchemy2 import Geometry
 
 class UserRole(str, enum.Enum):
@@ -80,6 +79,8 @@ class Offer(SQLModel, table=True):
     partner_id: int = Field(foreign_key="partner.id")
     type: OfferType = Field(sa_column=Column(Enum(OfferType)))
     name: str
+    description: str = Field(default="")
+    pickup_time: str = Field(default="")
     old_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
     new_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
     stock: int = Field(default=0)

@@ -22,7 +22,6 @@ export interface BizStats {
   todayRevenue: number;
   completedOrders: number;
   totalRevenue: number;
-  conversion: number;
 }
 
 export interface ParsedCodePayload {
@@ -102,7 +101,6 @@ export function buildBizStats(offers: OfferPublic[] = [], orders: PartnerOrder[]
     todayRevenue,
     completedOrders: completed.length,
     totalRevenue,
-    conversion: orders.length ? Math.round((completed.length / orders.length) * 100) : 0,
   };
 }
 
@@ -126,7 +124,8 @@ export function partnerErrorMessage(error: unknown) {
   if (message.includes("Partner profile not found")) return "Сначала зарегистрируйте заведение.";
   if (message.includes("another partner")) return "Этот заказ относится к другому заведению.";
   if (message.includes("not active")) return "Этот заказ уже закрыт или отменён.";
-  if (message.includes("Multiple orders")) return "Несколько заказов с таким кодом. Откройте заказ из списка и подтвердите его.";
+  if (message.includes("Multiple orders"))
+    return "Несколько заказов с таким кодом. Откройте заказ из списка и подтвердите его.";
   if (message.includes("not found")) return "Активный заказ с таким кодом не найден.";
   return message;
 }

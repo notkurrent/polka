@@ -103,7 +103,6 @@ interface BizAnalytics {
   reviewsCount: number;
   avgRating: number;
   balance: number;
-  conversion: number;
 }
 
 interface StripePlaceholderProps {

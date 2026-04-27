@@ -30,9 +30,7 @@ export default function BizScanPage() {
   const fontFn = FONT ? FONT() : "system-ui";
 
   const [initialPayload] = useState(initialCodePayload);
-  const [digits, setDigits] = useState(() =>
-    initialPayload?.code ? initialPayload.code.split("") : ["", "", "", ""],
-  );
+  const [digits, setDigits] = useState(() => (initialPayload?.code ? initialPayload.code.split("") : ["", "", "", ""]));
   const [orderId, setOrderId] = useState<number | undefined>(() => initialPayload?.orderId);
   const [scannerActive, setScannerActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -248,6 +246,9 @@ export default function BizScanPage() {
                 color: t.primaryDeep,
                 background: digits[index] ? t.primarySoft : "#fff",
                 boxSizing: "border-box",
+                WebkitAppearance: "none",
+                appearance: "none",
+                outline: "none",
               }}
             />
           ))}

@@ -27,8 +27,14 @@ export default function SearchPage() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const { data: offers, isLoading, error } = useSWR<NearbyOffer[]>(
-    debouncedQuery ? `/offers/nearby?lat=${lat}&lon=${lon}&radius=5000&search=${encodeURIComponent(debouncedQuery)}` : null,
+  const {
+    data: offers,
+    isLoading,
+    error,
+  } = useSWR<NearbyOffer[]>(
+    debouncedQuery
+      ? `/offers/nearby?lat=${lat}&lon=${lon}&radius=5000&search=${encodeURIComponent(debouncedQuery)}`
+      : null,
     (url: string) => api.get<NearbyOffer[]>(url),
   );
 
@@ -88,13 +94,25 @@ export default function SearchPage() {
               background: "transparent",
               fontFamily: FONT(),
               color: t.text,
+              WebkitAppearance: "none",
+              appearance: "none",
+              outline: "none",
             }}
           />
           {query && (
             <button
               aria-label="Очистить поиск"
               onClick={() => setQuery("")}
-              style={{ minWidth: 44, minHeight: 44, margin: "-10px", cursor: "pointer", border: "none", background: "transparent", display: "grid", placeItems: "center" }}
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                margin: "-10px",
+                cursor: "pointer",
+                border: "none",
+                background: "transparent",
+                display: "grid",
+                placeItems: "center",
+              }}
             >
               {Icon.close(16, t.textTer)}
             </button>
@@ -190,9 +208,7 @@ export default function SearchPage() {
             >
               {Icon.search(32, t.textTer)}
             </div>
-            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>
-              Найдите позицию рядом
-            </div>
+            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>Найдите позицию рядом</div>
             <div style={{ maxWidth: 300, marginTop: 10, fontSize: 14, lineHeight: 1.5 }}>
               Введите название заведения, еды или выберите популярную категорию выше.
             </div>
@@ -207,7 +223,9 @@ export default function SearchPage() {
               <Skeleton w="100%" h={76} radius={14} />
             </div>
           )}
-          {error && <ErrorState message="Не удалось загрузить результаты. Проверьте соединение и попробуйте ещё раз." />}
+          {error && (
+            <ErrorState message="Не удалось загрузить результаты. Проверьте соединение и попробуйте ещё раз." />
+          )}
           {!isLoading && !error && offers && offers.length > 0
             ? offers.map((item) => (
                 <button
@@ -232,7 +250,7 @@ export default function SearchPage() {
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: t.text }}>{item.offer.name}</div>
                     <div style={{ fontSize: 12, color: t.textSec }}>
-                      {(item.partner.name || item.partner_name)} · {formatDistance(item.distance)}
+                      {item.partner.name || item.partner_name} · {formatDistance(item.distance)}
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center" }}>
@@ -240,7 +258,9 @@ export default function SearchPage() {
                   </div>
                 </button>
               ))
-            : !isLoading && !error && offers && (
+            : !isLoading &&
+              !error &&
+              offers && (
                 <EmptyState
                   icon={Icon.search(34, t.textTer)}
                   title="Ничего не нашлось"

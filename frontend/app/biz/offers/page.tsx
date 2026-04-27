@@ -19,15 +19,28 @@ export default function BizOffersListScreen() {
   const fontFn = FONT ? FONT() : "system-ui";
   const { data: offers, isLoading, mutate, error } = useSWR<OfferPublic[]>("/partner-api/offers", bizApi.offers);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [draft, setDraft] = useState({ name: "", old_price: "", new_price: "", stock: "" });
+  const [draft, setDraft] = useState({
+    name: "",
+    description: "",
+    pickup_from: "19:00",
+    pickup_to: "21:00",
+    old_price: "",
+    new_price: "",
+    stock: "",
+  });
   const [busyId, setBusyId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
   const beginEdit = (offer: OfferPublic) => {
     setEditingId(offer.id);
     setMessage("");
+    const defaultTime = offer.pickup_time || "19:00 - 21:00";
+    const [from = "19:00", to = "21:00"] = defaultTime.split("-").map((s) => s.trim());
     setDraft({
       name: offer.name,
+      description: offer.description || "",
+      pickup_from: from,
+      pickup_to: to,
       old_price: String(offer.old_price),
       new_price: String(offer.new_price),
       stock: String(offer.stock),
@@ -40,6 +53,8 @@ export default function BizOffersListScreen() {
     try {
       await bizApi.updateOffer(id, {
         name: draft.name.trim(),
+        description: draft.description.trim(),
+        pickup_time: `${draft.pickup_from} - ${draft.pickup_to}`,
         old_price: Number(draft.old_price),
         new_price: Number(draft.new_price),
         stock: Number(draft.stock),
@@ -102,7 +117,11 @@ export default function BizOffersListScreen() {
           </>
         )}
         {error && <ErrorState message={partnerErrorMessage(error)} />}
-        {message && <div role="alert" style={{ color: t.danger, fontSize: 13 }}>{message}</div>}
+        {message && (
+          <div role="alert" style={{ color: t.danger, fontSize: 13 }}>
+            {message}
+          </div>
+        )}
         {!isLoading && !error && (!offers || offers.length === 0) && (
           <EmptyState
             icon={Icon.plus(34, t.textTer)}
@@ -139,6 +158,34 @@ export default function BizOffersListScreen() {
                       onChange={(event) => setDraft({ ...draft, name: event.target.value })}
                       style={inputStyle(t, fontFn)}
                     />
+                    <textarea
+                      value={draft.description}
+                      name="offer-description"
+                      aria-label="Описание"
+                      placeholder="Кратко о составе"
+                      onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+                      rows={2}
+                      style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
+                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <input
+                        type="time"
+                        value={draft.pickup_from}
+                        name="offer-pickup_from"
+                        aria-label="Окно выдачи от"
+                        onChange={(event) => setDraft({ ...draft, pickup_from: event.target.value })}
+                        style={inputStyle(t, fontFn)}
+                      />
+                      <span style={{ color: t.textSec }}>—</span>
+                      <input
+                        type="time"
+                        value={draft.pickup_to}
+                        name="offer-pickup_to"
+                        aria-label="Окно выдачи до"
+                        onChange={(event) => setDraft({ ...draft, pickup_to: event.target.value })}
+                        style={inputStyle(t, fontFn)}
+                      />
+                    </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 0.7fr", gap: 8 }}>
                       <input
                         value={draft.old_price}
@@ -180,9 +227,14 @@ export default function BizOffersListScreen() {
                       <Badge tone={active ? "solid" : "neutral"} size="sm">
                         {active ? "Активно" : "Нет остатков"}
                       </Badge>
-                      <span style={{ fontSize: 11, color: t.textSec }}>{offer.type === "MAGIC_BOX" ? "Сюрприз" : "Состав"}</span>
+                      <span style={{ fontSize: 11, color: t.textSec }}>
+                        {offer.type === "MAGIC_BOX" ? "Сюрприз" : "Состав"}
+                      </span>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 750, marginTop: 5 }}>{offer.name}</div>
+                    {offer.pickup_time && (
+                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>Выдача: {offer.pickup_time}</div>
+                    )}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
                       <PriceTag original={Number(offer.old_price)} now={Number(offer.new_price)} size="sm" />
                       <span style={{ fontSize: 11, color: t.textSec }}>· {offer.stock} шт</span>
@@ -231,10 +283,13 @@ function inputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties
     minHeight: 44,
     padding: "10px 12px",
     border: `1px solid ${t.divider}`,
-    borderRadius: 10,
-    fontSize: 14,
+    borderRadius: 12,
+    fontSize: 16,
     fontFamily: fontFn,
     boxSizing: "border-box",
+    WebkitAppearance: "none",
+    appearance: "none",
+    outline: "none",
   };
 }
 

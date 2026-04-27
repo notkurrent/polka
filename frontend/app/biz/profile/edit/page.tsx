@@ -55,7 +55,8 @@ function formatSchedule(schedule: ScheduleDay[]) {
   if (!enabled.length) return "Выходной";
 
   const sameTime = enabled.every((day) => day.from === enabled[0].from && day.to === enabled[0].to);
-  const allWeekdays = enabled.length === 5 && enabled.every((day, index) => index < 5 && day.short === WEEK_DAYS[index].short);
+  const allWeekdays =
+    enabled.length === 5 && enabled.every((day, index) => index < 5 && day.short === WEEK_DAYS[index].short);
   const allWeek = enabled.length === 7;
 
   if (sameTime && allWeek) return `Ежедневно ${enabled[0].from}-${enabled[0].to}`;
@@ -113,7 +114,11 @@ export default function BizProfileEditPage() {
   const categories = ["Кофейня", "Пекарня", "Ресторан", "Кондитерская", "Столовая"];
   const formattedHours = formatSchedule(schedule);
   const shouldSearchAddress = addressQuery.trim().length >= 3 && selectedAddress?.label !== addressQuery.trim();
-  const { data: addressSuggestions, isLoading: isAddressLoading, error: addressError } = useSWR(
+  const {
+    data: addressSuggestions,
+    isLoading: isAddressLoading,
+    error: addressError,
+  } = useSWR(
     shouldSearchAddress ? ["partner-address-suggestions", addressQuery.trim()] : null,
     ([, value]) => bizApi.addressSuggestions(value),
     { keepPreviousData: true },
@@ -126,9 +131,7 @@ export default function BizProfileEditPage() {
   };
 
   const updateTime = (index: number, field: "from" | "to", value: string) => {
-    setSchedule((current) =>
-      current.map((day, dayIndex) => (dayIndex === index ? { ...day, [field]: value } : day)),
-    );
+    setSchedule((current) => current.map((day, dayIndex) => (dayIndex === index ? { ...day, [field]: value } : day)));
   };
 
   const save = async () => {
@@ -177,7 +180,13 @@ export default function BizProfileEditPage() {
         ) : (
           <>
             <Field label="Название заведения">
-              <input name="partner-name" aria-label="Название заведения" value={data.name} onChange={(event) => setData({ ...data, name: event.target.value })} style={inputStyle(t, fontFn)} />
+              <input
+                name="partner-name"
+                aria-label="Название заведения"
+                value={data.name}
+                onChange={(event) => setData({ ...data, name: event.target.value })}
+                style={inputStyle(t, fontFn)}
+              />
             </Field>
 
             <div>
@@ -239,9 +248,7 @@ export default function BizProfileEditPage() {
                     }}
                   >
                     {isAddressLoading && (
-                      <div style={{ padding: "12px 14px", fontSize: 13, color: t.textSec }}>
-                        Ищем адреса...
-                      </div>
+                      <div style={{ padding: "12px 14px", fontSize: 13, color: t.textSec }}>Ищем адреса...</div>
                     )}
                     {addressError && (
                       <div style={{ padding: "12px 14px", fontSize: 13, color: t.danger }}>
@@ -253,37 +260,45 @@ export default function BizProfileEditPage() {
                         Адрес не найден. Уточните улицу или номер дома.
                       </div>
                     )}
-                    {!addressError && (addressSuggestions || []).map((suggestion) => (
-                      <button
-                        key={`${suggestion.place_id ?? suggestion.label}-${suggestion.lat}-${suggestion.lon}`}
-                        type="button"
-                        onClick={() => {
-                          setSelectedAddress(suggestion);
-                          setAddressQuery(suggestion.label);
-                          setData({ ...data, address: suggestion.label });
-                          setError("");
-                        }}
-                        style={{
-                          width: "100%",
-                          padding: "12px 14px",
-                          border: "none",
-                          borderBottom: `1px solid ${t.divider}`,
-                          background: "#fff",
-                          color: t.text,
-                          textAlign: "left",
-                          fontSize: 13,
-                          lineHeight: 1.35,
-                          fontFamily: fontFn,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {suggestion.label}
-                      </button>
-                    ))}
+                    {!addressError &&
+                      (addressSuggestions || []).map((suggestion) => (
+                        <button
+                          key={`${suggestion.place_id ?? suggestion.label}-${suggestion.lat}-${suggestion.lon}`}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAddress(suggestion);
+                            setAddressQuery(suggestion.label);
+                            setData({ ...data, address: suggestion.label });
+                            setError("");
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "12px 14px",
+                            border: "none",
+                            borderBottom: `1px solid ${t.divider}`,
+                            background: "#fff",
+                            color: t.text,
+                            textAlign: "left",
+                            fontSize: 13,
+                            lineHeight: 1.35,
+                            fontFamily: fontFn,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {suggestion.label}
+                        </button>
+                      ))}
                   </div>
                 )}
               </div>
-              <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.45, color: selectedAddress ? t.primaryDeep : t.textSec }}>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  color: selectedAddress ? t.primaryDeep : t.textSec,
+                }}
+              >
                 {selectedAddress ? "Адрес выбран из карты Алматы." : "Сохранить можно только адрес из подсказок."}
               </div>
             </div>
@@ -379,7 +394,16 @@ export default function BizProfileEditPage() {
               />
             </Field>
 
-            <div style={{ padding: 12, background: t.primarySoft, color: t.primaryDeep, borderRadius: 12, fontSize: 12, lineHeight: 1.45 }}>
+            <div
+              style={{
+                padding: 12,
+                background: t.primarySoft,
+                color: t.primaryDeep,
+                borderRadius: 12,
+                fontSize: 12,
+                lineHeight: 1.45,
+              }}
+            >
               Геопозицию заведения можно будет уточнить отдельно. Сейчас используется точка по умолчанию для Алматы.
             </div>
 
@@ -418,10 +442,13 @@ function inputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties
     minHeight: 44,
     padding: "10px 12px",
     border: `1px solid ${t.divider}`,
-    borderRadius: 10,
-    fontSize: 14,
+    borderRadius: 12,
+    fontSize: 16,
     fontFamily: fontFn,
     boxSizing: "border-box",
+    WebkitAppearance: "none",
+    appearance: "none",
+    outline: "none",
   };
 }
 
@@ -431,13 +458,16 @@ function timeInputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProper
     minHeight: 40,
     padding: "8px 6px",
     border: `1px solid ${t.divider}`,
-    borderRadius: 10,
+    borderRadius: 12,
     background: "#fff",
     color: t.text,
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: 700,
     fontFamily: fontFn,
     textAlign: "center",
     boxSizing: "border-box",
+    WebkitAppearance: "none",
+    appearance: "none",
+    outline: "none",
   };
 }

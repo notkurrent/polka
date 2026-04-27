@@ -14,6 +14,9 @@ export default function BizCreateOfferPage() {
 
   const [format, setFormat] = useState<"MAGIC_BOX" | "SPECIFIC">("MAGIC_BOX");
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [pickupFrom, setPickupFrom] = useState("19:00");
+  const [pickupTo, setPickupTo] = useState("21:00");
   const [price, setPrice] = useState("");
   const [original, setOriginal] = useState("");
   const [qty, setQty] = useState(1);
@@ -31,6 +34,7 @@ export default function BizCreateOfferPage() {
     const oldPrice = Number(original);
     const newPrice = Number(price);
     if (!title.trim()) return "Введите название позиции.";
+    if (!pickupFrom.trim() || !pickupTo.trim()) return "Укажите окно выдачи.";
     if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
     if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
     if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
@@ -51,6 +55,8 @@ export default function BizCreateOfferPage() {
       await bizApi.createOffer({
         type: format,
         name: title.trim(),
+        description: description.trim(),
+        pickup_time: `${pickupFrom} - ${pickupTo}`,
         old_price: Number(original),
         new_price: Number(price),
         stock: qty,
@@ -107,6 +113,18 @@ export default function BizCreateOfferPage() {
           />
         </Field>
 
+        <Field label="Описание">
+          <textarea
+            name="offer-description"
+            aria-label="Описание"
+            placeholder="Кратко о том, что внутри"
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={3}
+            style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
+          />
+        </Field>
+
         <div>
           <Label>Цены, ₸</Label>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -128,9 +146,16 @@ export default function BizCreateOfferPage() {
                 aria-label="Цена Polka"
                 onChange={(event) => setPrice(event.target.value.replace(/\D/g, ""))}
                 inputMode="numeric"
-                style={{ ...inputStyle(t, fontFn), border: `1.5px solid ${t.primary}`, color: t.primaryDeep, fontWeight: 750 }}
+                style={{
+                  ...inputStyle(t, fontFn),
+                  border: `1.5px solid ${t.primary}`,
+                  color: t.primaryDeep,
+                  fontWeight: 750,
+                }}
               />
-              <div style={{ fontSize: 10, color: t.primaryDeep, marginTop: 4, fontWeight: 650 }}>Скидка {discount}%</div>
+              <div style={{ fontSize: 10, color: t.primaryDeep, marginTop: 4, fontWeight: 650 }}>
+                Скидка {discount}%
+              </div>
             </div>
           </div>
         </div>
@@ -152,16 +177,36 @@ export default function BizCreateOfferPage() {
             <button onClick={() => setQty(Math.max(1, qty - 1))} type="button" style={roundButton(t, false)}>
               {Icon.minus(18, t.text)}
             </button>
-            <div style={{ fontSize: 28, fontWeight: 800, color: t.primaryDeep, minWidth: 48, textAlign: "center" }}>{qty}</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: t.primaryDeep, minWidth: 48, textAlign: "center" }}>
+              {qty}
+            </div>
             <button onClick={() => setQty(qty + 1)} type="button" style={roundButton(t, true)}>
               {Icon.plus(18, t.primaryDeep)}
             </button>
           </div>
         </div>
 
-        <div style={{ padding: 12, background: t.primarySoft, borderRadius: 12, color: t.primaryDeep, fontSize: 12, lineHeight: 1.45 }}>
-          Окно выдачи берётся из часов работы заведения. Изменить их можно в профиле.
-        </div>
+        <Field label="Окно выдачи">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="time"
+              name="pickup-from"
+              aria-label="Окно выдачи от"
+              value={pickupFrom}
+              onChange={(e) => setPickupFrom(e.target.value)}
+              style={inputStyle(t, fontFn)}
+            />
+            <span style={{ color: t.textSec }}>—</span>
+            <input
+              type="time"
+              name="pickup-to"
+              aria-label="Окно выдачи до"
+              value={pickupTo}
+              onChange={(e) => setPickupTo(e.target.value)}
+              style={inputStyle(t, fontFn)}
+            />
+          </div>
+        </Field>
 
         {error && <div style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
 
@@ -197,10 +242,13 @@ function inputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties
     minHeight: 44,
     padding: "10px 12px",
     border: `1px solid ${t.divider}`,
-    borderRadius: 10,
-    fontSize: 14,
+    borderRadius: 12,
+    fontSize: 16,
     fontFamily: fontFn,
     boxSizing: "border-box",
+    WebkitAppearance: "none",
+    appearance: "none",
+    outline: "none",
   };
 }
 

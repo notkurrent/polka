@@ -77,7 +77,14 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
   if (loadError) {
     return (
-      <div style={{ minHeight: "100dvh", background: t.bg, padding: "calc(24px + var(--app-safe-top)) 20px", fontFamily: FONT() }}>
+      <div
+        style={{
+          minHeight: "100dvh",
+          background: t.bg,
+          padding: "calc(24px + var(--app-safe-top)) 20px",
+          fontFamily: FONT(),
+        }}
+      >
         <PillButton variant="outline" full={false} onClick={() => router.back()}>
           Назад
         </PillButton>
@@ -169,6 +176,10 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
           </span>
         </div>
 
+        {offer.description && (
+          <div style={{ marginBottom: 24, fontSize: 14, color: t.textSec, lineHeight: 1.4 }}>{offer.description}</div>
+        )}
+
         <div style={{ background: t.surface, borderRadius: 16, padding: "16px", marginBottom: 24 }}>
           <p style={{ margin: 0, fontSize: 13, color: t.textSec }}>
             Осталось порций: <strong style={{ color: t.text }}>{offer.stock}</strong>
@@ -179,9 +190,15 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
           <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
             Адрес: <strong style={{ color: t.text }}>{partner.address}</strong>
           </p>
-          <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-            Выдача: <strong style={{ color: t.text }}>{partner.hours}</strong>
-          </p>
+          {offer.pickup_time ? (
+            <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
+              Выдача: <strong style={{ color: t.text }}>{offer.pickup_time}</strong>
+            </p>
+          ) : (
+            <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
+              Режим работы: <strong style={{ color: t.text }}>{partner.hours}</strong>
+            </p>
+          )}
           <button
             type="button"
             onClick={() => router.push(`/stores/${partner.id}`)}
@@ -204,12 +221,30 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         </div>
 
         {error && (
-          <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: "#FDE8E8", color: t.danger, fontSize: 13 }}>
+          <div
+            style={{
+              marginBottom: 16,
+              padding: 12,
+              borderRadius: 12,
+              background: "#FDE8E8",
+              color: t.danger,
+              fontSize: 13,
+            }}
+          >
             {error}
           </div>
         )}
         {cartFeedback && (
-          <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: t.primarySoft, color: t.primaryDeep, fontSize: 13 }}>
+          <div
+            style={{
+              marginBottom: 16,
+              padding: 12,
+              borderRadius: 12,
+              background: t.primarySoft,
+              color: t.primaryDeep,
+              fontSize: 13,
+            }}
+          >
             {cartFeedback}
           </div>
         )}
@@ -231,7 +266,13 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             gap: 10,
           }}
         >
-          <PillButton size="md" variant={isInCart ? "ghost" : "outline"} full onClick={isInCart ? () => router.push("/cart") : handleAddToCart} disabled={isOutOfStock}>
+          <PillButton
+            size="md"
+            variant={isInCart ? "ghost" : "outline"}
+            full
+            onClick={isInCart ? () => router.push("/cart") : handleAddToCart}
+            disabled={isOutOfStock}
+          >
             {isInCart ? "Открыть корзину" : "Добавить в корзину"}
           </PillButton>
           <PillButton size="lg" full onClick={handleReserve} disabled={isReserving || isOutOfStock}>

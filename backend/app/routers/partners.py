@@ -142,6 +142,8 @@ def partner_order_response(order: Order, offer: Offer, partner: Partner) -> dict
 class OfferCreate(BaseModel):
     type: OfferType
     name: str
+    description: str = ""
+    pickup_time: str = ""
     old_price: Decimal = Field(ge=0)
     new_price: Decimal = Field(ge=0)
     stock: int = Field(ge=0)
@@ -149,6 +151,8 @@ class OfferCreate(BaseModel):
 
 class OfferUpdate(BaseModel):
     name: str | None = None
+    description: str | None = None
+    pickup_time: str | None = None
     old_price: Decimal | None = Field(default=None, ge=0)
     new_price: Decimal | None = Field(default=None, ge=0)
     stock: int | None = Field(default=None, ge=0)

@@ -104,13 +104,7 @@ export function AppHeaderBiz({
 
 export function PillButtonBiz({ children, onClick, style, size = "md", disabled }: PillButtonProps) {
   return (
-    <PillButton
-      onClick={onClick}
-      variant="dark"
-      size={size}
-      disabled={disabled}
-      style={style}
-    >
+    <PillButton onClick={onClick} variant="dark" size={size} disabled={disabled} style={style}>
       {children}
     </PillButton>
   );

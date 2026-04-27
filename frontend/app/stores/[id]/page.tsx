@@ -23,9 +23,12 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
     Promise.resolve(params).then((p) => setId(p.id));
   }, [params]);
 
-  const { data: partnerDetail, isLoading, error } = useSWR<PartnerDetail>(
-    isAuthenticated && id ? `/partners/${id}` : null,
-    (url: string) => api.get<PartnerDetail>(url),
+  const {
+    data: partnerDetail,
+    isLoading,
+    error,
+  } = useSWR<PartnerDetail>(isAuthenticated && id ? `/partners/${id}` : null, (url: string) =>
+    api.get<PartnerDetail>(url),
   );
 
   const fav = id ? favorites.includes(id) : false;
@@ -44,10 +47,10 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
     offers: (partnerDetail?.offers || []).map((offer) => ({
       id: String(offer.id),
       title: offer.name,
-      desc: offer.type === "MAGIC_BOX" ? "Сюрприз-позиция от заведения" : "Готовая позиция",
+      desc: offer.description || (offer.type === "MAGIC_BOX" ? "Сюрприз-позиция от заведения" : "Готовая позиция"),
       original: offer.old_price,
       now: offer.new_price,
-      pickup: partner.hours,
+      pickup: offer.pickup_time || partner.hours,
       tone: (offer.type === "MAGIC_BOX" ? "purple" : "orange") as "purple" | "orange",
       label: offer.type === "MAGIC_BOX" ? "Сюрприз" : "Еда",
       qty: offer.stock,
@@ -251,11 +254,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                           }}
                           disabled={inCart || unavailable}
                           aria-label={
-                            unavailable
-                              ? "Нет в наличии"
-                              : inCart
-                                ? "Уже в корзине"
-                                : `Добавить ${o.title} в корзину`
+                            unavailable ? "Нет в наличии" : inCart ? "Уже в корзине" : `Добавить ${o.title} в корзину`
                           }
                           style={{
                             width: 44,
@@ -271,7 +270,11 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                             justifyContent: "center",
                           }}
                         >
-                          {inCart ? Icon.check(18, "#fff") : unavailable ? Icon.close(18, t.textTer) : Icon.plus(18, t.primaryDeep)}
+                          {inCart
+                            ? Icon.check(18, "#fff")
+                            : unavailable
+                              ? Icon.close(18, t.textTer)
+                              : Icon.plus(18, t.primaryDeep)}
                         </button>
                       </div>
                     </div>

@@ -7,7 +7,8 @@ import { TelegramProvider } from "@/components/TelegramProvider";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  userScalable: true,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   themeColor: "#ffffff",
 };
