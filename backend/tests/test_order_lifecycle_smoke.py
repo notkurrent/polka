@@ -130,7 +130,7 @@ async def cleanup_smoke_data(phone_prefix: str) -> None:
         await session.commit()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_order_lifecycle_smoke() -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7799{run_id}"
@@ -293,7 +293,7 @@ async def test_order_lifecycle_smoke() -> None:
             await cleanup_smoke_data(phone_prefix)
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_pending_partner_can_not_create_offer() -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7798{run_id}"
@@ -327,7 +327,7 @@ async def test_pending_partner_can_not_create_offer() -> None:
             await cleanup_smoke_data(phone_prefix)
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_pending_partner_offer_is_hidden_from_buyer() -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7797{run_id}"
@@ -377,7 +377,7 @@ async def test_pending_partner_offer_is_hidden_from_buyer() -> None:
             await cleanup_smoke_data(phone_prefix)
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_approved_partner_can_create_offer() -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7796{run_id}"

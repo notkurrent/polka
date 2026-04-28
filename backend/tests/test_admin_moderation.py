@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete
 from sqlmodel import select
 
-from app.database import AsyncSessionLocal, engine
+from app.database import AsyncSessionLocal
 from app.main import app
 from app.models import Offer, Order, Partner, PartnerStatus, Rating, User
 
@@ -106,7 +106,7 @@ async def cleanup_test_data(phone_prefix: str) -> None:
         await session.commit()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_admin_partner_moderation_api() -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7795{run_id}"
@@ -200,4 +200,3 @@ async def test_admin_partner_moderation_api() -> None:
             assert rejected_offer_response.status_code == 403
         finally:
             await cleanup_test_data(phone_prefix)
-            await engine.dispose()

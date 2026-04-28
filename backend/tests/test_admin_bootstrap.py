@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete
 from sqlmodel import select
 
-from app.database import AsyncSessionLocal, engine
+from app.database import AsyncSessionLocal
 from app.main import app
 from app.models import User
 
@@ -68,74 +68,60 @@ async def telegram_auth(client: AsyncClient, tg_id: str) -> dict:
     return response.json()["user"]
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_web_user_with_admin_phone_allowlist_becomes_admin(monkeypatch) -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7781{run_id}"
     phone = f"{phone_prefix}01"
     monkeypatch.setenv("ADMIN_PHONE_ALLOWLIST", phone)
     monkeypatch.delenv("ADMIN_TG_ID_ALLOWLIST", raising=False)
-
-    await engine.dispose()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         try:
             user = await web_register(client, phone, f"Phone Admin {run_id}")
             assert user["is_admin"] is True
         finally:
-            await engine.dispose()
             await cleanup_users(phone_prefix)
-            await engine.dispose()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_telegram_user_with_admin_tg_id_allowlist_becomes_admin(monkeypatch) -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     tg_id = f"4299{run_id}"
     monkeypatch.setenv("ENV", "dev")
     monkeypatch.delenv("ADMIN_PHONE_ALLOWLIST", raising=False)
     monkeypatch.setenv("ADMIN_TG_ID_ALLOWLIST", tg_id)
-
-    await engine.dispose()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         try:
             user = await telegram_auth(client, tg_id)
             assert user["is_admin"] is True
         finally:
-            await engine.dispose()
             await cleanup_users("+77000000000", [tg_id])
-            await engine.dispose()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_user_outside_admin_allowlist_does_not_become_admin(monkeypatch) -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7782{run_id}"
     phone = f"{phone_prefix}01"
     monkeypatch.setenv("ADMIN_PHONE_ALLOWLIST", f"{phone_prefix}99")
     monkeypatch.setenv("ADMIN_TG_ID_ALLOWLIST", "123456789")
-
-    await engine.dispose()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         try:
             user = await web_register(client, phone, f"Not Admin {run_id}")
             assert user["is_admin"] is False
         finally:
-            await engine.dispose()
             await cleanup_users(phone_prefix)
-            await engine.dispose()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_existing_admin_stays_admin_when_removed_from_allowlist(monkeypatch) -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7783{run_id}"
     phone = f"{phone_prefix}01"
     monkeypatch.setenv("ADMIN_PHONE_ALLOWLIST", phone)
-
-    await engine.dispose()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         try:
@@ -146,20 +132,16 @@ async def test_existing_admin_stays_admin_when_removed_from_allowlist(monkeypatc
             user = await web_login(client, phone)
             assert user["is_admin"] is True
         finally:
-            await engine.dispose()
             await cleanup_users(phone_prefix)
-            await engine.dispose()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_users_me_applies_admin_allowlist_for_existing_session(monkeypatch) -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7784{run_id}"
     phone = f"{phone_prefix}01"
     monkeypatch.delenv("ADMIN_PHONE_ALLOWLIST", raising=False)
     monkeypatch.delenv("ADMIN_TG_ID_ALLOWLIST", raising=False)
-
-    await engine.dispose()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         try:
@@ -174,6 +156,4 @@ async def test_users_me_applies_admin_allowlist_for_existing_session(monkeypatch
             assert response.status_code == 200, response.text
             assert response.json()["is_admin"] is True
         finally:
-            await engine.dispose()
             await cleanup_users(phone_prefix)
-            await engine.dispose()

@@ -7,7 +7,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete
 from sqlmodel import select
 
-from app.database import AsyncSessionLocal, engine
+from app.database import AsyncSessionLocal
 from app.main import app
 from app.models import Partner, User
 from app.routers import partners as partner_router
@@ -66,7 +66,7 @@ async def partner_exists(partner_id: int) -> bool:
         return await session.get(Partner, partner_id) is not None
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_partner_register_passes_without_admin_telegram_env(monkeypatch) -> None:
     monkeypatch.delenv("ADMIN_TELEGRAM_BOT_TOKEN", raising=False)
     monkeypatch.delenv("ADMIN_TELEGRAM_CHAT_ID", raising=False)
@@ -84,10 +84,9 @@ async def test_partner_register_passes_without_admin_telegram_env(monkeypatch) -
             assert await partner_exists(response.json()["id"])
         finally:
             await cleanup_test_data(phone_prefix)
-            await engine.dispose()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_partner_register_calls_admin_notification_when_env_is_configured(monkeypatch) -> None:
     monkeypatch.setenv("ADMIN_TELEGRAM_BOT_TOKEN", "admin-bot-token")
     monkeypatch.setenv("ADMIN_TELEGRAM_CHAT_ID", "-1001234567890")
@@ -111,10 +110,9 @@ async def test_partner_register_calls_admin_notification_when_env_is_configured(
             assert calls == [(response.json()["id"], user["id"])]
         finally:
             await cleanup_test_data(phone_prefix)
-            await engine.dispose()
 
 
-@pytest.mark.asyncio(loop_scope="module")
+@pytest.mark.asyncio
 async def test_partner_register_commits_when_admin_notification_fails(monkeypatch) -> None:
     monkeypatch.setenv("ADMIN_TELEGRAM_BOT_TOKEN", "admin-bot-token")
     monkeypatch.setenv("ADMIN_TELEGRAM_CHAT_ID", "-1001234567890")
@@ -136,4 +134,3 @@ async def test_partner_register_commits_when_admin_notification_fails(monkeypatc
             assert await partner_exists(response.json()["id"])
         finally:
             await cleanup_test_data(phone_prefix)
-            await engine.dispose()
