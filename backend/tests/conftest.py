@@ -1,4 +1,8 @@
+import os
+
 import pytest
+
+os.environ["POLKA_TESTING"] = "1"
 
 
 @pytest.fixture(autouse=True)
