@@ -69,7 +69,6 @@ export const useAuth = () => {
           try {
             await authWithTelegram();
           } catch (telegramError) {
-            console.warn("Telegram auth retry failed", telegramError);
             if (isTelegramAuthContext()) setTelegramAuthError(classifyTelegramAuthError(telegramError));
           }
         } finally {
@@ -81,7 +80,6 @@ export const useAuth = () => {
       try {
         await authWithTelegram();
       } catch (error) {
-        console.warn("Telegram auth failed", error);
         if (isTelegramAuthContext()) setTelegramAuthError(classifyTelegramAuthError(error));
       } finally {
         setIsLoading(false);

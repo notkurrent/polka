@@ -67,14 +67,14 @@ export default function BizScanPage() {
         } else {
           setError("QR не похож на код Polka.");
         }
-        scanner.clear().catch(console.error);
+        scanner.clear().catch(() => undefined);
         setScannerActive(false);
       },
       () => undefined,
     );
 
     return () => {
-      scanner.clear().catch(console.error);
+      scanner.clear().catch(() => undefined);
     };
   }, [scannerActive]);
 

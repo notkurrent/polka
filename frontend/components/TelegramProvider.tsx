@@ -77,8 +77,8 @@ export function TelegramProvider() {
         ) {
           try {
             webApp.requestFullscreen();
-          } catch (e) {
-            console.warn("Fullscreen not supported", e);
+          } catch {
+            // Older Telegram clients can expose the method but reject the call.
           }
         }
 
@@ -90,8 +90,8 @@ export function TelegramProvider() {
         ) {
           try {
             webApp.disableVerticalSwipes();
-          } catch (e) {
-            console.warn("Disable vertical swipes not supported", e);
+          } catch {
+            // Some Telegram clients reject this capability even when it is present.
           }
         }
 
@@ -101,8 +101,8 @@ export function TelegramProvider() {
         webApp.onEvent?.("safeAreaChanged", applyTelegramSafeAreas);
         webApp.onEvent?.("contentSafeAreaChanged", applyTelegramSafeAreas);
         webApp.onEvent?.("viewportChanged", applyTelegramSafeAreas);
-      } catch (error) {
-        console.error("Telegram WebApp Config Error:", error);
+      } catch {
+        // Telegram WebApp methods can fail in non-Telegram or restricted clients.
       }
 
       cleanup = () => {

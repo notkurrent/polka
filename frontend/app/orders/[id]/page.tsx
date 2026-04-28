@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import useSWR from "swr";
 import { tokens, Icon, QRCode, PillButton, Badge } from "@/components/ui/primitives";
 import AppHeader from "@/components/AppHeader";
-import { api } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 import { isActiveOrder, OrderDetail, statusLabel } from "@/lib/api-types";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -51,8 +51,7 @@ export default function ActiveOrderScreen() {
       const updated = await api.patch<OrderDetail>(`/orders/${id}`, { status: "EXPIRED" });
       mutate(updated, false);
     } catch (err) {
-      console.error(err);
-      setActionError(err instanceof Error ? err.message : "Не удалось отменить бронь");
+      setActionError(getApiErrorMessage(err, "Не удалось отменить бронь"));
     } finally {
       setCanceling(false);
     }
