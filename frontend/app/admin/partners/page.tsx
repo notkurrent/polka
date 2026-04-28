@@ -41,6 +41,12 @@ function actionLabel(action: AdminPartnerAction) {
   return "Вернуть на проверку";
 }
 
+function confirmationLabel(action: AdminPartnerAction) {
+  if (action === "reject") return "Сохранить отклонение";
+  if (action === "suspend") return "Сохранить блокировку";
+  return actionLabel(action);
+}
+
 function needsNote(action: AdminPartnerAction) {
   return action === "reject" || action === "suspend";
 }
@@ -52,7 +58,7 @@ function PartnerCard({
 }: {
   partner: AdminPartner;
   busy: boolean;
-  onAction: (partner: AdminPartner, action: AdminPartnerAction, note?: string) => Promise<void>;
+  onAction: (partner: AdminPartner, action: AdminPartnerAction, note?: string) => Promise<boolean>;
 }) {
   const t = tokens();
   const fontFn = FONT();
@@ -71,7 +77,14 @@ function PartnerCard({
       setNote(partner.review_note || "");
       return;
     }
-    await onAction(partner, action, needsNote(action) ? note : undefined);
+    const success = await onAction(partner, action, needsNote(action) ? note : undefined);
+    if (success) {
+      setNoteAction(null);
+      setNote("");
+    }
+  };
+
+  const cancelNoteAction = () => {
     setNoteAction(null);
     setNote("");
   };
@@ -175,23 +188,39 @@ function PartnerCard({
               outline: "none",
             }}
           />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+            <PillButton
+              size="sm"
+              variant="dangerOutline"
+              disabled={busy}
+              loading={busy}
+              onClick={() => void submitAction(noteAction)}
+            >
+              {confirmationLabel(noteAction)}
+            </PillButton>
+            <PillButton size="sm" variant="muted" disabled={busy} onClick={cancelNoteAction}>
+              Отмена
+            </PillButton>
+          </div>
         </div>
       ) : null}
 
-      <div style={{ display: "grid", gridTemplateColumns: actions.length > 1 ? "1fr 1fr" : "1fr", gap: 8 }}>
-        {actions.map((action) => (
-          <PillButton
-            key={action}
-            size="sm"
-            variant={action === "reject" || action === "suspend" ? "dangerOutline" : "dark"}
-            disabled={busy}
-            loading={busy && noteAction === action}
-            onClick={() => void submitAction(action)}
-          >
-            {noteAction === action ? "Сохранить" : actionLabel(action)}
-          </PillButton>
-        ))}
-      </div>
+      {!noteAction ? (
+        <div style={{ display: "grid", gridTemplateColumns: actions.length > 1 ? "1fr 1fr" : "1fr", gap: 8 }}>
+          {actions.map((action) => (
+            <PillButton
+              key={action}
+              size="sm"
+              variant={action === "reject" || action === "suspend" ? "dangerOutline" : "dark"}
+              disabled={busy}
+              loading={busy}
+              onClick={() => void submitAction(action)}
+            >
+              {actionLabel(action)}
+            </PillButton>
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -214,8 +243,10 @@ export default function AdminPartnersPage() {
     try {
       await adminApi.moderatePartner(partner.id, action, note);
       await mutate();
+      return true;
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Не удалось выполнить действие");
+      return false;
     } finally {
       setBusyId(null);
     }

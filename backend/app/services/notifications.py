@@ -95,3 +95,11 @@ async def notify_admin_partner_registered(partner: Partner, user: User) -> None:
             user.id,
             data,
         )
+        return
+
+    logger.info(
+        "admin.telegram.sent partner_id=%s user_id=%s chat_id=%s",
+        partner.id,
+        user.id,
+        chat_id,
+    )
