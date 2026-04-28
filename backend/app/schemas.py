@@ -23,6 +23,11 @@ class PartnerProfileDTO(PartnerPublicDTO):
     reviewed_at: datetime | None = None
 
 
+class AdminPartnerDTO(PartnerProfileDTO):
+    user_id: int
+    reviewed_by_user_id: int | None = None
+
+
 class OfferPublicDTO(BaseModel):
     id: int
     partner_id: int
