@@ -10,7 +10,7 @@ from sqlmodel import select
 
 from app.database import AsyncSessionLocal
 from app.main import app
-from app.models import Offer, Order, Partner, Rating, User
+from app.models import Offer, OfferType, Order, Partner, PartnerStatus, Rating, User
 
 
 ALMATY_LAT = 43.238949
@@ -34,7 +34,22 @@ async def web_register(client: AsyncClient, phone: str, name: str) -> tuple[str,
     return payload["access_token"], payload["user"]
 
 
-async def register_partner(client: AsyncClient, token: str, name: str) -> dict:
+async def approve_partner(partner_id: int) -> None:
+    async with AsyncSessionLocal() as session:
+        partner = await session.get(Partner, partner_id)
+        assert partner is not None
+        partner.status = PartnerStatus.APPROVED
+        session.add(partner)
+        await session.commit()
+
+
+async def register_partner(
+    client: AsyncClient,
+    token: str,
+    name: str,
+    *,
+    approve: bool = True,
+) -> dict:
     response = await client.post(
         "/partner-api/register",
         headers=auth_headers(token),
@@ -49,7 +64,11 @@ async def register_partner(client: AsyncClient, token: str, name: str) -> dict:
         },
     )
     assert response.status_code == 200, response.text
-    return response.json()
+    partner = response.json()
+    if approve:
+        await approve_partner(partner["id"])
+        partner["status"] = PartnerStatus.APPROVED.value
+    return partner
 
 
 async def create_offer(
@@ -111,7 +130,7 @@ async def cleanup_smoke_data(phone_prefix: str) -> None:
         await session.commit()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 async def test_order_lifecycle_smoke() -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7799{run_id}"
@@ -270,5 +289,112 @@ async def test_order_lifecycle_smoke() -> None:
             cancel_offer_after = await client.get(f"/offers/{cancel_offer['id']}")
             assert cancel_offer_after.status_code == 200
             assert cancel_offer_after.json()["offer"]["stock"] == 1
+        finally:
+            await cleanup_smoke_data(phone_prefix)
+
+
+@pytest.mark.asyncio(loop_scope="module")
+async def test_pending_partner_can_not_create_offer() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7798{run_id}"
+    partner_phone = f"{phone_prefix}01"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Pending Partner {run_id}")
+            partner = await register_partner(
+                client,
+                partner_token,
+                f"Pending Bakery {run_id}",
+                approve=False,
+            )
+            assert partner["status"] == PartnerStatus.PENDING.value
+
+            response = await client.post(
+                "/partner-api/offers",
+                headers=auth_headers(partner_token),
+                json={
+                    "type": "MAGIC_BOX",
+                    "name": f"Blocked Magic Box {run_id}",
+                    "old_price": str(Decimal("4200.00")),
+                    "new_price": str(Decimal("1600.00")),
+                    "stock": 2,
+                },
+            )
+            assert response.status_code == 403
+        finally:
+            await cleanup_smoke_data(phone_prefix)
+
+
+@pytest.mark.asyncio(loop_scope="module")
+async def test_pending_partner_offer_is_hidden_from_buyer() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7797{run_id}"
+    partner_phone = f"{phone_prefix}01"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Hidden Partner {run_id}")
+            partner = await register_partner(
+                client,
+                partner_token,
+                f"Hidden Bakery {run_id}",
+                approve=False,
+            )
+            async with AsyncSessionLocal() as session:
+                offer = Offer(
+                    partner_id=partner["id"],
+                    type=OfferType.MAGIC_BOX,
+                    name=f"Hidden Magic Box {run_id}",
+                    old_price=Decimal("4200.00"),
+                    new_price=Decimal("1600.00"),
+                    stock=2,
+                )
+                session.add(offer)
+                await session.commit()
+                await session.refresh(offer)
+                offer_id = offer.id
+
+            offers_response = await client.get("/offers/")
+            assert offers_response.status_code == 200
+            assert all(item["id"] != offer_id for item in offers_response.json())
+
+            detail_response = await client.get(f"/offers/{offer_id}")
+            assert detail_response.status_code == 404
+
+            partner_response = await client.get(f"/partners/{partner['id']}")
+            assert partner_response.status_code == 404
+
+            nearby_response = await client.get(
+                "/offers/nearby",
+                params={"lat": ALMATY_LAT, "lon": ALMATY_LON, "radius": 5000, "search": run_id},
+            )
+            assert nearby_response.status_code == 200
+            assert all(item["offer"]["id"] != offer_id for item in nearby_response.json())
+        finally:
+            await cleanup_smoke_data(phone_prefix)
+
+
+@pytest.mark.asyncio(loop_scope="module")
+async def test_approved_partner_can_create_offer() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7796{run_id}"
+    partner_phone = f"{phone_prefix}01"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Approved Partner {run_id}")
+            await register_partner(client, partner_token, f"Approved Bakery {run_id}", approve=True)
+
+            offer = await create_offer(
+                client,
+                partner_token,
+                name=f"Approved Magic Box {run_id}",
+                stock=2,
+            )
+            assert offer["id"]
         finally:
             await cleanup_smoke_data(phone_prefix)

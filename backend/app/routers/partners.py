@@ -14,18 +14,20 @@ from sqlmodel import select
 
 from app.database import get_session
 from app.dependencies import get_current_user
-from app.models import Offer, OfferType, Order, OrderStatus, Partner, User, UserRole
+from app.models import Offer, OfferType, Order, OrderStatus, Partner, PartnerStatus, User, UserRole
 from app.order_lifecycle import ACTIVE_ORDER_STATUSES, normalize_order_status
 from app.schemas import (
     OfferPublicDTO,
     OrderDetailDTO,
     PartnerDetailDTO,
+    PartnerProfileDTO,
     PartnerPublicDTO,
 )
 from app.serializers import (
     build_offer_dto,
     build_order_detail_dto,
     build_partner_dto,
+    build_partner_profile_dto,
 )
 
 router = APIRouter(prefix="/partner-api", tags=["partner"])
@@ -104,6 +106,7 @@ async def get_current_partner(user: User, session: AsyncSession) -> Partner:
             hours="09:00-21:00",
             description="Dev partner profile.",
             category="dev",
+            status=PartnerStatus.APPROVED,
         )
         session.add(partner)
         await session.flush()
@@ -113,6 +116,13 @@ async def get_current_partner(user: User, session: AsyncSession) -> Partner:
         return partner
 
     raise HTTPException(status_code=404, detail="Partner profile not found")
+
+
+async def get_approved_partner(user: User, session: AsyncSession) -> Partner:
+    partner = await get_current_partner(user, session)
+    if partner.status == PartnerStatus.APPROVED:
+        return partner
+    raise HTTPException(status_code=403, detail="Partner account is not approved")
 
 
 async def get_partner_location_row(session: AsyncSession, partner_id: int):
@@ -220,7 +230,7 @@ def compact_address_label(item: dict) -> str:
     return display_name
 
 
-@router.get("/profile", response_model=PartnerPublicDTO)
+@router.get("/profile", response_model=PartnerProfileDTO)
 async def get_partner_profile(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -228,7 +238,7 @@ async def get_partner_profile(
     partner = await get_current_partner(current_user, session)
     row = await get_partner_location_row(session, partner.id)
     partner, lat, lon = row
-    return build_partner_dto(
+    return build_partner_profile_dto(
         partner,
         lat=float(lat) if lat is not None else None,
         lon=float(lon) if lon is not None else None,
@@ -304,8 +314,13 @@ async def get_partner_detail(
         raise HTTPException(status_code=404, detail="Partner not found")
 
     partner, lat, lon = row
+    if partner.status != PartnerStatus.APPROVED:
+        raise HTTPException(status_code=404, detail="Partner not found")
+
     offers_result = await session.execute(
-        select(Offer).where(Offer.partner_id == partner.id).order_by(Offer.created_at.desc())
+        select(Offer)
+        .where(Offer.partner_id == partner.id)
+        .order_by(Offer.created_at.desc())
     )
 
     return PartnerDetailDTO(
@@ -318,7 +333,7 @@ async def get_partner_detail(
     )
 
 
-@router.post("/register", response_model=PartnerPublicDTO)
+@router.post("/register", response_model=PartnerProfileDTO)
 async def register_partner(
     req: PartnerRegister,
     current_user: User = Depends(get_current_user),
@@ -338,6 +353,7 @@ async def register_partner(
         hours=req.hours or "09:00-21:00",
         category=req.type,
         description=req.description,
+        status=PartnerStatus.PENDING,
     )
     session.add(partner)
     await session.flush()
@@ -349,7 +365,7 @@ async def register_partner(
     await session.commit()
     row = await get_partner_location_row(session, partner.id)
     partner, lat, lon = row
-    return build_partner_dto(
+    return build_partner_profile_dto(
         partner,
         lat=float(lat) if lat is not None else None,
         lon=float(lon) if lon is not None else None,
@@ -403,12 +419,14 @@ async def create_partner_offer(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    partner = await get_current_partner(current_user, session)
+    partner = await get_approved_partner(current_user, session)
 
     new_offer = Offer(
         partner_id=partner.id,
         type=req.type,
         name=req.name,
+        description=req.description,
+        pickup_time=req.pickup_time,
         old_price=req.old_price,
         new_price=req.new_price,
         stock=req.stock,
@@ -426,7 +444,7 @@ async def update_partner_offer(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    partner = await get_current_partner(current_user, session)
+    partner = await get_approved_partner(current_user, session)
 
     query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id)
     result = await session.execute(query)
@@ -451,7 +469,7 @@ async def delete_partner_offer(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    partner = await get_current_partner(current_user, session)
+    partner = await get_approved_partner(current_user, session)
 
     query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id)
     result = await session.execute(query)
@@ -477,7 +495,7 @@ async def get_partner_orders(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    partner = await get_current_partner(current_user, session)
+    partner = await get_approved_partner(current_user, session)
 
     query = (
         select(Order, Offer, Partner)
@@ -519,7 +537,7 @@ async def verify_order_code(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    partner = await get_current_partner(current_user, session)
+    partner = await get_approved_partner(current_user, session)
     order_id, code = parse_code_payload(req)
 
     query = (
@@ -591,7 +609,7 @@ async def update_order_status(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    partner = await get_current_partner(current_user, session)
+    partner = await get_approved_partner(current_user, session)
     next_status = normalize_order_status(req.status)
 
     if next_status == OrderStatus.COMPLETED:

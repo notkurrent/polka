@@ -9,6 +9,7 @@ from app.schemas import (
     OrderItemDTO,
     OrderOfferDTO,
     OrderPartnerDTO,
+    PartnerProfileDTO,
     PartnerPublicDTO,
 )
 
@@ -35,6 +36,27 @@ def build_partner_dto(
         description=partner.description or "",
         lat=lat,
         lon=lon,
+    )
+
+
+def build_partner_profile_dto(
+    partner: Partner,
+    *,
+    lat: float | None = None,
+    lon: float | None = None,
+) -> PartnerProfileDTO:
+    return PartnerProfileDTO(
+        id=partner.id,
+        name=partner.name,
+        address=partner.address,
+        hours=partner.hours,
+        category=partner.category or "",
+        description=partner.description or "",
+        lat=lat,
+        lon=lon,
+        status=partner.status,
+        review_note=partner.review_note,
+        reviewed_at=partner.reviewed_at,
     )
 
 

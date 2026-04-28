@@ -6,7 +6,7 @@ import logging
 import random
 
 from app.database import get_session
-from app.models import Order, OrderStatus, Offer, Partner, Rating, User
+from app.models import Order, OrderStatus, Offer, Partner, PartnerStatus, Rating, User
 from app.dependencies import get_current_user
 from app.schemas import OrderDetailDTO
 from app.serializers import build_order_detail_dto
@@ -51,7 +51,12 @@ async def create_order(
     session: AsyncSession = Depends(get_session)
 ):
     try:
-        query = select(Offer).where(Offer.id == req.offer_id).with_for_update()
+        query = (
+            select(Offer)
+            .join(Partner, Offer.partner_id == Partner.id)
+            .where(Offer.id == req.offer_id, Partner.status == PartnerStatus.APPROVED)
+            .with_for_update()
+        )
         result = await session.execute(query)
         offer = result.scalar_one_or_none()
 

@@ -11,6 +11,12 @@ class UserRole(str, enum.Enum):
     BUYER = "BUYER"
     PARTNER = "PARTNER"
 
+class PartnerStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    SUSPENDED = "SUSPENDED"
+
 class OfferType(str, enum.Enum):
     MAGIC_BOX = "MAGIC_BOX"
     SPECIFIC = "SPECIFIC"
@@ -30,6 +36,7 @@ class User(SQLModel, table=True):
     name: str
     role: UserRole = Field(sa_column=Column(Enum(UserRole)))
     is_tma: bool = Field(default=False)
+    is_admin: bool = Field(default=False)
     created_at: datetime = Field(
         sa_column=Column(
             DateTime(timezone=True),
@@ -54,6 +61,16 @@ class Partner(SQLModel, table=True):
     hours: str
     description: str = Field(default="")
     category: str = Field(default="")
+    status: PartnerStatus = Field(
+        default=PartnerStatus.PENDING,
+        sa_column=Column(Enum(PartnerStatus), nullable=False),
+    )
+    review_note: Optional[str] = Field(default=None)
+    reviewed_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
+    reviewed_by_user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     location: Optional[str] = Field(
         sa_column=Column(Geometry("POINT", srid=4326, spatial_index=False)),
         default=None

@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from app.models import OfferType
+from app.models import OfferType, PartnerStatus
 
 
 class PartnerPublicDTO(BaseModel):
@@ -15,6 +15,12 @@ class PartnerPublicDTO(BaseModel):
     description: str = ""
     lat: float | None = None
     lon: float | None = None
+
+
+class PartnerProfileDTO(PartnerPublicDTO):
+    status: PartnerStatus
+    review_note: str | None = None
+    reviewed_at: datetime | None = None
 
 
 class OfferPublicDTO(BaseModel):

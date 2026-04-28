@@ -6,7 +6,7 @@ from typing import Optional
 from geoalchemy2 import Geography
 
 from app.database import get_session
-from app.models import Offer, OfferType, Partner
+from app.models import Offer, OfferType, Partner, PartnerStatus
 from app.schemas import OfferPublicDTO, OfferWithPartnerDTO
 from app.serializers import build_offer_dto, build_offer_with_partner_dto
 
@@ -17,7 +17,11 @@ async def get_offers(
     type: Optional[OfferType] = None,
     session: AsyncSession = Depends(get_session)
 ):
-    query = select(Offer).where(Offer.stock > 0)
+    query = (
+        select(Offer)
+        .join(Partner, Offer.partner_id == Partner.id)
+        .where(Offer.stock > 0, Partner.status == PartnerStatus.APPROVED)
+    )
     if type:
         query = query.where(Offer.type == type)
 
@@ -49,6 +53,7 @@ async def get_nearby_offers(
         .join(Partner, Offer.partner_id == Partner.id)
         .where(
             Offer.stock > 0,
+            Partner.status == PartnerStatus.APPROVED,
             Partner.location.is_not(None),
             func.ST_DWithin(
                 partner_location,
@@ -123,7 +128,7 @@ async def get_offer_detail(
             func.ST_X(Partner.location).label("lon"),
         )
         .join(Partner, Offer.partner_id == Partner.id)
-        .where(Offer.id == offer_id)
+        .where(Offer.id == offer_id, Partner.status == PartnerStatus.APPROVED)
     )
     result = await session.execute(query)
     row = result.one_or_none()

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.database import AsyncSessionLocal
-from app.models import Offer, OfferType, Order, OrderStatus, Partner, User, UserRole
+from app.models import Offer, OfferType, Order, OrderStatus, Partner, PartnerStatus, User, UserRole
 from app.utils.auth import hash_password
 
 
@@ -64,6 +64,7 @@ async def upsert_partner(session: AsyncSession, user: User) -> Partner:
             hours="08:00-21:00",
             description="Свежая выпечка и готовые позиции рядом с центром Алматы.",
             category="bakery",
+            status=PartnerStatus.APPROVED,
         )
         session.add(partner)
         await session.flush()
@@ -73,6 +74,7 @@ async def upsert_partner(session: AsyncSession, user: User) -> Partner:
         partner.hours = "08:00-21:00"
         partner.description = "Свежая выпечка и готовые позиции рядом с центром Алматы."
         partner.category = "bakery"
+        partner.status = PartnerStatus.APPROVED
         session.add(partner)
         await session.flush()
 

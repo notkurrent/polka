@@ -79,6 +79,7 @@ def auth_user_payload(user: User) -> dict:
         "email": user.email,
         "role": user.role.value,
         "is_tma": user.is_tma,
+        "is_admin": user.is_admin,
         "has_password": bool(user.password_hash),
         "has_telegram": bool(user.tg_id),
     }
