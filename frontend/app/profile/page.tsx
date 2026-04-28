@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
@@ -15,12 +15,19 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const setSelectedMode = useAppStore((s) => s.setSelectedMode);
+  const setSelectedModeForUser = useAppStore((s) => s.setSelectedModeForUser);
   const t = tokens();
+  const [mounted, setMounted] = useState(false);
 
-  const name = user?.name || "Пользователь";
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const hydratedUser = mounted ? user : null;
+  const name = hydratedUser?.name || "Пользователь";
   const initial = name.charAt(0).toUpperCase();
-  const phone = user?.phone || "Телефон не добавлен";
-  const accountIncomplete = isTelegramAccountIncomplete(user);
+  const phone = hydratedUser?.phone || "Телефон не добавлен";
+  const accountIncomplete = isTelegramAccountIncomplete(hydratedUser);
 
   const handleLogout = () => {
     logout();
@@ -28,11 +35,16 @@ export default function ProfileScreen() {
   };
 
   const openBusinessCabinet = () => {
-    setSelectedMode("business");
-    router.push(user?.role === "PARTNER" ? "/biz" : "/biz/register");
+    if (hydratedUser?.id) {
+      setSelectedModeForUser(hydratedUser.id, "business");
+    } else {
+      setSelectedMode("business");
+    }
+    router.push(hydratedUser?.role === "PARTNER" ? "/biz" : "/biz/register");
   };
 
   const menuItems = [
+    ...(hydratedUser?.is_admin === true ? [{ label: "Админка", path: "/admin/partners" }] : []),
     { label: "Уведомления", path: "/profile/notifications" },
     { label: "Способы оплаты", path: "/profile/payment" },
     { label: "Помощь и поддержка", path: "/profile/support" },
@@ -92,28 +104,28 @@ export default function ProfileScreen() {
               style={{
                 padding: "6px 10px",
                 borderRadius: 999,
-                background: hasTelegramIdentity(user) ? t.primarySoft : t.surface,
-                color: hasTelegramIdentity(user) ? t.primaryDeep : t.textSec,
+                background: hasTelegramIdentity(hydratedUser) ? t.primarySoft : t.surface,
+                color: hasTelegramIdentity(hydratedUser) ? t.primaryDeep : t.textSec,
                 fontSize: 12,
                 fontWeight: 650,
               }}
             >
-              {hasTelegramIdentity(user) ? "Telegram привязан" : "Telegram не привязан"}
+              {hasTelegramIdentity(hydratedUser) ? "Telegram привязан" : "Telegram не привязан"}
             </span>
             <span
               style={{
                 padding: "6px 10px",
                 borderRadius: 999,
-                background: user?.phone ? t.primarySoft : t.surface,
-                color: user?.phone ? t.primaryDeep : t.textSec,
+                background: hydratedUser?.phone ? t.primarySoft : t.surface,
+                color: hydratedUser?.phone ? t.primaryDeep : t.textSec,
                 fontSize: 12,
                 fontWeight: 650,
               }}
             >
-              {user?.phone ? "Телефон добавлен" : "Телефон не добавлен"}
+              {hydratedUser?.phone ? "Телефон добавлен" : "Телефон не добавлен"}
             </span>
           </div>
-          {!hasPassword(user) && user?.phone && (
+          {!hasPassword(hydratedUser) && hydratedUser?.phone && (
             <div style={{ fontSize: 12, lineHeight: 1.45, color: t.textSec }}>Пароль для входа на сайте ещё не задан.</div>
           )}
         </div>

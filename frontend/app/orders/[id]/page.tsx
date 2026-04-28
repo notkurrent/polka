@@ -266,9 +266,25 @@ export default function ActiveOrderScreen() {
               Оценить заказ
             </PillButton>
           ) : active ? (
-            <PillButton variant="dark" size="lg" disabled>
-              Покажите код продавцу
-            </PillButton>
+            <div
+              style={{
+                minHeight: 56,
+                padding: "12px 18px",
+                borderRadius: 16,
+                border: `1px solid ${t.divider}`,
+                background: t.surface,
+                color: t.textSec,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                fontSize: 14,
+                fontWeight: 650,
+                lineHeight: 1.35,
+              }}
+            >
+              Покажите QR или 4-значный код продавцу
+            </div>
           ) : (
             <PillButton onClick={() => router.push("/")} variant="outline" size="lg">
               Найти ещё позиции

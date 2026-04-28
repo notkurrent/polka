@@ -34,6 +34,7 @@ interface AppState {
   activateUserMode: (userId: number) => void;
   deactivateUserMode: () => void;
   setSelectedMode: (mode: SelectedMode | null) => void;
+  setSelectedModeForUser: (userId: number, mode: SelectedMode | null) => void;
   clearSelectedMode: () => void;
   dismissAccountLinkPrompt: () => void;
   dismissAccountCompletionPrompt: () => void;
@@ -76,6 +77,21 @@ export const useAppStore = create<AppState>()(
             delete selectedModeByUser[key];
           }
           return { selectedMode: mode, selectedModeByUser };
+        }),
+      setSelectedModeForUser: (userId, mode) =>
+        set((state) => {
+          const key = String(userId);
+          const selectedModeByUser = { ...state.selectedModeByUser };
+          if (mode) {
+            selectedModeByUser[key] = mode;
+          } else {
+            delete selectedModeByUser[key];
+          }
+          return {
+            activeUserId: userId,
+            selectedMode: mode,
+            selectedModeByUser,
+          };
         }),
       clearSelectedMode: () =>
         set((state) => {

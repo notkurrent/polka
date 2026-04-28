@@ -54,6 +54,7 @@ export default function AppScreenBuyerPage() {
     favorites,
     accountLinkPromptDismissed,
     accountCompletionPromptDismissed,
+    setSelectedModeForUser,
     toggleFavorite,
     dismissAccountLinkPrompt,
     dismissAccountCompletionPrompt,
@@ -81,6 +82,11 @@ export default function AppScreenBuyerPage() {
   useEffect(() => {
     if (authLoading) return;
     const isTMA = isTelegramAuthContext();
+    const requestedMode =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("mode") ||
+          window.sessionStorage.getItem("polka:requested-mode")
+        : null;
 
     if (!isAuthenticated) {
       if (isTMA) {
@@ -89,14 +95,30 @@ export default function AppScreenBuyerPage() {
       } else {
         router.replace("/landing");
       }
-    } else if (!selectedMode) {
+      return;
+    }
+
+    if (requestedMode === "buyer") {
+      if (user?.id) {
+        setSelectedModeForUser(user.id, "buyer");
+      }
+      window.sessionStorage.removeItem("polka:requested-mode");
+      if (!onboardingDone) {
+        router.replace("/onboarding");
+      } else if (window.location.search) {
+        router.replace("/");
+      }
+      return;
+    }
+
+    if (!selectedMode) {
       router.replace("/choose-role?auto=1");
     } else if (selectedMode === "business") {
       router.replace(nextRouteForBusiness(user));
     } else if (!onboardingDone) {
       router.replace("/onboarding");
     }
-  }, [authLoading, isAuthenticated, onboardingDone, router, selectedMode, user]);
+  }, [authLoading, isAuthenticated, onboardingDone, router, selectedMode, setSelectedModeForUser, user]);
 
   if (!authLoading && isTelegramAuthContext() && !isAuthenticated && telegramAuthError) {
     const telegramAuthCopy = {

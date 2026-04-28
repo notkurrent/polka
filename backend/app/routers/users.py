@@ -7,6 +7,7 @@ from app.database import get_session
 from app.dependencies import get_current_user
 from app.models import User
 from app.routers.auth import normalize_phone
+from app.utils.admin_bootstrap import apply_admin_bootstrap
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -18,7 +19,15 @@ class UpdateUser(BaseModel):
 
 
 @router.get("/me")
-async def get_me(current_user: User = Depends(get_current_user)):
+async def get_me(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    if apply_admin_bootstrap(current_user):
+        session.add(current_user)
+        await session.commit()
+        await session.refresh(current_user)
+
     return {
         "id": current_user.id,
         "name": current_user.name,
@@ -67,6 +76,8 @@ async def update_me(
 
     for key, value in update_data.items():
         setattr(current_user, key, value)
+
+    apply_admin_bootstrap(current_user)
 
     session.add(current_user)
     await session.commit()

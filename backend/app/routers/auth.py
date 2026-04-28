@@ -8,6 +8,7 @@ from app.utils.auth import (
     verify_password,
     verify_telegram_web_app_data,
 )
+from app.utils.admin_bootstrap import apply_admin_bootstrap
 from app.database import get_session
 from app.models import User, UserRole
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -144,6 +145,11 @@ async def telegram_auth(req: TelegramAuthRequest, session: AsyncSession = Depend
         await session.commit()
         await session.refresh(user)
 
+    if apply_admin_bootstrap(user):
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
     return auth_response(user)
 
 
@@ -174,6 +180,10 @@ async def link_telegram_web_account(
         )
 
     if current_user.id == target_user.id:
+        if apply_admin_bootstrap(target_user):
+            session.add(target_user)
+            await session.commit()
+            await session.refresh(target_user)
         return auth_response(target_user)
 
     tg_id = current_user.tg_id
@@ -183,6 +193,7 @@ async def link_telegram_web_account(
 
     target_user.tg_id = tg_id
     target_user.is_tma = True
+    apply_admin_bootstrap(target_user)
 
     session.add(target_user)
     await session.commit()
@@ -217,6 +228,7 @@ async def complete_telegram_account(
         current_user.phone = phone
         current_user.password_hash = password_hash
         current_user.is_tma = True
+        apply_admin_bootstrap(current_user)
         session.add(current_user)
         await session.commit()
         await session.refresh(current_user)
@@ -226,6 +238,7 @@ async def complete_telegram_account(
         if not current_user.password_hash:
             current_user.password_hash = password_hash
         current_user.is_tma = True
+        apply_admin_bootstrap(current_user)
         session.add(current_user)
         await session.commit()
         await session.refresh(current_user)
@@ -278,6 +291,7 @@ async def register_web(req: RegisterRequest, session: AsyncSession = Depends(get
         role=UserRole.BUYER,
         is_tma=False,
     )
+    apply_admin_bootstrap(user)
     session.add(user)
     await session.commit()
     await session.refresh(user)
@@ -294,6 +308,11 @@ async def login_web(req: LoginRequest, session: AsyncSession = Depends(get_sessi
     if user is None or not verify_password(req.password, user.password_hash):
         logger.info("auth.web_login_invalid phone_suffix=%s", phone[-4:])
         raise HTTPException(status_code=401, detail="Invalid phone or password")
+
+    if apply_admin_bootstrap(user):
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
 
     return auth_response(user)
 
@@ -326,6 +345,11 @@ async def verify_otp(req: VerifyOtpRequest, session: AsyncSession = Depends(get_
             role=UserRole.BUYER,
             is_tma=False,
         )
+        apply_admin_bootstrap(user)
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+    elif apply_admin_bootstrap(user):
         session.add(user)
         await session.commit()
         await session.refresh(user)

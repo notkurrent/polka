@@ -9,15 +9,16 @@ interface EmptyStateProps {
   description: string;
   action?: React.ReactNode;
   compact?: boolean;
+  fill?: boolean;
 }
 
-export function EmptyState({ icon, title, description, action, compact = false }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, compact = false, fill = true }: EmptyStateProps) {
   const t = tokens();
 
   return (
     <div
       style={{
-        minHeight: compact ? undefined : "calc(100dvh - 220px)",
+        minHeight: compact || !fill ? undefined : "calc(100dvh - 220px)",
         padding: compact ? "24px 20px" : "40px 32px",
         display: "flex",
         flexDirection: "column",

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import Script from "next/script";
 import "../app/globals.css";
 import { TelegramProvider } from "@/components/TelegramProvider";
 
@@ -36,9 +35,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <Script src="https://telegram.org/js/telegram-web-app.js?v=7.10" strategy="beforeInteractive" />
-      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <TelegramProvider />
         <div className="app-shell">{children}</div>

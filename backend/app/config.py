@@ -51,6 +51,14 @@ def get_admin_panel_url() -> str:
     return os.getenv("ADMIN_PANEL_URL", "")
 
 
+def get_admin_phone_allowlist() -> list[str]:
+    return parse_csv_env("ADMIN_PHONE_ALLOWLIST", [])
+
+
+def get_admin_tg_id_allowlist() -> list[str]:
+    return parse_csv_env("ADMIN_TG_ID_ALLOWLIST", [])
+
+
 def parse_csv_env(name: str, default: list[str]) -> list[str]:
     raw = os.getenv(name)
     if raw is None:

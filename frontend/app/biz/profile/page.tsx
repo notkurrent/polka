@@ -20,11 +20,19 @@ export default function BizProfileScreen() {
   const fontFn = FONT ? FONT() : "system-ui";
   const { data: profile, isLoading, error } = useSWR("/partner-api/profile", bizApi.profile);
   const setSelectedMode = useAppStore((state) => state.setSelectedMode);
+  const setSelectedModeForUser = useAppStore((state) => state.setSelectedModeForUser);
   const { user, logout } = useAuthStore();
 
   const switchToBuyer = () => {
-    setSelectedMode("buyer");
-    router.push("/");
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("polka:requested-mode", "buyer");
+    }
+    if (user?.id) {
+      setSelectedModeForUser(user.id, "buyer");
+    } else {
+      setSelectedMode("buyer");
+    }
+    router.replace("/?mode=buyer");
   };
 
   const handleLogout = () => {
@@ -83,6 +91,7 @@ export default function BizProfileScreen() {
               }}
             >
               {[
+                ...(user?.is_admin === true ? [{ label: "Админка", href: "/admin/partners" }] : []),
                 { label: "Редактировать профиль", href: "/biz/profile/edit" },
                 { label: "Публичная страница", href: `/stores/${profile.id}` },
               ].map((item, i, arr) => (

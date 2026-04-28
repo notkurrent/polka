@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { AppHeaderBiz, AppScreenBiz } from "@/components/biz/BizShared";
 import { Badge, FONT, Icon, PillButton, tokens } from "@/components/ui/primitives";
@@ -228,6 +229,7 @@ function PartnerCard({
 export default function AdminPartnersPage() {
   const t = tokens();
   const fontFn = FONT();
+  const router = useRouter();
   const guard = useAdminGuard();
   const [status, setStatus] = useState<PartnerStatus>("PENDING");
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -259,7 +261,7 @@ export default function AdminPartnersPage() {
   if (guard.forbidden) {
     return (
       <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
-        <AppHeaderBiz title="Админка" />
+        <AppHeaderBiz title="Админка" onBack={() => router.back()} />
         <EmptyState
           icon={Icon.close(34, t.textTer)}
           title="Нет доступа"
@@ -272,7 +274,7 @@ export default function AdminPartnersPage() {
 
   return (
     <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
-      <AppHeaderBiz title="Модерация партнёров" />
+      <AppHeaderBiz title="Модерация партнёров" onBack={() => router.back()} />
 
       <div style={{ padding: "12px 16px 0" }}>
         <div

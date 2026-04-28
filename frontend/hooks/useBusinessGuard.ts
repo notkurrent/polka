@@ -14,6 +14,8 @@ export function useBusinessGuard() {
 
   useEffect(() => {
     if (isLoading) return;
+    const isSwitchingToBuyer =
+      typeof window !== "undefined" && window.sessionStorage.getItem("polka:requested-mode") === "buyer";
 
     if (!isAuthenticated) {
       if (!isTelegramAuthContext()) {
@@ -23,6 +25,7 @@ export function useBusinessGuard() {
     }
 
     if (selectedMode !== "business") {
+      if (isSwitchingToBuyer) return;
       router.replace("/choose-role");
       return;
     }

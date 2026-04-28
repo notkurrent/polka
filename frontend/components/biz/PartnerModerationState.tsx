@@ -76,6 +76,7 @@ export function PartnerModerationState({ profile, compact = false, context = "da
         title={copy.title}
         description={copy.description}
         compact={compact}
+        fill={false}
         action={
           status === "REJECTED" ? (
             <PillButtonBiz onClick={() => router.push("/biz/profile/edit")} style={{ width: "100%" }}>

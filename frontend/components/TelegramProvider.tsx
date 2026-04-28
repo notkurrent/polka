@@ -14,7 +14,13 @@ const px = (value: unknown) => `${Number(value) || 0}px`;
 
 export function TelegramProvider() {
   useEffect(() => {
-    if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+    if (typeof window === "undefined") return;
+
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+
+    const configureTelegram = () => {
+      if (cancelled || !window.Telegram?.WebApp) return;
       const webApp = window.Telegram.WebApp;
       const launchInfo = getTelegramLaunchInfo();
       const isTelegramLaunch = launchInfo.hasInitData || launchInfo.isLikelyTelegramWebView;
@@ -99,14 +105,29 @@ export function TelegramProvider() {
         console.error("Telegram WebApp Config Error:", error);
       }
 
-      return () => {
+      cleanup = () => {
         webApp.offEvent?.("safeAreaChanged", applyTelegramSafeAreas);
         webApp.offEvent?.("contentSafeAreaChanged", applyTelegramSafeAreas);
         webApp.offEvent?.("viewportChanged", applyTelegramSafeAreas);
         document.body.style.overscrollBehaviorY = previousOverscroll;
         delete root.dataset.telegramWebapp;
       };
+    };
+
+    if (window.Telegram?.WebApp) {
+      configureTelegram();
+    } else if (!document.querySelector('script[src^="https://telegram.org/js/telegram-web-app.js"]')) {
+      const script = document.createElement("script");
+      script.src = "https://telegram.org/js/telegram-web-app.js?v=7.10";
+      script.async = true;
+      script.onload = configureTelegram;
+      document.head.appendChild(script);
     }
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, []);
 
   return null;
