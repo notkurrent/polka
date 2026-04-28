@@ -3,9 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
 import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
+import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { bizApi, money, parseCodePayload, partnerErrorMessage, type ParsedCodePayload } from "@/lib/biz-api";
 import type { OrderDetail } from "@/lib/api-types";
 
@@ -28,6 +32,8 @@ export default function BizScanPage() {
   const t = tokens();
   const router = useRouter();
   const fontFn = FONT ? FONT() : "system-ui";
+  const { data: profile, isLoading: profileLoading, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
+  const isApproved = profile?.status === "APPROVED";
 
   const [initialPayload] = useState(initialCodePayload);
   const [digits, setDigits] = useState(() => (initialPayload?.code ? initialPayload.code.split("") : ["", "", "", ""]));
@@ -113,6 +119,39 @@ export default function BizScanPage() {
       setLoading(false);
     }
   };
+
+  if (profileLoading) {
+    return (
+      <AppScreenBiz style={{ fontFamily: fontFn }}>
+        <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
+        <div style={{ padding: "24px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <Skeleton w="100%" h={48} radius={14} />
+          <Skeleton w="100%" h={96} radius={14} />
+          <Skeleton w="100%" h={64} radius={14} />
+        </div>
+      </AppScreenBiz>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <AppScreenBiz style={{ fontFamily: fontFn }}>
+        <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
+        <div style={{ padding: 16 }}>
+          <ErrorState message={partnerErrorMessage(profileError)} />
+        </div>
+      </AppScreenBiz>
+    );
+  }
+
+  if (profile && !isApproved) {
+    return (
+      <AppScreenBiz style={{ fontFamily: fontFn }}>
+        <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
+        <PartnerModerationState profile={profile} context="feature" />
+      </AppScreenBiz>
+    );
+  }
 
   if (completed) {
     return (

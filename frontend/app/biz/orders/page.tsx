@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { tokens, FONT, Icon, Badge } from "@/components/ui/primitives";
 import { AppScreenBiz, AppHeaderBiz } from "@/components/biz/BizShared";
 import { BizTabBar } from "@/components/biz/BizTabBar";
+import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -29,7 +30,12 @@ export default function BizOrdersPage() {
   const t = tokens();
   const router = useRouter();
   const fontFn = FONT ? FONT() : "system-ui";
-  const { data: orders, isLoading, error } = useSWR<PartnerOrder[]>("/partner-api/orders", bizApi.orders);
+  const { data: profile, isLoading: profileLoading, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
+  const isApproved = profile?.status === "APPROVED";
+  const { data: orders, isLoading, error } = useSWR<PartnerOrder[]>(
+    isApproved ? "/partner-api/orders" : null,
+    bizApi.orders,
+  );
 
   const active = (orders || []).filter((order) => isActiveOrder(orderStatus(order)));
   const past = (orders || []).filter((order) => !isActiveOrder(orderStatus(order)));
@@ -97,8 +103,12 @@ export default function BizOrdersPage() {
       <AppHeaderBiz title="Заказы" />
 
       <div style={{ padding: "16px 16px" }}>
-        {loadingOrError(isLoading, error)}
-        {!isLoading && !error && (orders || []).length === 0 && (
+        {loadingOrError(profileLoading, profileError)}
+        {!profileLoading && !profileError && profile && !isApproved && (
+          <PartnerModerationState profile={profile} compact context="feature" />
+        )}
+        {isApproved && loadingOrError(isLoading, error)}
+        {isApproved && !isLoading && !error && (orders || []).length === 0 && (
           <EmptyState
             icon={Icon.list(34, t.textTer)}
             title="Пока нет заказов"
@@ -106,7 +116,7 @@ export default function BizOrdersPage() {
             compact
           />
         )}
-        {!isLoading && !error && (orders || []).length > 0 && (
+        {isApproved && !isLoading && !error && (orders || []).length > 0 && (
           <>
             <SectionTitle title="Активные" count={active.length} />
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>

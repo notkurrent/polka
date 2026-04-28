@@ -1,8 +1,9 @@
 "use client";
 
 import useSWR from "swr";
-import { AppHeaderBiz, StatTile } from "@/components/biz/BizShared";
+import { AppScreenBiz, AppHeaderBiz, StatTile } from "@/components/biz/BizShared";
 import { BizTabBar } from "@/components/biz/BizTabBar";
+import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
 import { Icon, tokens, FONT } from "@/components/ui/primitives";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -23,24 +24,40 @@ import {
 export default function BizAnalyticsScreen() {
   const t = tokens();
   const fontFn = FONT ? FONT() : "system-ui";
-  const { data: offers } = useSWR("/partner-api/offers", bizApi.offers);
-  const { data: orders, isLoading, error } = useSWR<PartnerOrder[]>("/partner-api/orders", bizApi.orders);
+  const { data: profile, isLoading: profileLoading, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
+  const isApproved = profile?.status === "APPROVED";
+  const { data: offers } = useSWR(isApproved ? "/partner-api/offers" : null, bizApi.offers);
+  const { data: orders, isLoading, error } = useSWR<PartnerOrder[]>(
+    isApproved ? "/partner-api/orders" : null,
+    bizApi.orders,
+  );
   const stats = buildBizStats(offers, orders);
   const completed = (orders || []).filter((order) => orderStatus(order).toUpperCase() === "COMPLETED").slice(0, 5);
 
   return (
-    <div className="screen-scroll-with-tabbar" style={{ background: t.bg, fontFamily: fontFn }}>
+    <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Аналитика" />
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
-        {isLoading && (
+        {profileLoading && (
           <>
             <Skeleton w="100%" h={68} radius={12} />
             <Skeleton w="100%" h={68} radius={12} />
             <Skeleton w="100%" h={160} radius={12} />
           </>
         )}
-        {error && <ErrorState message={partnerErrorMessage(error)} />}
-        {!isLoading && !error && (
+        {profileError && <ErrorState message={partnerErrorMessage(profileError)} />}
+        {!profileLoading && !profileError && profile && !isApproved && (
+          <PartnerModerationState profile={profile} compact context="feature" />
+        )}
+        {isApproved && isLoading && (
+          <>
+            <Skeleton w="100%" h={68} radius={12} />
+            <Skeleton w="100%" h={68} radius={12} />
+            <Skeleton w="100%" h={160} radius={12} />
+          </>
+        )}
+        {isApproved && error && <ErrorState message={partnerErrorMessage(error)} />}
+        {isApproved && !isLoading && !error && (
           <>
             <div style={{ display: "flex", gap: 8 }}>
               <StatTile value={money(stats.totalRevenue)} label="Выручка всего" accent />
@@ -103,6 +120,6 @@ export default function BizAnalyticsScreen() {
         )}
       </div>
       <BizTabBar />
-    </div>
+    </AppScreenBiz>
   );
 }

@@ -95,13 +95,13 @@ export default function BizRegisterPage() {
           </div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.4, textWrap: "pretty" }}>
-              Заведение готово
+              Заявка отправлена на проверку
             </div>
             <div style={{ fontSize: 13, color: t.textSec, marginTop: 8, lineHeight: 1.5, textWrap: "pretty" }}>
-              Профиль создан. Теперь можно опубликовать первую позицию и принимать брони.
+              Мы проверим данные заведения. После одобрения откроются позиции, брони и выдача заказов.
             </div>
           </div>
-          <Badge tone="solid">Статус · активен</Badge>
+          <Badge tone="amber">Статус · на проверке</Badge>
           <PillButtonBiz onClick={() => router.push("/biz")} style={{ marginTop: 16 }}>
             Перейти в кабинет
           </PillButtonBiz>

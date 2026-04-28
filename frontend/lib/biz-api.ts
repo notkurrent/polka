@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
-import type { OfferPublic, OrderDetail, PartnerPublic } from "@/lib/api-types";
+import type { OfferPublic, OrderDetail, PartnerProfile, PartnerPublic, PartnerStatus } from "@/lib/api-types";
 import { isActiveOrder, statusLabel } from "@/lib/api-types";
 
 export interface PartnerOrder extends OrderDetail {
@@ -130,8 +130,16 @@ export function partnerErrorMessage(error: unknown) {
   return message;
 }
 
+export function partnerStatusLabel(status?: PartnerStatus) {
+  if (status === "PENDING") return "На проверке";
+  if (status === "APPROVED") return "Одобрен";
+  if (status === "REJECTED") return "Отклонён";
+  if (status === "SUSPENDED") return "Заблокирован";
+  return "Статус неизвестен";
+}
+
 export const bizApi = {
-  profile: () => api.get<PartnerPublic>("/partner-api/profile"),
+  profile: () => api.get<PartnerProfile>("/partner-api/profile"),
   addressSuggestions: (query: string) =>
     api.get<AddressSuggestion[]>(`/partner-api/address-suggestions?q=${encodeURIComponent(query)}`),
   updateProfile: (body: Partial<PartnerPublic>) => api.patch<PartnerPublic>("/partner-api/profile", body),

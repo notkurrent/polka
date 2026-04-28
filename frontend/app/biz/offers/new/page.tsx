@@ -3,14 +3,20 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
 import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
+import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
 
 export default function BizCreateOfferPage() {
   const t = tokens();
   const router = useRouter();
   const fontFn = FONT ? FONT() : "system-ui";
+  const { data: profile, isLoading: profileLoading, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
+  const isApproved = profile?.status === "APPROVED";
 
   const [format, setFormat] = useState<"MAGIC_BOX" | "SPECIFIC">("MAGIC_BOX");
   const [title, setTitle] = useState("");
@@ -72,6 +78,22 @@ export default function BizCreateOfferPage() {
   return (
     <AppScreenBiz>
       <AppHeaderBiz title="Новая позиция" onBack={() => router.back()} />
+      {profileLoading && (
+        <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <Skeleton w="100%" h={78} radius={12} />
+          <Skeleton w="100%" h={78} radius={12} />
+          <Skeleton w="100%" h={120} radius={12} />
+        </div>
+      )}
+      {profileError && (
+        <div style={{ padding: 16 }}>
+          <ErrorState message={partnerErrorMessage(profileError)} />
+        </div>
+      )}
+      {!profileLoading && !profileError && profile && !isApproved && (
+        <PartnerModerationState profile={profile} context="feature" />
+      )}
+      {!profileLoading && !profileError && isApproved && (
       <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <Label>Формат</Label>
@@ -214,6 +236,7 @@ export default function BizCreateOfferPage() {
           {isSubmitting ? "Сохранение…" : "Опубликовать"}
         </PillButtonBiz>
       </div>
+      )}
     </AppScreenBiz>
   );
 }

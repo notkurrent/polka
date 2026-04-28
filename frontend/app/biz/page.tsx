@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
 import { BizTabBar } from "@/components/biz/BizTabBar";
 import { AppScreenBiz, StatTile, ActionCard, ReservationRow, type BizReservation } from "@/components/biz/BizShared";
+import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
 import {
   bizApi,
   buildBizStats,
@@ -20,6 +21,7 @@ import {
   type PartnerOrder,
 } from "@/lib/biz-api";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { OfferPublic } from "@/lib/api-types";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,9 +60,10 @@ export default function BizDashboardPage() {
   const dismissLinkPrompt = useAppStore((state) => state.dismissAccountLinkPrompt);
   const dismissCompletionPrompt = useAppStore((state) => state.dismissAccountCompletionPrompt);
 
-  const { data: profile, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
-  const { data: offers } = useSWR<OfferPublic[]>("/partner-api/offers", bizApi.offers);
-  const { data: orders, isLoading } = useSWR<PartnerOrder[]>("/partner-api/orders", bizApi.orders);
+  const { data: profile, error: profileError, isLoading: profileLoading } = useSWR("/partner-api/profile", bizApi.profile);
+  const isApproved = profile?.status === "APPROVED";
+  const { data: offers } = useSWR<OfferPublic[]>(isApproved ? "/partner-api/offers" : null, bizApi.offers);
+  const { data: orders, isLoading } = useSWR<PartnerOrder[]>(isApproved ? "/partner-api/orders" : null, bizApi.orders);
 
   const stats = buildBizStats(offers, orders);
   const activeReservations = (orders || []).filter((order) => isActiveOrder(orderStatus(order))).slice(0, 3);
@@ -150,7 +153,24 @@ export default function BizDashboardPage() {
         </div>
       )}
 
-      {!needsProfile && (
+      {!needsProfile && profileError && !profileLoading && (
+        <div style={{ padding: 16 }}>
+          <ErrorState message={partnerErrorMessage(profileError)} />
+        </div>
+      )}
+
+      {!needsProfile && profileLoading && (
+        <div style={{ padding: "14px 16px 0", display: "flex", flexDirection: "column", gap: 8 }}>
+          <Skeleton w="100%" h={74} radius={14} />
+          <Skeleton w="100%" h={74} radius={14} />
+        </div>
+      )}
+
+      {!needsProfile && !profileError && !profileLoading && profile && !isApproved && (
+        <PartnerModerationState profile={profile} />
+      )}
+
+      {!needsProfile && !profileError && !profileLoading && isApproved && (
         <>
           {isTelegramAccountIncomplete(user) && (!completionPromptDismissed || !linkPromptDismissed) && (
             <div style={{ padding: "14px 16px 0" }}>

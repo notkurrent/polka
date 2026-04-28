@@ -4,8 +4,9 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
+import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
 import { BizTabBar } from "@/components/biz/BizTabBar";
+import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
 import { Badge, PriceTag, StripePlaceholder, tokens, FONT, Icon } from "@/components/ui/primitives";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -17,7 +18,12 @@ export default function BizOffersListScreen() {
   const router = useRouter();
   const t = tokens();
   const fontFn = FONT ? FONT() : "system-ui";
-  const { data: offers, isLoading, mutate, error } = useSWR<OfferPublic[]>("/partner-api/offers", bizApi.offers);
+  const { data: profile, isLoading: profileLoading, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
+  const isApproved = profile?.status === "APPROVED";
+  const { data: offers, isLoading, mutate, error } = useSWR<OfferPublic[]>(
+    isApproved ? "/partner-api/offers" : null,
+    bizApi.offers,
+  );
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draft, setDraft] = useState({
     name: "",
@@ -82,10 +88,11 @@ export default function BizOffersListScreen() {
   };
 
   return (
-    <div className="screen-scroll-with-tabbar" style={{ background: t.bg, fontFamily: fontFn }}>
+    <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz
         title="Мои позиции"
         right={
+          isApproved ? (
           <button
             type="button"
             aria-label="Создать позицию"
@@ -107,22 +114,33 @@ export default function BizOffersListScreen() {
               {Icon.plus(20, t.primaryDeep)}
             </span>
           </button>
+          ) : undefined
         }
       />
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-        {isLoading && (
+        {profileLoading && (
           <>
             <Skeleton w="100%" h={86} radius={12} />
             <Skeleton w="100%" h={86} radius={12} />
           </>
         )}
-        {error && <ErrorState message={partnerErrorMessage(error)} />}
+        {profileError && <ErrorState message={partnerErrorMessage(profileError)} />}
+        {!profileLoading && !profileError && profile && !isApproved && (
+          <PartnerModerationState profile={profile} compact context="feature" />
+        )}
+        {!profileLoading && isApproved && isLoading && (
+          <>
+            <Skeleton w="100%" h={86} radius={12} />
+            <Skeleton w="100%" h={86} radius={12} />
+          </>
+        )}
+        {isApproved && error && <ErrorState message={partnerErrorMessage(error)} />}
         {message && (
           <div role="alert" style={{ color: t.danger, fontSize: 13 }}>
             {message}
           </div>
         )}
-        {!isLoading && !error && (!offers || offers.length === 0) && (
+        {isApproved && !isLoading && !error && (!offers || offers.length === 0) && (
           <EmptyState
             icon={Icon.plus(34, t.textTer)}
             title="Пока нет позиций"
@@ -130,7 +148,7 @@ export default function BizOffersListScreen() {
             compact
           />
         )}
-        {offers?.map((offer) => {
+        {isApproved && offers?.map((offer) => {
           const isEditing = editingId === offer.id;
           const active = offer.stock > 0;
 
@@ -258,22 +276,24 @@ export default function BizOffersListScreen() {
             </div>
           );
         })}
-        <div
-          style={{
-            padding: "14px 16px",
-            background: t.primarySoft,
-            borderRadius: 12,
-            fontSize: 12,
-            color: t.primaryDeep,
-            textAlign: "center",
-            lineHeight: 1.5,
-          }}
-        >
-          Позиция исчезает из покупательской ленты, когда остаток становится 0.
-        </div>
+        {isApproved && (
+          <div
+            style={{
+              padding: "14px 16px",
+              background: t.primarySoft,
+              borderRadius: 12,
+              fontSize: 12,
+              color: t.primaryDeep,
+              textAlign: "center",
+              lineHeight: 1.5,
+            }}
+          >
+            Позиция исчезает из покупательской ленты, когда остаток становится 0.
+          </div>
+        )}
       </div>
       <BizTabBar />
-    </div>
+    </AppScreenBiz>
   );
 }
 

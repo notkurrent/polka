@@ -1,4 +1,5 @@
 export type OfferType = "SURPLUS" | "MAGIC_BOX" | string;
+export type PartnerStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
 export interface PartnerPublic {
   id: number;
@@ -9,6 +10,12 @@ export interface PartnerPublic {
   description?: string;
   lat?: number | null;
   lon?: number | null;
+}
+
+export interface PartnerProfile extends PartnerPublic {
+  status: PartnerStatus;
+  review_note?: string | null;
+  reviewed_at?: string | null;
 }
 
 export interface OfferPublic {
