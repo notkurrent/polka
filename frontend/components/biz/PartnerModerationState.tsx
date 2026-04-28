@@ -71,12 +71,19 @@ export function PartnerModerationState({ profile, compact = false, context = "da
           {partnerStatusLabel(status)}
         </Badge>
       </div>
-      <EmptyState icon={icon} title={copy.title} description={copy.description} compact={compact} />
-      {status === "REJECTED" && (
-        <PillButtonBiz onClick={() => router.push("/biz/profile/edit")} style={{ marginTop: 12, width: "100%" }}>
-          Исправить данные
-        </PillButtonBiz>
-      )}
+      <EmptyState
+        icon={icon}
+        title={copy.title}
+        description={copy.description}
+        compact={compact}
+        action={
+          status === "REJECTED" ? (
+            <PillButtonBiz onClick={() => router.push("/biz/profile/edit")} style={{ width: "100%" }}>
+              Исправить данные
+            </PillButtonBiz>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

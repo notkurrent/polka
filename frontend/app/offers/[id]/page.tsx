@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { api } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 import { OfferDetail, OrderDetail } from "@/lib/api-types";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/app";
@@ -41,12 +41,11 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
     setError("");
     try {
       setIsReserving(true);
-      const order = await api.post<OrderDetail>("/orders/", { offer_id: Number(id) });
+      const order = await api.post<OrderDetail>("/orders", { offer_id: Number(id) });
 
       router.push(`/orders/${order.id}`);
     } catch (err) {
-      console.error("Booking error", err);
-      setError(err instanceof Error ? err.message : "Не удалось забронировать позицию");
+      setError(getApiErrorMessage(err, "Не удалось забронировать позицию. Попробуйте еще раз."));
     } finally {
       setIsReserving(false);
     }

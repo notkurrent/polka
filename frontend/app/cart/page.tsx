@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/app";
 import { tokens, Icon, StripePlaceholder, PillButton, PriceTag } from "@/components/ui/primitives";
 import AppHeader from "@/components/AppHeader";
-import { api } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function CartScreen() {
@@ -22,13 +22,12 @@ export default function CartScreen() {
     setError("");
     try {
       for (const item of cart) {
-        await api.post("/orders/", { offer_id: item.offerId });
+        await api.post("/orders", { offer_id: item.offerId });
       }
       clearCart();
       router.push("/orders");
     } catch (err) {
-      console.error("Reservation failed:", err);
-      setError(err instanceof Error ? err.message : "Не удалось забронировать все позиции. Корзина сохранена.");
+      setError(getApiErrorMessage(err, "Не удалось забронировать все позиции. Корзина сохранена."));
     } finally {
       setLoading(false);
     }

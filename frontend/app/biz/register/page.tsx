@@ -226,7 +226,7 @@ export default function BizRegisterPage() {
           </PillButtonBiz>
         )}
         <PillButtonBiz onClick={handleSubmit} size="lg" disabled={loading} style={{ marginTop: 10 }}>
-          {loading ? "Отправка…" : "Зарегистрировать"}
+          {loading ? "Отправляем заявку…" : "Отправить заявку"}
         </PillButtonBiz>
         <button
           type="button"

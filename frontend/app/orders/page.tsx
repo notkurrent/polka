@@ -21,7 +21,7 @@ export default function OrdersScreen() {
   const t = tokens();
   const fontFn = FONT ? FONT() : "system-ui";
 
-  const { data: orders, isLoading, error } = useSWR<OrderSummary[]>(isAuthenticated ? "/orders/" : null, (url: string) =>
+  const { data: orders, isLoading, error } = useSWR<OrderSummary[]>(isAuthenticated ? "/orders" : null, (url: string) =>
     api.get<OrderSummary[]>(url),
   );
   const hasOrders = Array.isArray(orders) && orders.length > 0;
