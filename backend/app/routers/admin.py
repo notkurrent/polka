@@ -48,6 +48,7 @@ def build_admin_partner_dto(
         status=partner.status,
         review_note=partner.review_note,
         reviewed_at=partner.reviewed_at,
+        created_at=partner.created_at,
         reviewed_by_user_id=partner.reviewed_by_user_id,
     )
 

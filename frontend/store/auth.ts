@@ -11,6 +11,7 @@ export interface User {
   email?: string;
   role: UserRole;
   is_tma?: boolean;
+  is_admin?: boolean;
   has_password?: boolean;
   has_telegram?: boolean;
 }

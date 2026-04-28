@@ -25,6 +25,7 @@ class PartnerProfileDTO(PartnerPublicDTO):
 
 class AdminPartnerDTO(PartnerProfileDTO):
     user_id: int
+    created_at: datetime
     reviewed_by_user_id: int | None = None
 
 
