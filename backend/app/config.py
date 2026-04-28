@@ -35,6 +35,22 @@ def get_telegram_webhook_secret() -> str:
     return os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
 
 
+def get_admin_telegram_bot_token() -> str:
+    return os.getenv("ADMIN_TELEGRAM_BOT_TOKEN", "")
+
+
+def get_admin_telegram_chat_id() -> str:
+    return os.getenv("ADMIN_TELEGRAM_CHAT_ID", "")
+
+
+def get_admin_telegram_thread_id() -> str:
+    return os.getenv("ADMIN_TELEGRAM_THREAD_ID", "")
+
+
+def get_admin_panel_url() -> str:
+    return os.getenv("ADMIN_PANEL_URL", "")
+
+
 def parse_csv_env(name: str, default: list[str]) -> list[str]:
     raw = os.getenv(name)
     if raw is None:

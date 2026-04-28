@@ -29,6 +29,7 @@ from app.serializers import (
     build_partner_dto,
     build_partner_profile_dto,
 )
+from app.services.notifications import notify_admin_partner_registered
 
 router = APIRouter(prefix="/partner-api", tags=["partner"])
 public_router = APIRouter(prefix="/partners", tags=["partners"])
@@ -363,6 +364,16 @@ async def register_partner(
     session.add(current_user)
 
     await session.commit()
+
+    try:
+        await notify_admin_partner_registered(partner, current_user)
+    except Exception:
+        logger.exception(
+            "partner.register_admin_notification_failed partner_id=%s user_id=%s",
+            partner.id,
+            current_user.id,
+        )
+
     row = await get_partner_location_row(session, partner.id)
     partner, lat, lon = row
     return build_partner_profile_dto(
