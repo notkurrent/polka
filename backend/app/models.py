@@ -101,6 +101,7 @@ class Offer(SQLModel, table=True):
     old_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
     new_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
     stock: int = Field(default=0)
+    is_archived: bool = Field(default=False)
     created_at: datetime = Field(
         sa_column=Column(
             DateTime(timezone=True),

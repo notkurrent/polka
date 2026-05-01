@@ -398,3 +398,96 @@ async def test_approved_partner_can_create_offer() -> None:
             assert offer["id"]
         finally:
             await cleanup_smoke_data(phone_prefix)
+
+
+@pytest.mark.asyncio
+async def test_partner_can_delete_offer_without_orders() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7794{run_id}"
+    partner_phone = f"{phone_prefix}01"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Delete Partner {run_id}")
+            await register_partner(client, partner_token, f"Delete Bakery {run_id}", approve=True)
+            offer = await create_offer(
+                client,
+                partner_token,
+                name=f"Delete Magic Box {run_id}",
+                stock=2,
+            )
+
+            delete_response = await client.delete(
+                f"/partner-api/offers/{offer['id']}",
+                headers=auth_headers(partner_token),
+            )
+            assert delete_response.status_code == 200, delete_response.text
+            assert delete_response.json()["status"] == "deleted"
+
+            partner_offers_response = await client.get(
+                "/partner-api/offers",
+                headers=auth_headers(partner_token),
+            )
+            assert partner_offers_response.status_code == 200
+            assert all(item["id"] != offer["id"] for item in partner_offers_response.json())
+        finally:
+            await cleanup_smoke_data(phone_prefix)
+
+
+@pytest.mark.asyncio
+async def test_partner_delete_offer_with_orders_archives_once_orders_exist() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7793{run_id}"
+    buyer_one_phone = f"{phone_prefix}01"
+    buyer_two_phone = f"{phone_prefix}02"
+    partner_phone = f"{phone_prefix}03"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            buyer_one_token, _buyer_one = await web_register(client, buyer_one_phone, f"Archive Buyer One {run_id}")
+            buyer_two_token, _buyer_two = await web_register(client, buyer_two_phone, f"Archive Buyer Two {run_id}")
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Archive Partner {run_id}")
+            await register_partner(client, partner_token, f"Archive Bakery {run_id}", approve=True)
+            offer = await create_offer(
+                client,
+                partner_token,
+                name=f"Archive Magic Box {run_id}",
+                stock=2,
+            )
+
+            first_order_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_one_token),
+                json={"offer_id": offer["id"]},
+            )
+            assert first_order_response.status_code == 200, first_order_response.text
+            second_order_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_two_token),
+                json={"offer_id": offer["id"]},
+            )
+            assert second_order_response.status_code == 200, second_order_response.text
+
+            delete_response = await client.delete(
+                f"/partner-api/offers/{offer['id']}",
+                headers=auth_headers(partner_token),
+            )
+            assert delete_response.status_code == 200, delete_response.text
+            assert delete_response.json()["status"] == "archived"
+
+            partner_offers_response = await client.get(
+                "/partner-api/offers",
+                headers=auth_headers(partner_token),
+            )
+            assert partner_offers_response.status_code == 200
+            assert all(item["id"] != offer["id"] for item in partner_offers_response.json())
+
+            async with AsyncSessionLocal() as session:
+                archived_offer = await session.get(Offer, offer["id"])
+                assert archived_offer is not None
+                assert archived_offer.is_archived is True
+                assert archived_offer.stock == 0
+        finally:
+            await cleanup_smoke_data(phone_prefix)

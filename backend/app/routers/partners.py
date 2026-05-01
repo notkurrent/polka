@@ -320,7 +320,7 @@ async def get_partner_detail(
 
     offers_result = await session.execute(
         select(Offer)
-        .where(Offer.partner_id == partner.id)
+        .where(Offer.partner_id == partner.id, Offer.stock > 0, Offer.is_archived.is_(False))
         .order_by(Offer.created_at.desc())
     )
 
@@ -419,7 +419,11 @@ async def get_partner_offers(
 ):
     partner = await get_current_partner(current_user, session)
 
-    query = select(Offer).where(Offer.partner_id == partner.id).order_by(Offer.created_at.desc())
+    query = (
+        select(Offer)
+        .where(Offer.partner_id == partner.id, Offer.is_archived.is_(False))
+        .order_by(Offer.created_at.desc())
+    )
     result = await session.execute(query)
     return [build_offer_dto(offer) for offer in result.scalars().all()]
 
@@ -457,7 +461,7 @@ async def update_partner_offer(
 ):
     partner = await get_approved_partner(current_user, session)
 
-    query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id)
+    query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id, Offer.is_archived.is_(False))
     result = await session.execute(query)
     offer = result.scalar_one_or_none()
 
@@ -482,15 +486,16 @@ async def delete_partner_offer(
 ):
     partner = await get_approved_partner(current_user, session)
 
-    query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id)
+    query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id, Offer.is_archived.is_(False))
     result = await session.execute(query)
     offer = result.scalar_one_or_none()
 
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
 
-    order_result = await session.execute(select(Order).where(Order.offer_id == offer.id))
+    order_result = await session.execute(select(Order.id).where(Order.offer_id == offer.id).limit(1))
     if order_result.scalar_one_or_none() is not None:
+        offer.is_archived = True
         offer.stock = 0
         session.add(offer)
         await session.commit()

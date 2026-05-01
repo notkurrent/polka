@@ -36,6 +36,7 @@ export default function BizOffersListScreen() {
   });
   const [busyId, setBusyId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<OfferPublic | null>(null);
 
   const beginEdit = (offer: OfferPublic) => {
     setEditingId(offer.id);
@@ -79,6 +80,7 @@ export default function BizOffersListScreen() {
     setMessage("");
     try {
       await bizApi.deleteOffer(id);
+      setPendingDelete(null);
       await mutate();
     } catch (err) {
       setMessage(partnerErrorMessage(err));
@@ -262,7 +264,7 @@ export default function BizOffersListScreen() {
                         Изменить
                       </button>
                       <button
-                        onClick={() => deleteOffer(offer.id)}
+                        onClick={() => setPendingDelete(offer)}
                         type="button"
                         disabled={busyId === offer.id}
                         style={{ ...secondaryButton(t, fontFn), color: t.danger }}
@@ -292,6 +294,86 @@ export default function BizOffersListScreen() {
           </div>
         )}
       </div>
+      {pendingDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-offer-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            padding: "16px",
+            background: "rgba(17, 23, 20, 0.36)",
+          }}
+          onClick={() => {
+            if (busyId !== pendingDelete.id) setPendingDelete(null);
+          }}
+        >
+          <div
+            style={{
+              width: "min(100%, calc(var(--app-shell-max-width) - 32px))",
+              borderRadius: 16,
+              background: t.bg,
+              border: `1px solid ${t.divider}`,
+              padding: 16,
+              boxShadow: "0 18px 60px rgba(17, 23, 20, 0.22)",
+              fontFamily: fontFn,
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div id="delete-offer-title" style={{ fontSize: 17, fontWeight: 800, color: t.text, lineHeight: 1.25 }}>
+              Удалить позицию?
+            </div>
+            <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.45, color: t.textSec }}>
+              {pendingDelete.name} исчезнет из списка позиций и из покупательской ленты. История уже созданных заказов
+              сохранится.
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8, marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => deleteOffer(pendingDelete.id)}
+                disabled={busyId === pendingDelete.id}
+                style={{
+                  minHeight: 48,
+                  borderRadius: 14,
+                  border: "none",
+                  background: "#FDE8E8",
+                  color: t.danger,
+                  fontSize: 14,
+                  fontWeight: 750,
+                  fontFamily: fontFn,
+                  cursor: busyId === pendingDelete.id ? "not-allowed" : "pointer",
+                  opacity: busyId === pendingDelete.id ? 0.66 : 1,
+                }}
+              >
+                {busyId === pendingDelete.id ? "Удаляем..." : "Да, удалить"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                disabled={busyId === pendingDelete.id}
+                style={{
+                  minHeight: 48,
+                  borderRadius: 14,
+                  border: `1px solid ${t.divider}`,
+                  background: t.bg,
+                  color: t.text,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  fontFamily: fontFn,
+                  cursor: busyId === pendingDelete.id ? "not-allowed" : "pointer",
+                }}
+              >
+                Оставить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <BizTabBar />
     </AppScreenBiz>
   );

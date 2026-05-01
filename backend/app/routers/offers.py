@@ -20,7 +20,7 @@ async def get_offers(
     query = (
         select(Offer)
         .join(Partner, Offer.partner_id == Partner.id)
-        .where(Offer.stock > 0, Partner.status == PartnerStatus.APPROVED)
+        .where(Offer.stock > 0, Offer.is_archived.is_(False), Partner.status == PartnerStatus.APPROVED)
     )
     if type:
         query = query.where(Offer.type == type)
@@ -53,6 +53,7 @@ async def get_nearby_offers(
         .join(Partner, Offer.partner_id == Partner.id)
         .where(
             Offer.stock > 0,
+            Offer.is_archived.is_(False),
             Partner.status == PartnerStatus.APPROVED,
             Partner.location.is_not(None),
             func.ST_DWithin(
@@ -128,7 +129,7 @@ async def get_offer_detail(
             func.ST_X(Partner.location).label("lon"),
         )
         .join(Partner, Offer.partner_id == Partner.id)
-        .where(Offer.id == offer_id, Partner.status == PartnerStatus.APPROVED)
+        .where(Offer.id == offer_id, Offer.is_archived.is_(False), Partner.status == PartnerStatus.APPROVED)
     )
     result = await session.execute(query)
     row = result.one_or_none()

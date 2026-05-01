@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
@@ -11,17 +11,15 @@ import { tokens, Icon, PillButton } from "@/components/ui/primitives";
 import { TabBar } from "@/components/TabBar";
 import AppHeader from "@/components/AppHeader";
 
+const subscribeHydration = () => () => undefined;
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const setSelectedMode = useAppStore((s) => s.setSelectedMode);
   const setSelectedModeForUser = useAppStore((s) => s.setSelectedModeForUser);
   const t = tokens();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(subscribeHydration, () => true, () => false);
 
   const hydratedUser = mounted ? user : null;
   const name = hydratedUser?.name || "Пользователь";
