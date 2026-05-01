@@ -10,7 +10,7 @@ from app.models import Order, OrderStatus, Offer, Partner, PartnerStatus, Rating
 from app.dependencies import get_current_user
 from app.schemas import OrderDetailDTO
 from app.serializers import build_order_detail_dto
-from app.order_lifecycle import ACTIVE_ORDER_STATUSES, normalize_order_status
+from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status
 from pydantic import BaseModel, Field as PydanticField
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -51,10 +51,15 @@ async def create_order(
     session: AsyncSession = Depends(get_session)
 ):
     try:
+        await expire_stale_orders(session)
         query = (
             select(Offer)
             .join(Partner, Offer.partner_id == Partner.id)
-            .where(Offer.id == req.offer_id, Partner.status == PartnerStatus.APPROVED)
+            .where(
+                Offer.id == req.offer_id,
+                Offer.is_archived.is_(False),
+                Partner.status == PartnerStatus.APPROVED,
+            )
             .with_for_update()
         )
         result = await session.execute(query)
@@ -106,6 +111,7 @@ async def get_my_orders(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
+    await expire_stale_orders(session)
     query = (
         select(Order, Offer, Partner)
         .join(Offer, Order.offer_id == Offer.id)
@@ -126,6 +132,7 @@ async def get_order_detail(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
+    await expire_stale_orders(session)
     row = await get_order_detail_row(session, order_id)
 
     if not row:
@@ -146,6 +153,7 @@ async def update_my_order_status(
     session: AsyncSession = Depends(get_session)
 ):
     try:
+        await expire_stale_orders(session)
         result = await session.execute(
             select(Order).where(Order.id == order_id).with_for_update()
         )
@@ -206,6 +214,7 @@ async def create_order_rating(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
+    await expire_stale_orders(session)
     result = await session.execute(select(Order).where(Order.id == order_id))
     order = result.scalar_one_or_none()
 

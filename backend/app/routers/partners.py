@@ -15,7 +15,7 @@ from sqlmodel import select
 from app.database import get_session
 from app.dependencies import get_current_user
 from app.models import Offer, OfferType, Order, OrderStatus, Partner, PartnerStatus, User, UserRole
-from app.order_lifecycle import ACTIVE_ORDER_STATUSES, normalize_order_status
+from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status
 from app.schemas import (
     OfferPublicDTO,
     OrderDetailDTO,
@@ -310,6 +310,7 @@ async def get_partner_detail(
     partner_id: int,
     session: AsyncSession = Depends(get_session),
 ):
+    await expire_stale_orders(session)
     row = await get_partner_location_row(session, partner_id)
     if not row:
         raise HTTPException(status_code=404, detail="Partner not found")
@@ -418,6 +419,7 @@ async def get_partner_offers(
     session: AsyncSession = Depends(get_session),
 ):
     partner = await get_current_partner(current_user, session)
+    await expire_stale_orders(session)
 
     query = (
         select(Offer)
@@ -434,6 +436,7 @@ async def create_partner_offer(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
+    await expire_stale_orders(session)
     partner = await get_approved_partner(current_user, session)
 
     new_offer = Offer(
@@ -553,6 +556,7 @@ async def verify_order_code(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
+    await expire_stale_orders(session)
     partner = await get_approved_partner(current_user, session)
     order_id, code = parse_code_payload(req)
 
@@ -625,6 +629,7 @@ async def update_order_status(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
+    await expire_stale_orders(session)
     partner = await get_approved_partner(current_user, session)
     next_status = normalize_order_status(req.status)
 

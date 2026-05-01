@@ -11,10 +11,11 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 function secondsUntilExpiration(order: OrderDetail, now: number) {
-  if (typeof order.expires_in_seconds === "number") {
-    const createdAt = new Date(order.created_at).getTime();
-    const expiresAt = createdAt + order.expires_in_seconds * 1000;
-    return Math.max(0, Math.floor((expiresAt - now) / 1000));
+  if (order.expires_at) {
+    const expiresAt = new Date(order.expires_at).getTime();
+    if (Number.isFinite(expiresAt)) {
+      return Math.max(0, Math.floor((expiresAt - now) / 1000));
+    }
   }
   const createdAt = new Date(order.created_at).getTime();
   const fallbackExpiresAt = createdAt + 30 * 60 * 1000;
@@ -43,6 +44,12 @@ export default function ActiveOrderScreen() {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [order]);
+
+  useEffect(() => {
+    if (!order || !isActiveOrder(order.status)) return;
+    if (secondsUntilExpiration(order, now) > 0) return;
+    mutate();
+  }, [mutate, now, order]);
 
   const handleCancel = async () => {
     setCanceling(true);
@@ -90,8 +97,10 @@ export default function ActiveOrderScreen() {
   const sec = order ? secondsUntilExpiration(order, now) : 0;
   const mm = String(Math.floor(sec / 60)).padStart(2, "0");
   const ss = String(sec % 60).padStart(2, "0");
-  const active = isActiveOrder(order.status);
+  const expiredByTimer = isActiveOrder(order.status) && sec <= 0;
+  const active = isActiveOrder(order.status) && !expiredByTimer;
   const completed = order.status === "COMPLETED";
+  const displayStatus = expiredByTimer ? "EXPIRED" : order.status;
   const items = order.items?.length ? order.items : [{ id: String(order.offer.id), title: order.offer.name, price: order.offer.new_price }];
   const qrValue = `polka://order/${order.id}/${order.code}`;
 
@@ -122,7 +131,7 @@ export default function ActiveOrderScreen() {
             alignItems: "center",
           }}
         >
-          <Badge tone={active ? "green" : completed ? "dark" : "amber"}>{statusLabel(order.status)}</Badge>
+          <Badge tone={active ? "green" : completed ? "dark" : "amber"}>{statusLabel(displayStatus)}</Badge>
           {active && (
             <div
               style={{

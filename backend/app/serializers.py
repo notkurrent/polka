@@ -1,5 +1,4 @@
-import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from app.models import Offer, Order, Partner
 from app.schemas import (
@@ -12,9 +11,7 @@ from app.schemas import (
     PartnerProfileDTO,
     PartnerPublicDTO,
 )
-
-
-RESERVATION_TTL_MINUTES = int(os.getenv("ORDER_RESERVATION_TTL_MINUTES", "30"))
+from app.order_lifecycle import order_expires_at
 
 
 def order_status_name(order: Order) -> str:
@@ -89,13 +86,6 @@ def build_offer_with_partner_dto(
         partner_name=partner.name,
         distance=distance,
     )
-
-
-def order_expires_at(order: Order) -> datetime:
-    created_at = order.created_at
-    if created_at.tzinfo is None:
-        created_at = created_at.replace(tzinfo=timezone.utc)
-    return created_at + timedelta(minutes=RESERVATION_TTL_MINUTES)
 
 
 def order_expires_in_seconds(order: Order) -> int:

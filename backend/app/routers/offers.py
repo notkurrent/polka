@@ -7,6 +7,7 @@ from geoalchemy2 import Geography
 
 from app.database import get_session
 from app.models import Offer, OfferType, Partner, PartnerStatus
+from app.order_lifecycle import expire_stale_orders
 from app.schemas import OfferPublicDTO, OfferWithPartnerDTO
 from app.serializers import build_offer_dto, build_offer_with_partner_dto
 
@@ -17,6 +18,7 @@ async def get_offers(
     type: Optional[OfferType] = None,
     session: AsyncSession = Depends(get_session)
 ):
+    await expire_stale_orders(session)
     query = (
         select(Offer)
         .join(Partner, Offer.partner_id == Partner.id)
@@ -38,6 +40,7 @@ async def get_nearby_offers(
     search: Optional[str] = Query(None, description="Search by offer or partner name"),
     session: AsyncSession = Depends(get_session)
 ):
+    await expire_stale_orders(session)
     user_location = func.ST_GeogFromText(f"SRID=4326;POINT({lon} {lat})")
     partner_location = Partner.location.cast(Geography)
     distance = func.ST_Distance(partner_location, user_location)
@@ -121,6 +124,7 @@ async def get_offer_detail(
     offer_id: int,
     session: AsyncSession = Depends(get_session),
 ):
+    await expire_stale_orders(session)
     query = (
         select(
             Offer,

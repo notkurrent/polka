@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 
@@ -489,5 +490,67 @@ async def test_partner_delete_offer_with_orders_archives_once_orders_exist() -> 
                 assert archived_offer is not None
                 assert archived_offer.is_archived is True
                 assert archived_offer.stock == 0
+        finally:
+            await cleanup_smoke_data(phone_prefix)
+
+
+@pytest.mark.asyncio
+async def test_expired_reservation_is_closed_and_stock_is_restored() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7792{run_id}"
+    buyer_phone = f"{phone_prefix}01"
+    partner_phone = f"{phone_prefix}02"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            buyer_token, _buyer = await web_register(client, buyer_phone, f"Expire Buyer {run_id}")
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Expire Partner {run_id}")
+            await register_partner(client, partner_token, f"Expire Bakery {run_id}", approve=True)
+            offer = await create_offer(
+                client,
+                partner_token,
+                name=f"Expire Magic Box {run_id}",
+                stock=1,
+            )
+
+            order_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+                json={"offer_id": offer["id"]},
+            )
+            assert order_response.status_code == 200, order_response.text
+            order = order_response.json()
+            assert order["status"] == "RESERVED"
+
+            stale_created_at = datetime.now(timezone.utc) - timedelta(minutes=31)
+            async with AsyncSessionLocal() as session:
+                db_order = await session.get(Order, order["id"])
+                assert db_order is not None
+                db_order.created_at = stale_created_at
+                db_order.updated_at = stale_created_at
+                session.add(db_order)
+                await session.commit()
+
+            orders_response = await client.get(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+            )
+            assert orders_response.status_code == 200, orders_response.text
+            expired_order = next(item for item in orders_response.json() if item["id"] == order["id"])
+            assert expired_order["status"] == "EXPIRED"
+            assert expired_order["expires_in_seconds"] == 0
+
+            offer_after_expiry = await client.get(f"/offers/{offer['id']}")
+            assert offer_after_expiry.status_code == 200, offer_after_expiry.text
+            assert offer_after_expiry.json()["offer"]["stock"] == 1
+
+            verify_response = await client.post(
+                "/partner-api/orders/verify-code",
+                headers=auth_headers(partner_token),
+                json={"order_id": order["id"], "code": order["code"]},
+            )
+            assert verify_response.status_code == 400
+            assert verify_response.json()["detail"] == "Order is not active"
         finally:
             await cleanup_smoke_data(phone_prefix)
