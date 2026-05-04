@@ -67,8 +67,12 @@ export interface OrderPartner {
 }
 
 export interface OrderItem {
-  id: string;
+  id: number;
+  offer_id: number;
   title: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
   price: number;
 }
 

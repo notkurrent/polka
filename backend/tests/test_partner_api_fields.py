@@ -10,7 +10,7 @@ from sqlmodel import select
 
 from app.database import AsyncSessionLocal
 from app.main import app
-from app.models import Offer, Order, Partner, PartnerStatus, Rating, User
+from app.models import Offer, Order, OrderItem, Partner, PartnerStatus, Rating, User
 
 
 ALMATY_LAT = 43.238949
@@ -60,11 +60,12 @@ async def cleanup_test_data(phone_prefix: str) -> None:
             ).scalars().all()
         if offer_ids:
             order_ids = (
-                await session.execute(select(Order.id).where(Order.offer_id.in_(offer_ids)))
+                await session.execute(select(OrderItem.order_id).where(OrderItem.offer_id.in_(offer_ids)))
             ).scalars().all()
 
         if order_ids:
             await session.execute(delete(Rating).where(Rating.order_id.in_(order_ids)))
+            await session.execute(delete(OrderItem).where(OrderItem.order_id.in_(order_ids)))
             await session.execute(delete(Order).where(Order.id.in_(order_ids)))
         if offer_ids:
             await session.execute(delete(Offer).where(Offer.id.in_(offer_ids)))

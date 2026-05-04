@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.models import Offer, Order, OrderStatus
+from app.models import Offer, Order, OrderItem, OrderStatus
 
 
 ACTIVE_ORDER_STATUSES = {OrderStatus.PENDING, OrderStatus.RESERVED}
@@ -46,12 +46,14 @@ async def expire_stale_orders(session: AsyncSession) -> int:
         return 0
 
     for order in stale_orders:
-        offer_result = await session.execute(
-            select(Offer).where(Offer.id == order.offer_id).with_for_update()
+        item_result = await session.execute(
+            select(OrderItem, Offer)
+            .join(Offer, OrderItem.offer_id == Offer.id)
+            .where(OrderItem.order_id == order.id)
+            .with_for_update(of=Offer)
         )
-        offer = offer_result.scalar_one_or_none()
-        if offer is not None:
-            offer.stock += 1
+        for item, offer in item_result.all():
+            offer.stock += item.quantity
             session.add(offer)
         order.status = OrderStatus.EXPIRED
         session.add(order)
@@ -59,3 +61,15 @@ async def expire_stale_orders(session: AsyncSession) -> int:
     await session.commit()
     logger.info("order.expired_stale count=%s", len(stale_orders))
     return len(stale_orders)
+
+
+async def restore_order_stock(session: AsyncSession, order_id: int) -> None:
+    item_result = await session.execute(
+        select(OrderItem, Offer)
+        .join(Offer, OrderItem.offer_id == Offer.id)
+        .where(OrderItem.order_id == order_id)
+        .with_for_update(of=Offer)
+    )
+    for item, offer in item_result.all():
+        offer.stock += item.quantity
+        session.add(offer)

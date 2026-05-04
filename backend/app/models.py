@@ -125,7 +125,6 @@ class Offer(SQLModel, table=True):
 class Order(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
-    offer_id: int = Field(foreign_key="offer.id")
     status: OrderStatus = Field(sa_column=Column(Enum(OrderStatus)))
     code: str = Field(default="", max_length=4)
     created_at: datetime = Field(
@@ -143,6 +142,17 @@ class Order(SQLModel, table=True):
             nullable=False
         )
     )
+
+
+class OrderItem(SQLModel, table=True):
+    __tablename__ = "order_item"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    order_id: int = Field(foreign_key="order.id", index=True)
+    offer_id: int = Field(foreign_key="offer.id", index=True)
+    quantity: int = Field(default=1)
+    unit_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
+    total_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
 
 
 class Rating(SQLModel, table=True):

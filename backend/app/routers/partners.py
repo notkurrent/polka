@@ -14,8 +14,8 @@ from sqlmodel import select
 
 from app.database import get_session
 from app.dependencies import get_current_user
-from app.models import Offer, OfferType, Order, OrderStatus, Partner, PartnerStatus, User, UserRole
-from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status
+from app.models import Offer, OfferType, Order, OrderItem, OrderStatus, Partner, PartnerStatus, User, UserRole
+from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status, restore_order_stock
 from app.schemas import (
     OfferPublicDTO,
     OrderDetailDTO,
@@ -154,8 +154,18 @@ async def get_partner_location_row(session: AsyncSession, partner_id: int):
     return result.one_or_none()
 
 
-def partner_order_response(order: Order, offer: Offer, partner: Partner) -> dict:
-    detail = build_order_detail_dto(order, offer, partner).model_dump()
+async def get_order_item_rows(session: AsyncSession, order_id: int) -> list[tuple[OrderItem, Offer]]:
+    result = await session.execute(
+        select(OrderItem, Offer)
+        .join(Offer, OrderItem.offer_id == Offer.id)
+        .where(OrderItem.order_id == order_id)
+        .order_by(OrderItem.id)
+    )
+    return result.all()
+
+
+def partner_order_response(order: Order, item_rows: list[tuple[OrderItem, Offer]], partner: Partner) -> dict:
+    detail = build_order_detail_dto(order, item_rows, partner).model_dump(mode="json")
     detail["order"] = {
         "id": order.id,
         "status": detail["status"],
@@ -163,7 +173,7 @@ def partner_order_response(order: Order, offer: Offer, partner: Partner) -> dict
         "created_at": order.created_at,
         "updated_at": order.updated_at,
     }
-    detail["offer_snapshot"] = build_offer_dto(offer).model_dump()
+    detail["offer_snapshot"] = build_offer_dto(item_rows[0][1]).model_dump(mode="json")
     return detail
 
 
@@ -653,7 +663,7 @@ async def delete_partner_offer(
     if not offer:
         raise HTTPException(status_code=404, detail="Offer not found")
 
-    order_result = await session.execute(select(Order.id).where(Order.offer_id == offer.id).limit(1))
+    order_result = await session.execute(select(OrderItem.id).where(OrderItem.offer_id == offer.id).limit(1))
     if order_result.scalar_one_or_none() is not None:
         offer.is_archived = True
         offer.stock = 0
@@ -678,19 +688,26 @@ async def get_partner_orders(
 ):
     partner = await get_approved_partner(current_user, session)
 
-    query = (
-        select(Order, Offer, Partner)
-        .join(Offer, Order.offer_id == Offer.id)
-        .join(Partner, Offer.partner_id == Partner.id)
+    order_ids_query = (
+        select(OrderItem.order_id)
+        .join(Offer, OrderItem.offer_id == Offer.id)
         .where(Offer.partner_id == partner.id)
+        .distinct()
+        .subquery()
+    )
+    query = (
+        select(Order)
+        .where(Order.id.in_(select(order_ids_query.c.order_id)))
         .order_by(Order.created_at.desc())
     )
     result = await session.execute(query)
 
-    return [
-        partner_order_response(order, offer, order_partner)
-        for order, offer, order_partner in result.all()
-    ]
+    responses = []
+    for order in result.scalars().all():
+        item_rows = await get_order_item_rows(session, order.id)
+        if item_rows:
+            responses.append(partner_order_response(order, item_rows, partner))
+    return responses
 
 
 def parse_code_payload(req: VerifyOrderCodeRequest) -> tuple[int | None, str]:
@@ -723,9 +740,9 @@ async def verify_order_code(
     order_id, code = parse_code_payload(req)
 
     query = (
-        select(Order, Offer, Partner)
-        .join(Offer, Order.offer_id == Offer.id)
-        .join(Partner, Offer.partner_id == Partner.id)
+        select(Order)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+        .join(Offer, OrderItem.offer_id == Offer.id)
         .where(Offer.partner_id == partner.id, Order.code == code)
         .with_for_update(of=Order)
     )
@@ -735,14 +752,20 @@ async def verify_order_code(
         query = query.where(Order.status.in_(ACTIVE_ORDER_STATUSES))
 
     result = await session.execute(query)
-    rows = result.all()
+    raw_rows = result.all()
+    seen_order_ids: set[int] = set()
+    rows = []
+    for row in raw_rows:
+        row_order = row[0]
+        if row_order.id in seen_order_ids:
+            continue
+        seen_order_ids.add(row_order.id)
+        rows.append(row)
 
     if not rows:
-        ownership_query = (
-            select(Order, Offer)
-            .join(Offer, Order.offer_id == Offer.id)
-            .where(Order.code == code)
-        )
+        ownership_query = select(Order, Offer).join(OrderItem, OrderItem.order_id == Order.id).join(
+            Offer, OrderItem.offer_id == Offer.id
+        ).where(Order.code == code)
         if order_id is not None:
             ownership_query = ownership_query.where(Order.id == order_id)
         ownership_result = await session.execute(ownership_query)
@@ -767,7 +790,7 @@ async def verify_order_code(
     if order_id is not None and not active_rows:
         raise HTTPException(status_code=400, detail="Order is not active")
 
-    order, offer, order_partner = rows[0]
+    order = rows[0][0]
     if order.status not in ACTIVE_ORDER_STATUSES:
         raise HTTPException(status_code=400, detail="Order is not active")
 
@@ -781,7 +804,8 @@ async def verify_order_code(
         partner.id,
         order.status.value,
     )
-    return build_order_detail_dto(order, offer, order_partner)
+    item_rows = await get_order_item_rows(session, order.id)
+    return build_order_detail_dto(order, item_rows, partner)
 
 
 @router.patch("/orders/{order_id}/status", response_model=OrderDetailDTO)
@@ -802,43 +826,34 @@ async def update_order_status(
 
     try:
         query = (
-            select(Order, Offer, Partner)
-            .join(Offer, Order.offer_id == Offer.id)
-            .join(Partner, Offer.partner_id == Partner.id)
+            select(Order)
+            .join(OrderItem, OrderItem.order_id == Order.id)
+            .join(Offer, OrderItem.offer_id == Offer.id)
             .where(Order.id == order_id, Offer.partner_id == partner.id)
             .with_for_update(of=Order)
         )
         result = await session.execute(query)
-        row = result.one_or_none()
+        row = result.first()
 
         if not row:
             raise HTTPException(status_code=404, detail="Order not found")
 
-        order, offer, order_partner = row
+        order = row[0]
         if order.status not in ACTIVE_ORDER_STATUSES:
             raise HTTPException(status_code=400, detail="Order status can not be changed")
 
-        offer_result = await session.execute(
-            select(Offer).where(Offer.id == order.offer_id).with_for_update()
-        )
-        locked_offer = offer_result.scalar_one_or_none()
-        if not locked_offer:
-            raise HTTPException(status_code=404, detail="Offer not found")
-
-        locked_offer.stock += 1
+        await restore_order_stock(session, order.id)
         order.status = next_status
-        session.add(locked_offer)
         session.add(order)
         await session.commit()
-        await session.refresh(order)
-        await session.refresh(locked_offer)
         logger.info(
             "order.status_changed order_id=%s partner_id=%s status=%s actor=partner",
             order.id,
             partner.id,
             order.status.value,
         )
-        return build_order_detail_dto(order, locked_offer, order_partner)
+        item_rows = await get_order_item_rows(session, order.id)
+        return build_order_detail_dto(order, item_rows, partner)
     except HTTPException:
         await session.rollback()
         raise

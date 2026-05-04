@@ -71,36 +71,43 @@ export default function OrdersScreen() {
         {!isLoading &&
           !error &&
           hasOrders &&
-          orders.map((order) => (
-            <button
-              type="button"
-              key={order.id}
-              onClick={() => router.push(`/orders/${order.id}`)}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                background: t.surface,
-                borderRadius: 16,
-                padding: "16px",
-                cursor: "pointer",
-                border: `1px solid ${t.divider}`,
-                color: t.text,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 700 }}>{order.offer.name}</div>
-                  <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
-                    {order.partner.name} · {order.total} ₸
+          orders.map((order) => {
+            const itemsCount = order.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 1;
+            const title =
+              order.items && order.items.length > 1 ? `${order.items[0].title} +${order.items.length - 1}` : order.offer.name;
+            return (
+              <button
+                type="button"
+                key={order.id}
+                onClick={() => router.push(`/orders/${order.id}`)}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  background: t.surface,
+                  borderRadius: 16,
+                  padding: "16px",
+                  cursor: "pointer",
+                  border: `1px solid ${t.divider}`,
+                  color: t.text,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {title}
+                    </div>
+                    <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
+                      {order.partner.name} · {itemsCount} шт · {order.total} ₸
+                    </div>
+                    <div style={{ fontSize: 12, color: t.textSec, marginTop: 4 }}>
+                      {statusLabel(order.status)} · {new Date(order.created_at).toLocaleDateString("ru-RU")}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: t.textSec, marginTop: 4 }}>
-                    {statusLabel(order.status)} · {new Date(order.created_at).toLocaleDateString("ru-RU")}
-                  </div>
+                  {<QrCode size={24} color={t.primaryDeep} />}
                 </div>
-                {<QrCode size={24} color={t.primaryDeep} />}
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
       </div>
 
       <TabBar />

@@ -78,8 +78,14 @@ class OrderPartnerDTO(BaseModel):
 
 
 class OrderItemDTO(BaseModel):
-    id: str
+    id: int
+    offer_id: int
     title: str
+    quantity: int
+    unit_price: Decimal
+    total_price: Decimal
+
+    # Compatibility alias for older screens that read `price`.
     price: Decimal
 
 

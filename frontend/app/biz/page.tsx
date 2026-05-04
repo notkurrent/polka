@@ -15,6 +15,7 @@ import {
   orderCreatedAt,
   orderId,
   orderPrice,
+  orderSubtitle,
   orderStatus,
   orderTitle,
   partnerErrorMessage,
@@ -42,7 +43,7 @@ function toReservation(order: PartnerOrder): BizReservation {
   return {
     id: String(orderId(order)),
     user: `Клиент #${orderId(order)}`,
-    offer: orderTitle(order),
+    offer: `${orderTitle(order)} · ${orderSubtitle(order)}`,
     price: money(orderPrice(order)),
     code: "",
     status: isActiveOrder(orderStatus(order)) ? "active" : orderStatus(order).toUpperCase() === "COMPLETED" ? "completed" : "expired",

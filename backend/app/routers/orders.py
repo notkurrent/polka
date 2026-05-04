@@ -6,18 +6,25 @@ import logging
 import random
 
 from app.database import get_session
-from app.models import Order, OrderStatus, Offer, Partner, PartnerStatus, Rating, User
+from app.models import Order, OrderItem, OrderStatus, Offer, Partner, PartnerStatus, Rating, User
 from app.dependencies import get_current_user
 from app.schemas import OrderDetailDTO
 from app.serializers import build_order_detail_dto
-from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status
+from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status, restore_order_stock
 from pydantic import BaseModel, Field as PydanticField
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 logger = logging.getLogger(__name__)
 
-class CreateOrderRequest(BaseModel):
+
+class CreateOrderItemRequest(BaseModel):
     offer_id: int
+    quantity: int = PydanticField(default=1, ge=1)
+
+
+class CreateOrderRequest(BaseModel):
+    offer_id: int | None = None
+    items: list[CreateOrderItemRequest] = PydanticField(default_factory=list)
 
 
 class UpdateOrderStatus(BaseModel):
@@ -34,13 +41,34 @@ async def get_order_detail_row(
     session: AsyncSession,
     order_id: int,
 ):
+    order = await session.get(Order, order_id)
+    if not order:
+        return None
+
     result = await session.execute(
-        select(Order, Offer, Partner)
-        .join(Offer, Order.offer_id == Offer.id)
+        select(OrderItem, Offer, Partner)
+        .join(Offer, OrderItem.offer_id == Offer.id)
         .join(Partner, Offer.partner_id == Partner.id)
-        .where(Order.id == order_id)
+        .where(OrderItem.order_id == order_id)
+        .order_by(OrderItem.id)
     )
-    return result.one_or_none()
+    rows = result.all()
+    if not rows:
+        return None
+
+    partner = rows[0][2]
+    return order, [(item, offer) for item, offer, _partner in rows], partner
+
+
+def order_item_quantities(req: CreateOrderRequest) -> dict[int, int]:
+    requested_items = req.items
+    if not requested_items and req.offer_id is not None:
+        requested_items = [CreateOrderItemRequest(offer_id=req.offer_id, quantity=1)]
+
+    quantities: dict[int, int] = {}
+    for item in requested_items:
+        quantities[item.offer_id] = quantities.get(item.offer_id, 0) + item.quantity
+    return quantities
 
 
 @router.post("", response_model=OrderDetailDTO, include_in_schema=False)
@@ -52,51 +80,71 @@ async def create_order(
 ):
     try:
         await expire_stale_orders(session)
-        query = (
-            select(Offer)
+        quantities = order_item_quantities(req)
+        if not quantities:
+            raise HTTPException(status_code=400, detail="Order items required")
+
+        result = await session.execute(
+            select(Offer, Partner)
             .join(Partner, Offer.partner_id == Partner.id)
             .where(
-                Offer.id == req.offer_id,
+                Offer.id.in_(quantities.keys()),
                 Offer.is_archived.is_(False),
                 Partner.status == PartnerStatus.APPROVED,
             )
             .with_for_update()
         )
-        result = await session.execute(query)
-        offer = result.scalar_one_or_none()
+        rows = result.all()
 
-        if not offer:
+        if len(rows) != len(quantities):
             raise HTTPException(status_code=404, detail="Offer not found")
 
-        if offer.stock <= 0:
-            raise HTTPException(status_code=400, detail="Out of stock")
+        partner_ids = {partner.id for _offer, partner in rows}
+        if len(partner_ids) != 1:
+            raise HTTPException(status_code=400, detail="Order items must belong to one partner")
 
-        offer.stock -= 1
+        offers_by_id = {offer.id: offer for offer, _partner in rows}
+        for offer_id, quantity in quantities.items():
+            offer = offers_by_id[offer_id]
+            if offer.stock < quantity:
+                raise HTTPException(status_code=400, detail="Out of stock")
+            offer.stock -= quantity
+            session.add(offer)
 
         new_order = Order(
             user_id=current_user.id,
-            offer_id=offer.id,
             status=OrderStatus.RESERVED,
             code=str(random.randint(1000, 9999))
         )
 
         session.add(new_order)
+        await session.flush()
+        for offer_id, quantity in quantities.items():
+            offer = offers_by_id[offer_id]
+            session.add(
+                OrderItem(
+                    order_id=new_order.id,
+                    offer_id=offer.id,
+                    quantity=quantity,
+                    unit_price=offer.new_price,
+                    total_price=offer.new_price * quantity,
+                )
+            )
+
         await session.commit()
-        await session.refresh(new_order)
-        await session.refresh(offer)
         logger.info(
-            "order.created order_id=%s user_id=%s offer_id=%s status=%s",
+            "order.created order_id=%s user_id=%s items=%s status=%s",
             new_order.id,
             current_user.id,
-            offer.id,
+            len(quantities),
             new_order.status.value,
         )
 
-        partner = await session.get(Partner, offer.partner_id)
-        if not partner:
-            raise HTTPException(status_code=404, detail="Partner not found")
-
-        return build_order_detail_dto(new_order, offer, partner)
+        row = await get_order_detail_row(session, new_order.id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Order not found")
+        order, item_rows, partner = row
+        return build_order_detail_dto(order, item_rows, partner)
     except HTTPException:
         # Must rollback incase of errors within logic
         await session.rollback()
@@ -112,18 +160,15 @@ async def get_my_orders(
     session: AsyncSession = Depends(get_session)
 ):
     await expire_stale_orders(session)
-    query = (
-        select(Order, Offer, Partner)
-        .join(Offer, Order.offer_id == Offer.id)
-        .join(Partner, Offer.partner_id == Partner.id)
-        .where(Order.user_id == current_user.id)
-        .order_by(Order.created_at.desc())
-    )
+    query = select(Order).where(Order.user_id == current_user.id).order_by(Order.created_at.desc())
     result = await session.execute(query)
-    return [
-        build_order_detail_dto(order, offer, partner)
-        for order, offer, partner in result.all()
-    ]
+    details = []
+    for order in result.scalars().all():
+        row = await get_order_detail_row(session, order.id)
+        if row:
+            detail_order, item_rows, partner = row
+            details.append(build_order_detail_dto(detail_order, item_rows, partner))
+    return details
 
 
 @router.get("/{order_id}", response_model=OrderDetailDTO)
@@ -138,11 +183,11 @@ async def get_order_detail(
     if not row:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    order, offer, partner = row
+    order, item_rows, partner = row
     if order.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    return build_order_detail_dto(order, offer, partner)
+    return build_order_detail_dto(order, item_rows, partner)
 
 
 @router.patch("/{order_id}", response_model=OrderDetailDTO)
@@ -174,20 +219,10 @@ async def update_my_order_status(
         if next_status != OrderStatus.EXPIRED:
             raise HTTPException(status_code=400, detail="Invalid status transition")
 
-        offer_result = await session.execute(
-            select(Offer).where(Offer.id == order.offer_id).with_for_update()
-        )
-        offer = offer_result.scalar_one_or_none()
-        if not offer:
-            raise HTTPException(status_code=404, detail="Offer not found")
-        offer.stock += 1
-        session.add(offer)
-
+        await restore_order_stock(session, order.id)
         order.status = next_status
         session.add(order)
         await session.commit()
-        await session.refresh(order)
-        await session.refresh(offer)
         logger.info(
             "order.status_changed order_id=%s user_id=%s status=%s actor=buyer",
             order.id,
@@ -195,10 +230,11 @@ async def update_my_order_status(
             order.status.value,
         )
 
-        partner = await session.get(Partner, offer.partner_id)
-        if not partner:
-            raise HTTPException(status_code=404, detail="Partner not found")
-        return build_order_detail_dto(order, offer, partner)
+        row = await get_order_detail_row(session, order.id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Order not found")
+        detail_order, item_rows, partner = row
+        return build_order_detail_dto(detail_order, item_rows, partner)
     except HTTPException:
         await session.rollback()
         raise
@@ -233,15 +269,17 @@ async def create_order_rating(
     if existing_rating_result.scalar_one_or_none() is not None:
         raise HTTPException(status_code=400, detail="Rating already exists")
 
-    offer_result = await session.execute(select(Offer).where(Offer.id == order.offer_id))
-    offer = offer_result.scalar_one_or_none()
-    if not offer:
-        raise HTTPException(status_code=404, detail="Offer not found")
+    item_result = await session.execute(
+        select(OrderItem, Offer).join(Offer, OrderItem.offer_id == Offer.id).where(OrderItem.order_id == order.id)
+    )
+    item_row = item_result.first()
+    if not item_row:
+        raise HTTPException(status_code=404, detail="Order item not found")
 
     rating = Rating(
         order_id=order.id,
         user_id=current_user.id,
-        partner_id=offer.partner_id,
+        partner_id=item_row[1].partner_id,
         score=req.score,
         tags=json.dumps(req.tags, ensure_ascii=False),
         comment=req.comment,

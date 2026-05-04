@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.database import AsyncSessionLocal
-from app.models import Offer, OfferType, Order, OrderStatus, Partner, PartnerStatus, User, UserRole
+from app.models import Offer, OfferType, Order, OrderItem, OrderStatus, Partner, PartnerStatus, User, UserRole
 from app.utils.auth import hash_password
 
 
@@ -136,9 +136,11 @@ async def upsert_demo_order(
     offer: Offer,
 ) -> Order:
     result = await session.execute(
-        select(Order).where(
+        select(Order)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+        .where(
             Order.user_id == buyer.id,
-            Order.offer_id == offer.id,
+            OrderItem.offer_id == offer.id,
             Order.code == DEMO_ORDER_CODE,
         )
     )
@@ -147,11 +149,20 @@ async def upsert_demo_order(
     if order is None:
         order = Order(
             user_id=buyer.id,
-            offer_id=offer.id,
             status=OrderStatus.RESERVED,
             code=DEMO_ORDER_CODE,
         )
         session.add(order)
+        await session.flush()
+        session.add(
+            OrderItem(
+                order_id=order.id,
+                offer_id=offer.id,
+                quantity=1,
+                unit_price=offer.new_price,
+                total_price=offer.new_price,
+            )
+        )
         await session.flush()
         return order
 
@@ -170,7 +181,8 @@ async def expire_other_active_partner_orders(
 ) -> None:
     result = await session.execute(
         select(Order)
-        .join(Offer, Order.offer_id == Offer.id)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+        .join(Offer, OrderItem.offer_id == Offer.id)
         .where(
             Offer.partner_id == partner.id,
             Order.id != keep_order.id,

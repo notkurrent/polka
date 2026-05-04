@@ -39,6 +39,7 @@ interface AppState {
   dismissAccountLinkPrompt: () => void;
   dismissAccountCompletionPrompt: () => void;
   addToCart: (item: CartItem) => void;
+  updateCartQuantity: (offerId: string, quantity: number) => void;
   removeFromCart: (offerId: string) => void;
   clearCart: () => void;
   cartTotal: () => number;
@@ -105,16 +106,35 @@ export const useAppStore = create<AppState>()(
       dismissAccountCompletionPrompt: () => set({ accountCompletionPromptDismissed: true }),
       addToCart: (item) =>
         set((state) => {
+          const quantity = Math.max(1, Math.min(item.quantity, item.stock ?? item.quantity));
+          const normalizedItem = { ...item, quantity };
+          const differentPartner = state.cart.length > 0 && state.cart.some((i) => i.partnerId !== item.partnerId);
+          if (differentPartner) {
+            return { cart: [normalizedItem] };
+          }
+
           const existing = state.cart.find((i) => i.offerId === item.offerId);
           if (existing) {
             return {
               cart: state.cart.map((i) =>
-                i.offerId === item.offerId ? { ...i, quantity: i.quantity + item.quantity } : i,
+                i.offerId === item.offerId
+                  ? { ...i, quantity: Math.min(i.quantity + quantity, i.stock ?? i.quantity + quantity) }
+                  : i,
               ),
             };
           }
-          return { cart: [...state.cart, item] };
+          return { cart: [...state.cart, normalizedItem] };
         }),
+      updateCartQuantity: (offerId, quantity) =>
+        set((state) => ({
+          cart: state.cart
+            .map((item) =>
+              item.offerId === offerId
+                ? { ...item, quantity: Math.max(0, Math.min(quantity, item.stock ?? quantity)) }
+                : item,
+            )
+            .filter((item) => item.quantity > 0),
+        })),
       removeFromCart: (offerId) =>
         set((state) => ({
           cart: state.cart.filter((i) => i.offerId !== offerId),

@@ -65,8 +65,20 @@ export function orderPrice(order: PartnerOrder) {
   return Number(order.total ?? orderOffer(order)?.new_price ?? 0);
 }
 
+export function orderQuantity(order: PartnerOrder) {
+  return order.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 1;
+}
+
 export function orderTitle(order: PartnerOrder) {
+  if (order.items?.length) {
+    return order.items.length > 1 ? `${order.items[0].title} +${order.items.length - 1}` : order.items[0].title;
+  }
   return orderOffer(order)?.name ?? "Позиция";
+}
+
+export function orderSubtitle(order: PartnerOrder) {
+  const quantity = orderQuantity(order);
+  return quantity > 1 ? `${quantity} шт` : "1 шт";
 }
 
 export function formatOrderDate(value?: string) {

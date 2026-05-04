@@ -11,7 +11,7 @@ from sqlmodel import select
 
 from app.database import AsyncSessionLocal
 from app.main import app
-from app.models import Offer, OfferType, Order, Partner, PartnerStatus, Rating, User
+from app.models import Offer, OfferType, Order, OrderItem, Partner, PartnerStatus, Rating, User
 
 
 ALMATY_LAT = 43.238949
@@ -113,7 +113,7 @@ async def cleanup_smoke_data(phone_prefix: str) -> None:
             ).scalars().all()
         if offer_ids:
             order_ids = (
-                await session.execute(select(Order.id).where(Order.offer_id.in_(offer_ids)))
+                await session.execute(select(OrderItem.order_id).where(OrderItem.offer_id.in_(offer_ids)))
             ).scalars().all()
         buyer_order_ids = (
             await session.execute(select(Order.id).where(Order.user_id.in_(user_ids)))
@@ -122,6 +122,7 @@ async def cleanup_smoke_data(phone_prefix: str) -> None:
 
         if order_ids:
             await session.execute(delete(Rating).where(Rating.order_id.in_(order_ids)))
+            await session.execute(delete(OrderItem).where(OrderItem.order_id.in_(order_ids)))
             await session.execute(delete(Order).where(Order.id.in_(order_ids)))
         if offer_ids:
             await session.execute(delete(Offer).where(Offer.id.in_(offer_ids)))
@@ -324,6 +325,92 @@ async def test_pending_partner_can_not_create_offer() -> None:
                 },
             )
             assert response.status_code == 403
+        finally:
+            await cleanup_smoke_data(phone_prefix)
+
+
+@pytest.mark.asyncio
+async def test_order_with_multiple_items_reserves_and_restores_stock() -> None:
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7789{run_id}"
+    buyer_phone = f"{phone_prefix}01"
+    partner_phone = f"{phone_prefix}02"
+    other_partner_phone = f"{phone_prefix}03"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            buyer_token, _buyer = await web_register(client, buyer_phone, f"Multi Buyer {run_id}")
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Multi Partner {run_id}")
+            other_partner_token, _other_partner_user = await web_register(
+                client,
+                other_partner_phone,
+                f"Other Multi Partner {run_id}",
+            )
+            await register_partner(client, partner_token, f"Multi Bakery {run_id}", approve=True)
+            await register_partner(client, other_partner_token, f"Other Multi Bakery {run_id}", approve=True)
+            first_offer = await create_offer(client, partner_token, name=f"Multi Box One {run_id}", stock=3)
+            second_offer = await create_offer(client, partner_token, name=f"Multi Box Two {run_id}", stock=2)
+            other_offer = await create_offer(client, other_partner_token, name=f"Other Multi Box {run_id}", stock=2)
+
+            order_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+                json={
+                    "items": [
+                        {"offer_id": first_offer["id"], "quantity": 2},
+                        {"offer_id": second_offer["id"], "quantity": 1},
+                    ]
+                },
+            )
+            assert order_response.status_code == 200, order_response.text
+            order = order_response.json()
+            assert order["status"] == "RESERVED"
+            assert len(order["code"]) == 4
+            assert order["total"] == "4800.00"
+            assert [(item["offer_id"], item["quantity"]) for item in order["items"]] == [
+                (first_offer["id"], 2),
+                (second_offer["id"], 1),
+            ]
+            assert order["items"][0]["unit_price"] == "1600.00"
+            assert order["items"][0]["total_price"] == "3200.00"
+
+            first_after = await client.get(f"/offers/{first_offer['id']}")
+            second_after = await client.get(f"/offers/{second_offer['id']}")
+            assert first_after.json()["offer"]["stock"] == 1
+            assert second_after.json()["offer"]["stock"] == 1
+
+            partner_orders_response = await client.get("/partner-api/orders", headers=auth_headers(partner_token))
+            assert partner_orders_response.status_code == 200, partner_orders_response.text
+            partner_order = next(item for item in partner_orders_response.json() if item["id"] == order["id"])
+            assert len(partner_order["items"]) == 2
+            assert partner_order["total"] == "4800.00"
+
+            mixed_partner_response = await client.post(
+                "/orders/",
+                headers=auth_headers(buyer_token),
+                json={
+                    "items": [
+                        {"offer_id": first_offer["id"], "quantity": 1},
+                        {"offer_id": other_offer["id"], "quantity": 1},
+                    ]
+                },
+            )
+            assert mixed_partner_response.status_code == 400
+            assert mixed_partner_response.json()["detail"] == "Order items must belong to one partner"
+
+            cancel_response = await client.patch(
+                f"/orders/{order['id']}",
+                headers=auth_headers(buyer_token),
+                json={"status": "Expired"},
+            )
+            assert cancel_response.status_code == 200, cancel_response.text
+            assert cancel_response.json()["status"] == "EXPIRED"
+
+            first_restored = await client.get(f"/offers/{first_offer['id']}")
+            second_restored = await client.get(f"/offers/{second_offer['id']}")
+            assert first_restored.json()["offer"]["stock"] == 3
+            assert second_restored.json()["offer"]["stock"] == 2
         finally:
             await cleanup_smoke_data(phone_prefix)
 

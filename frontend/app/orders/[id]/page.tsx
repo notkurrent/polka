@@ -101,7 +101,19 @@ export default function ActiveOrderScreen() {
   const active = isActiveOrder(order.status) && !expiredByTimer;
   const completed = order.status === "COMPLETED";
   const displayStatus = expiredByTimer ? "EXPIRED" : order.status;
-  const items = order.items?.length ? order.items : [{ id: String(order.offer.id), title: order.offer.name, price: order.offer.new_price }];
+  const items = order.items?.length
+    ? order.items
+    : [
+        {
+          id: order.offer.id,
+          offer_id: order.offer.id,
+          title: order.offer.name,
+          quantity: 1,
+          unit_price: order.offer.new_price,
+          total_price: order.offer.new_price,
+          price: order.offer.new_price,
+        },
+      ];
   const qrValue = `polka://order/${order.id}/${order.code}`;
 
   return (
@@ -236,8 +248,11 @@ export default function ActiveOrderScreen() {
                 fontSize: 14,
               }}
             >
-              <span style={{ color: t.text }}>{it.title}</span>
-              <span style={{ fontWeight: 600 }}>{it.price} ₸</span>
+              <span style={{ color: t.text }}>
+                {it.title}
+                {it.quantity > 1 ? <span style={{ color: t.textSec }}> · {it.quantity} шт</span> : null}
+              </span>
+              <span style={{ fontWeight: 600 }}>{it.total_price} ₸</span>
             </div>
           ))}
           <div style={{ height: 1, background: t.divider, margin: "4px 0" }} />

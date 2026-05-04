@@ -36,13 +36,14 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
   const partner = selectedOfferData?.partner;
   const isOutOfStock = !!offer && offer.stock <= 0;
   const isInCart = id ? cart.some((item) => item.offerId === id) : false;
+  const cartHasOtherPartner = !!partner && cart.length > 0 && cart.some((item) => item.partnerId !== String(partner.id));
 
   const handleReserve = useCallback(async () => {
     if (!id || isOutOfStock || isReserving) return;
     setError("");
     try {
       setIsReserving(true);
-      const order = await api.post<OrderDetail>("/orders", { offer_id: Number(id) });
+      const order = await api.post<OrderDetail>("/orders", { items: [{ offer_id: Number(id), quantity: 1 }] });
 
       router.push(`/orders/${order.id}`);
     } catch (err) {
@@ -66,7 +67,13 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         stock: offer.stock,
       });
     }
-    setCartFeedback(isInCart ? "Позиция уже в корзине." : "Добавили в корзину.");
+    setCartFeedback(
+      isInCart
+        ? "Позиция уже в корзине."
+        : cartHasOtherPartner
+          ? "Начали новую корзину для этого заведения."
+          : "Добавили в корзину.",
+    );
   };
 
   useEffect(() => {

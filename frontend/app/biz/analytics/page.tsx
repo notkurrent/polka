@@ -15,6 +15,7 @@ import {
   orderCreatedAt,
   orderId,
   orderPrice,
+  orderSubtitle,
   orderStatus,
   orderTitle,
   partnerErrorMessage,
@@ -91,6 +92,7 @@ export default function BizAnalyticsScreen() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 650 }}>{orderTitle(order)}</div>
                       <div style={{ fontSize: 11, color: t.textSec }}>{formatOrderDate(orderCreatedAt(order))}</div>
+                      <div style={{ fontSize: 11, color: t.textSec }}>{orderSubtitle(order)}</div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 750, fontFamily: "ui-monospace, monospace" }}>
                       {money(orderPrice(order))}

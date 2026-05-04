@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function CartScreen() {
   const router = useRouter();
-  const { cart, removeFromCart, cartTotal, clearCart } = useAppStore();
+  const { cart, updateCartQuantity, removeFromCart, cartTotal, clearCart } = useAppStore();
   const t = tokens();
   const total = cartTotal();
   const [loading, setLoading] = useState(false);
@@ -21,13 +21,16 @@ export default function CartScreen() {
     setLoading(true);
     setError("");
     try {
-      for (const item of cart) {
-        await api.post("/orders", { offer_id: item.offerId });
-      }
+      const order = await api.post<{ id: number }>("/orders", {
+        items: cart.map((item) => ({
+          offer_id: Number(item.offerId),
+          quantity: item.quantity,
+        })),
+      });
       clearCart();
-      router.push("/orders");
+      router.push(`/orders/${order.id}`);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Не удалось забронировать все позиции. Корзина сохранена."));
+      setError(getApiErrorMessage(err, "Не удалось забронировать заказ. Корзина сохранена."));
     } finally {
       setLoading(false);
     }
@@ -64,6 +67,8 @@ export default function CartScreen() {
           <>
             <div style={{ padding: "0 16px", display: "flex", flexDirection: "column" }}>
               {cart.map((item, index) => {
+                const lineTotal = item.price * item.quantity;
+                const canIncrease = item.stock == null || item.quantity < item.stock;
                 return (
                   <React.Fragment key={item.offerId}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center", padding: "16px 0" }}>
@@ -83,8 +88,48 @@ export default function CartScreen() {
                           {item.name}
                         </div>
                         <div style={{ fontSize: 13, color: t.textSec }}>{item.storeName || "Заведение"}</div>
-                        <div style={{ marginTop: 2 }}>
+                        <div style={{ marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                           <PriceTag original={item.originalPrice ?? item.price} now={item.price} size="sm" />
+                          <span style={{ fontSize: 13, fontWeight: 750, color: t.text }}>{formatTenge(lineTotal)}</span>
+                        </div>
+                        <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item.offerId, item.quantity - 1)}
+                            aria-label={`Уменьшить количество ${item.name}`}
+                            style={qtyButtonStyle(t)}
+                          >
+                            {Icon.minus(16, t.primaryDeep)}
+                          </button>
+                          <span
+                            style={{
+                              minWidth: 34,
+                              height: 32,
+                              borderRadius: 10,
+                              background: t.bg,
+                              border: `1px solid ${t.divider}`,
+                              display: "grid",
+                              placeItems: "center",
+                              fontSize: 14,
+                              fontWeight: 750,
+                              color: t.text,
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item.offerId, item.quantity + 1)}
+                            disabled={!canIncrease}
+                            aria-label={`Увеличить количество ${item.name}`}
+                            style={{ ...qtyButtonStyle(t), opacity: canIncrease ? 1 : 0.45, cursor: canIncrease ? "pointer" : "default" }}
+                          >
+                            {Icon.plus(16, t.primaryDeep)}
+                          </button>
+                          {item.stock != null && (
+                            <span style={{ fontSize: 12, color: t.textSec }}>из {item.stock}</span>
+                          )}
                         </div>
                       </div>
 
@@ -135,7 +180,7 @@ export default function CartScreen() {
                 }}
               >
                 <span style={{ fontSize: 15, fontWeight: 700, color: t.text }}>Итого</span>
-                <span style={{ fontSize: 20, fontWeight: 800, color: t.primaryDeep }}>{total} ₸</span>
+                <span style={{ fontSize: 20, fontWeight: 800, color: t.primaryDeep }}>{formatTenge(total)}</span>
               </div>
               {error && (
                 <div style={{ marginBottom: 12, padding: 12, borderRadius: 12, background: "#FDE8E8", color: t.danger, fontSize: 13 }}>
@@ -151,4 +196,24 @@ export default function CartScreen() {
       </div>
     </div>
   );
+}
+
+function formatTenge(value: number) {
+  return `${value.toLocaleString("ru")} ₸`;
+}
+
+function qtyButtonStyle(t: ReturnType<typeof tokens>): React.CSSProperties {
+  return {
+    width: 32,
+    height: 32,
+    borderRadius: "50%",
+    background: t.primarySoft,
+    border: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    color: t.primaryDeep,
+    flexShrink: 0,
+  };
 }

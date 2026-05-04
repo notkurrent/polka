@@ -18,6 +18,7 @@ import {
   orderCreatedAt,
   orderId,
   orderPrice,
+  orderSubtitle,
   orderStatus,
   orderTitle,
   partnerErrorMessage,
@@ -88,7 +89,9 @@ export default function BizOrdersPage() {
             <div style={{ fontSize: 14, fontWeight: 750 }}>{money(orderPrice(order))}</div>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6, gap: 8 }}>
-            <span style={{ fontSize: 12, color: t.textSec }}>{formatOrderDate(orderCreatedAt(order))}</span>
+            <span style={{ fontSize: 12, color: t.textSec }}>
+              {orderSubtitle(order)} · {formatOrderDate(orderCreatedAt(order))}
+            </span>
             <Badge tone={statusTone(orderStatus(order))} size="sm">
               {statusLabel(orderStatus(order))}
             </Badge>

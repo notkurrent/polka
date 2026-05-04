@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.models import Offer, Order, Partner
+from app.models import Offer, Order, OrderItem, Partner
 from app.schemas import (
     OfferPublicDTO,
     OfferWithPartnerDTO,
@@ -102,9 +102,25 @@ def order_expires_in_seconds(order: Order) -> int:
     return max(0, int((order_expires_at(order) - datetime.now(timezone.utc)).total_seconds()))
 
 
-def build_order_detail_dto(order: Order, offer: Offer, partner: Partner) -> OrderDetailDTO:
+def build_order_detail_dto(order: Order, item_rows: list[tuple[OrderItem, Offer]], partner: Partner) -> OrderDetailDTO:
+    if not item_rows:
+        raise ValueError("Order has no items")
+
     expires_in = order_expires_in_seconds(order)
-    item = OrderItemDTO(id=str(offer.id), title=offer.name, price=offer.new_price)
+    first_item, first_offer = item_rows[0]
+    items = [
+        OrderItemDTO(
+            id=item.id,
+            offer_id=offer.id,
+            title=offer.name,
+            quantity=item.quantity,
+            unit_price=item.unit_price,
+            total_price=item.total_price,
+            price=item.unit_price,
+        )
+        for item, offer in item_rows
+    ]
+    total = sum((item.total_price for item, _offer in item_rows), start=first_item.total_price * 0)
 
     return OrderDetailDTO(
         id=order.id,
@@ -115,12 +131,12 @@ def build_order_detail_dto(order: Order, offer: Offer, partner: Partner) -> Orde
         expires_at=order_expires_at(order),
         expires_in_seconds=expires_in,
         offer=OrderOfferDTO(
-            id=offer.id,
-            name=offer.name,
-            old_price=offer.old_price,
-            new_price=offer.new_price,
-            discount_reason=offer.discount_reason or "",
-            type=offer.type,
+            id=first_offer.id,
+            name=first_offer.name,
+            old_price=first_offer.old_price,
+            new_price=first_offer.new_price,
+            discount_reason=first_offer.discount_reason or "",
+            type=first_offer.type,
         ),
         partner=OrderPartnerDTO(
             id=partner.id,
@@ -129,10 +145,10 @@ def build_order_detail_dto(order: Order, offer: Offer, partner: Partner) -> Orde
             hours=partner.hours,
             map_url=partner.map_url,
         ),
-        total=offer.new_price,
+        total=total,
         storeName=partner.name,
         address=partner.address,
-        pickup=offer.pickup_time or partner.hours,
+        pickup=first_offer.pickup_time or partner.hours,
         expiresIn=expires_in,
-        items=[item],
+        items=items,
     )
