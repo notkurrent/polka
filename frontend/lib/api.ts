@@ -81,10 +81,13 @@ function handlePartnerRoleRequired() {
 
 class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const hasFormDataBody = typeof FormData !== "undefined" && options.body instanceof FormData;
     const defaultHeaders: HeadersInit = {
-      "Content-Type": "application/json",
       "ngrok-skip-browser-warning": "true",
     };
+    if (!hasFormDataBody) {
+      (defaultHeaders as Record<string, string>)["Content-Type"] = "application/json";
+    }
 
     // Достаём токен из Zustand persist (auth-storage в localStorage)
     if (typeof window !== "undefined") {
@@ -133,6 +136,14 @@ class ApiClient {
       ...options,
       method: "POST",
       body: JSON.stringify(body),
+    });
+  }
+
+  postForm<T>(endpoint: string, body: FormData, options?: RequestInit) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body,
     });
   }
 

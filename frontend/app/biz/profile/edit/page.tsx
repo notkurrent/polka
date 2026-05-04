@@ -9,6 +9,7 @@ import { tokens, FONT } from "@/components/ui/primitives";
 import { bizApi, partnerErrorMessage, type AddressSuggestion } from "@/lib/biz-api";
 import { BUSINESS_CATEGORIES, DEFAULT_BUSINESS_CATEGORY } from "@/lib/business-constants";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { BusinessLogoPicker } from "@/components/biz/BusinessLogoPicker";
 
 type ScheduleDay = {
   short: string;
@@ -22,6 +23,7 @@ type PartnerProfileForm = {
   name: string;
   category: string;
   address: string;
+  map_url: string;
   hours: string;
   description: string;
 };
@@ -82,9 +84,14 @@ export default function BizProfileEditPage() {
     name: "",
     category: DEFAULT_BUSINESS_CATEGORY,
     address: "",
+    map_url: "",
     hours: "09:00-21:00",
     description: "",
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState("");
   const [schedule, setSchedule] = useState<ScheduleDay[]>(defaultSchedule);
   const [addressQuery, setAddressQuery] = useState("");
   const [selectedAddress, setSelectedAddress] = useState<AddressSuggestion | null>(null);
@@ -101,9 +108,11 @@ export default function BizProfileEditPage() {
           name: profile.name || "",
           category: profile.category || DEFAULT_BUSINESS_CATEGORY,
           address: profile.address || "",
+          map_url: profile.map_url || "",
           hours,
           description: profile.description || "",
         });
+        setLogoUrl(profile.logo_url || null);
         setAddressQuery(profile.address || "");
         setSelectedAddress(
           profile.address
@@ -158,6 +167,7 @@ export default function BizProfileEditPage() {
     }
     setSaving(true);
     setError("");
+    setLogoError("");
     try {
       await bizApi.updateProfile({
         name: data.name.trim(),
@@ -165,9 +175,24 @@ export default function BizProfileEditPage() {
         address: selectedAddress.label,
         hours: formattedHours,
         description: data.description.trim(),
+        map_url: data.map_url.trim() || null,
         lat: selectedAddress.lat,
         lon: selectedAddress.lon,
       });
+      if (logoFile) {
+        setLogoUploading(true);
+        try {
+          const updatedProfile = await bizApi.uploadLogo(logoFile);
+          setLogoUrl(updatedProfile.logo_url || null);
+          setLogoFile(null);
+        } catch (uploadError) {
+          setLogoError(partnerErrorMessage(uploadError));
+          setError("Данные сохранены, но логотип не загрузился. Выберите другой файл и попробуйте снова.");
+          return;
+        } finally {
+          setLogoUploading(false);
+        }
+      }
       router.push("/biz/profile");
     } catch (err) {
       setError(partnerErrorMessage(err));
@@ -195,6 +220,23 @@ export default function BizProfileEditPage() {
                 value={data.name}
                 onChange={(event) => setData({ ...data, name: event.target.value })}
                 style={inputStyle(t, fontFn)}
+              />
+            </Field>
+
+            <Field label="Логотип бизнеса">
+              <BusinessLogoPicker
+                id="biz-profile-logo"
+                businessName={data.name}
+                file={logoFile}
+                logoUrl={logoUrl}
+                loading={logoUploading}
+                error={logoError}
+                disabled={saving || logoUploading}
+                onFileChange={(file) => {
+                  setLogoFile(file);
+                  setLogoError("");
+                  setError("");
+                }}
               />
             </Field>
 
@@ -312,6 +354,17 @@ export default function BizProfileEditPage() {
               </div>
             </div>
 
+            <Field label="Ссылка на 2GIS / карту">
+              <input
+                name="partner-map-url"
+                aria-label="Ссылка на 2GIS или карту"
+                value={data.map_url}
+                onChange={(event) => setData({ ...data, map_url: event.target.value })}
+                placeholder="https://2gis.kz/..."
+                style={inputStyle(t, fontFn)}
+              />
+            </Field>
+
             <div>
               <Label>Часы работы</Label>
               <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -417,8 +470,8 @@ export default function BizProfileEditPage() {
             </div>
 
             {error && <div style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
-            <PillButtonBiz onClick={save} disabled={saving} size="lg" style={{ marginTop: 8 }}>
-              {saving ? "Сохранение…" : "Сохранить"}
+            <PillButtonBiz onClick={save} disabled={saving || logoUploading} size="lg" style={{ marginTop: 8 }}>
+              {saving || logoUploading ? "Сохранение…" : "Сохранить"}
             </PillButtonBiz>
           </>
         )}

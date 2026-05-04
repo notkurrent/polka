@@ -8,8 +8,9 @@ import { api } from "@/lib/api";
 import type { User } from "@/store/auth";
 import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
-import { partnerErrorMessage } from "@/lib/biz-api";
+import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
 import { BUSINESS_CATEGORIES, DEFAULT_BUSINESS_CATEGORY } from "@/lib/business-constants";
+import { BusinessLogoPicker } from "@/components/biz/BusinessLogoPicker";
 
 export default function BizRegisterPage() {
   const router = useRouter();
@@ -21,8 +22,13 @@ export default function BizRegisterPage() {
     name: "",
     type: DEFAULT_BUSINESS_CATEGORY,
     address: "",
+    map_url: "",
     description: "",
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState("");
+  const [profileCreated, setProfileCreated] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,12 +40,29 @@ export default function BizRegisterPage() {
     }
     setLoading(true);
     setError("");
+    setLogoError("");
     try {
-      await api.post("/partner-api/register", {
-        ...data,
-        lat: 43.238949,
-        lon: 76.889709,
-      });
+      if (!profileCreated) {
+        await api.post("/partner-api/register", {
+          ...data,
+          map_url: data.map_url.trim() || null,
+          lat: 43.238949,
+          lon: 76.889709,
+        });
+        setProfileCreated(true);
+      }
+      if (logoFile) {
+        setLogoUploading(true);
+        try {
+          await bizApi.uploadLogo(logoFile);
+        } catch (uploadError) {
+          setLogoError(partnerErrorMessage(uploadError));
+          setError("Заявка создана, но логотип не загрузился. Выберите другой файл или перейдите в кабинет.");
+          return;
+        } finally {
+          setLogoUploading(false);
+        }
+      }
       const me = await api.get<User>("/users/me");
       setUser(me);
       setSelectedMode("business");
@@ -60,10 +83,17 @@ export default function BizRegisterPage() {
     router.replace("/");
   };
 
-  const fields = [
+  const fields: Array<{
+    id: string;
+    label: string;
+    options?: readonly string[];
+    textarea?: boolean;
+    placeholder?: string;
+  }> = [
     { id: "name", label: "Название заведения" },
     { id: "type", label: "Категория", options: BUSINESS_CATEGORIES },
     { id: "address", label: "Адрес заведения" },
+    { id: "map_url", label: "Ссылка на 2GIS / карту", placeholder: "https://2gis.kz/..." },
     { id: "description", label: "Описание", textarea: true },
   ];
 
@@ -197,6 +227,7 @@ export default function BizRegisterPage() {
                 name={f.id}
                 value={data[f.id]}
                 onChange={(e) => setData({ ...data, [f.id]: e.target.value })}
+                placeholder={f.placeholder}
                 style={{
                   width: "100%",
                   marginTop: 6,
@@ -214,6 +245,19 @@ export default function BizRegisterPage() {
             )}
           </div>
         ))}
+        <BusinessLogoPicker
+          id="biz-register-logo"
+          businessName={data.name}
+          file={logoFile}
+          loading={logoUploading}
+          error={logoError}
+          disabled={loading || logoUploading}
+          onFileChange={(file) => {
+            setLogoFile(file);
+            setLogoError("");
+            setError("");
+          }}
+        />
         {error && (
           <div
             style={{ color: error.includes("уже создан") ? t.primaryDeep : t.danger, fontSize: 13, fontWeight: 600 }}
@@ -226,8 +270,27 @@ export default function BizRegisterPage() {
             Перейти в кабинет
           </PillButtonBiz>
         )}
-        <PillButtonBiz onClick={handleSubmit} size="lg" disabled={loading} style={{ marginTop: 10 }}>
-          {loading ? "Отправляем заявку…" : "Отправить заявку"}
+        {profileCreated && (
+          <PillButtonBiz
+            onClick={async () => {
+              const me = await api.get<User>("/users/me");
+              setUser(me);
+              setSelectedMode("business");
+              router.push("/biz");
+            }}
+            size="lg"
+          >
+            Перейти в кабинет
+          </PillButtonBiz>
+        )}
+        <PillButtonBiz onClick={handleSubmit} size="lg" disabled={loading || logoUploading} style={{ marginTop: 10 }}>
+          {loading || logoUploading
+            ? profileCreated
+              ? "Загружаем логотип…"
+              : "Отправляем заявку…"
+            : profileCreated
+              ? "Загрузить логотип и перейти"
+              : "Отправить заявку"}
         </PillButtonBiz>
         <button
           type="button"

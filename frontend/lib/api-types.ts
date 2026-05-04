@@ -8,6 +8,9 @@ export interface PartnerPublic {
   hours: string;
   category?: string;
   description?: string;
+  logo_path?: string | null;
+  logo_url?: string | null;
+  map_url?: string | null;
   lat?: number | null;
   lon?: number | null;
 }

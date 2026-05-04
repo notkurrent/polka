@@ -143,6 +143,11 @@ export const bizApi = {
   addressSuggestions: (query: string) =>
     api.get<AddressSuggestion[]>(`/partner-api/address-suggestions?q=${encodeURIComponent(query)}`),
   updateProfile: (body: Partial<PartnerPublic>) => api.patch<PartnerPublic>("/partner-api/profile", body),
+  uploadLogo: (file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return api.postForm<PartnerPublic>("/partner-api/profile/logo", body);
+  },
   offers: () => api.get<OfferPublic[]>("/partner-api/offers"),
   createOffer: (body: unknown) => api.post<OfferPublic>("/partner-api/offers", body),
   updateOffer: (id: number, body: unknown) => api.patch<OfferPublic>(`/partner-api/offers/${id}`, body),
