@@ -11,6 +11,7 @@ import { PartnerModerationState } from "@/components/biz/PartnerModerationState"
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { bizApi, money, parseCodePayload, partnerErrorMessage, type ParsedCodePayload } from "@/lib/biz-api";
+import { PLATFORM_COMMISSION_PERCENT, PLATFORM_COMMISSION_RATE } from "@/lib/business-constants";
 import type { OrderDetail } from "@/lib/api-types";
 
 function initialCodePayload(): ParsedCodePayload | null {
@@ -78,7 +79,7 @@ export default function BizScanPage() {
     };
   }, [scannerActive]);
 
-  const commission = useMemo(() => Math.round(Number(completed?.total || 0) * 0.17), [completed]);
+  const commission = useMemo(() => Math.round(Number(completed?.total || 0) * PLATFORM_COMMISSION_RATE), [completed]);
 
   const setDigit = (index: number, value: string) => {
     const onlyDigit = value.replace(/\D/g, "").slice(-1);
@@ -196,7 +197,10 @@ export default function BizScanPage() {
             }}
           >
             <SummaryRow label="Оплачено клиентом" value={money(completed.total)} />
-            <SummaryRow label="Комиссия 17%" value={`-${money(commission)}`} />
+            <SummaryRow
+              label={`Комиссия ${PLATFORM_COMMISSION_PERCENT}%`}
+              value={commission ? `-${money(commission)}` : money(commission)}
+            />
             <div style={{ height: 1, background: t.divider, margin: "8px 0" }} />
             <SummaryRow label="Ваша выручка" value={money(Number(completed.total) - commission)} strong />
           </div>

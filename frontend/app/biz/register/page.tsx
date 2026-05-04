@@ -9,6 +9,7 @@ import type { User } from "@/store/auth";
 import { useAuthStore } from "@/store/auth";
 import { useAppStore } from "@/store/app";
 import { partnerErrorMessage } from "@/lib/biz-api";
+import { BUSINESS_CATEGORIES, DEFAULT_BUSINESS_CATEGORY } from "@/lib/business-constants";
 
 export default function BizRegisterPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function BizRegisterPage() {
 
   const [data, setData] = useState<Record<string, string>>({
     name: "",
-    type: "Кофейня",
+    type: DEFAULT_BUSINESS_CATEGORY,
     address: "",
     description: "",
   });
@@ -61,7 +62,7 @@ export default function BizRegisterPage() {
 
   const fields = [
     { id: "name", label: "Название заведения" },
-    { id: "type", label: "Категория", options: ["Кофейня", "Пекарня", "Ресторан", "Кондитерская", "Столовая"] },
+    { id: "type", label: "Категория", options: BUSINESS_CATEGORIES },
     { id: "address", label: "Адрес заведения" },
     { id: "description", label: "Описание", textarea: true },
   ];

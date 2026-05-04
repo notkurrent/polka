@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ALMATY_CENTER, formatDistance, NearbyOffer } from "@/lib/api-types";
+import { BUSINESS_CATEGORY_SEARCH_OPTIONS } from "@/lib/business-constants";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -39,10 +40,7 @@ export default function SearchPage() {
   );
 
   const categories = [
-    { label: "Кофейни", query: "Кофейни" },
-    { label: "Пекарни", query: "Пекарни" },
-    { label: "Рестораны", query: "Рестораны" },
-    { label: "Десерты", query: "Десерты" },
+    ...BUSINESS_CATEGORY_SEARCH_OPTIONS,
     { label: "Сюрприз-пакеты", query: "Сюрприз-пакеты" },
   ];
 

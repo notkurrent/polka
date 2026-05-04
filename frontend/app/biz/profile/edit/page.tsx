@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
 import { tokens, FONT } from "@/components/ui/primitives";
 import { bizApi, partnerErrorMessage, type AddressSuggestion } from "@/lib/biz-api";
+import { BUSINESS_CATEGORIES, DEFAULT_BUSINESS_CATEGORY } from "@/lib/business-constants";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 type ScheduleDay = {
@@ -15,6 +16,14 @@ type ScheduleDay = {
   enabled: boolean;
   from: string;
   to: string;
+};
+
+type PartnerProfileForm = {
+  name: string;
+  category: string;
+  address: string;
+  hours: string;
+  description: string;
 };
 
 const DEFAULT_FROM = "09:00";
@@ -69,9 +78,9 @@ export default function BizProfileEditPage() {
   const t = tokens();
   const fontFn = FONT ? FONT() : "system-ui";
 
-  const [data, setData] = useState({
+  const [data, setData] = useState<PartnerProfileForm>({
     name: "",
-    category: "Кофейня",
+    category: DEFAULT_BUSINESS_CATEGORY,
     address: "",
     hours: "09:00-21:00",
     description: "",
@@ -90,7 +99,7 @@ export default function BizProfileEditPage() {
         const hours = profile.hours || "09:00-21:00";
         setData({
           name: profile.name || "",
-          category: profile.category || "Кофейня",
+          category: profile.category || DEFAULT_BUSINESS_CATEGORY,
           address: profile.address || "",
           hours,
           description: profile.description || "",
@@ -111,7 +120,7 @@ export default function BizProfileEditPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const categories = ["Кофейня", "Пекарня", "Ресторан", "Кондитерская", "Столовая"];
+  const categories = BUSINESS_CATEGORIES;
   const formattedHours = formatSchedule(schedule);
   const shouldSearchAddress = addressQuery.trim().length >= 3 && selectedAddress?.label !== addressQuery.trim();
   const {
