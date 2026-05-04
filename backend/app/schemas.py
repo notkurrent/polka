@@ -13,6 +13,8 @@ class PartnerPublicDTO(BaseModel):
     hours: str
     category: str = ""
     description: str = ""
+    logo_path: str | None = None
+    logo_url: str | None = None
     lat: float | None = None
     lon: float | None = None
 
@@ -39,6 +41,8 @@ class OfferPublicDTO(BaseModel):
     old_price: Decimal
     new_price: Decimal
     stock: int
+    image_path: str | None = None
+    image_url: str | None = None
     created_at: datetime
 
 

@@ -12,6 +12,7 @@ from app.schemas import (
     PartnerPublicDTO,
 )
 from app.order_lifecycle import order_expires_at
+from app.services.media_storage import build_public_media_url
 
 
 def order_status_name(order: Order) -> str:
@@ -31,6 +32,8 @@ def build_partner_dto(
         hours=partner.hours,
         category=partner.category or "",
         description=partner.description or "",
+        logo_path=partner.logo_path,
+        logo_url=build_public_media_url(partner.logo_path),
         lat=lat,
         lon=lon,
     )
@@ -68,6 +71,8 @@ def build_offer_dto(offer: Offer) -> OfferPublicDTO:
         old_price=offer.old_price,
         new_price=offer.new_price,
         stock=offer.stock,
+        image_path=offer.image_path,
+        image_url=build_public_media_url(offer.image_path),
         created_at=offer.created_at,
     )
 

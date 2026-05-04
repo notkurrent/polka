@@ -6,7 +6,7 @@ import time
 from decimal import Decimal
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import func, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,10 +30,20 @@ from app.serializers import (
     build_partner_profile_dto,
 )
 from app.services.notifications import notify_admin_partner_registered
+from app.services.media_storage import (
+    MediaImageKind,
+    MediaStorageError,
+    MediaValidationError,
+    SupabaseMediaStorage,
+    new_offer_image_path,
+    new_partner_logo_path,
+    prepare_upload_image,
+)
 
 router = APIRouter(prefix="/partner-api", tags=["partner"])
 public_router = APIRouter(prefix="/partners", tags=["partners"])
 logger = logging.getLogger(__name__)
+media_storage = SupabaseMediaStorage()
 
 DEFAULT_DEV_LAT = 43.238949
 DEFAULT_DEV_LON = 76.889709
@@ -203,6 +213,14 @@ class AddressSuggestion(BaseModel):
     lat: float
     lon: float
     place_id: int | None = None
+
+
+def media_http_exception(exc: Exception) -> HTTPException:
+    if isinstance(exc, MediaValidationError):
+        return HTTPException(status_code=400, detail=str(exc))
+    if isinstance(exc, MediaStorageError):
+        return HTTPException(status_code=503, detail=str(exc))
+    return HTTPException(status_code=500, detail="Image processing failed")
 
 
 def compact_address_label(item: dict) -> str:
@@ -413,6 +431,52 @@ async def update_partner_profile(
     )
 
 
+@router.post("/profile/logo", response_model=PartnerPublicDTO)
+async def upload_partner_logo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    partner = await get_current_partner(current_user, session)
+
+    try:
+        prepared = await prepare_upload_image(file, MediaImageKind.PARTNER_LOGO)
+        new_path = new_partner_logo_path(partner.id, prepared.extension)
+        await media_storage.upload(
+            path=new_path,
+            body=prepared.body,
+            content_type=prepared.content_type,
+        )
+    except (MediaValidationError, MediaStorageError) as exc:
+        raise media_http_exception(exc) from exc
+
+    old_path = partner.logo_path
+    partner.logo_path = new_path
+    session.add(partner)
+    try:
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        try:
+            await media_storage.delete(new_path)
+        except MediaStorageError:
+            logger.exception("media.rollback_delete_failed path=%s", new_path)
+        raise
+
+    try:
+        await media_storage.delete(old_path)
+    except MediaStorageError:
+        logger.exception("media.old_logo_delete_failed path=%s", old_path)
+
+    row = await get_partner_location_row(session, partner.id)
+    partner, row_lat, row_lon = row
+    return build_partner_dto(
+        partner,
+        lat=float(row_lat) if row_lat is not None else None,
+        lon=float(row_lon) if row_lon is not None else None,
+    )
+
+
 @router.get("/offers", response_model=list[OfferPublicDTO])
 async def get_partner_offers(
     current_user: User = Depends(get_current_user),
@@ -453,6 +517,54 @@ async def create_partner_offer(
     await session.commit()
     await session.refresh(new_offer)
     return build_offer_dto(new_offer)
+
+
+@router.post("/offers/{offer_id}/image", response_model=OfferPublicDTO)
+async def upload_partner_offer_image(
+    offer_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    partner = await get_approved_partner(current_user, session)
+
+    query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id, Offer.is_archived.is_(False))
+    result = await session.execute(query)
+    offer = result.scalar_one_or_none()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+
+    try:
+        prepared = await prepare_upload_image(file, MediaImageKind.OFFER_IMAGE)
+        new_path = new_offer_image_path(partner.id, offer.id, prepared.extension)
+        await media_storage.upload(
+            path=new_path,
+            body=prepared.body,
+            content_type=prepared.content_type,
+        )
+    except (MediaValidationError, MediaStorageError) as exc:
+        raise media_http_exception(exc) from exc
+
+    old_path = offer.image_path
+    offer.image_path = new_path
+    session.add(offer)
+    try:
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        try:
+            await media_storage.delete(new_path)
+        except MediaStorageError:
+            logger.exception("media.rollback_delete_failed path=%s", new_path)
+        raise
+
+    try:
+        await media_storage.delete(old_path)
+    except MediaStorageError:
+        logger.exception("media.old_offer_image_delete_failed path=%s", old_path)
+
+    await session.refresh(offer)
+    return build_offer_dto(offer)
 
 
 @router.patch("/offers/{offer_id}", response_model=OfferPublicDTO)
@@ -504,8 +616,13 @@ async def delete_partner_offer(
         await session.commit()
         return {"status": "archived"}
 
+    image_path = offer.image_path
     await session.delete(offer)
     await session.commit()
+    try:
+        await media_storage.delete(image_path)
+    except MediaStorageError:
+        logger.exception("media.deleted_offer_image_delete_failed path=%s", image_path)
     return {"status": "deleted"}
 
 

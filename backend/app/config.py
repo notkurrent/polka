@@ -51,6 +51,31 @@ def get_admin_panel_url() -> str:
     return os.getenv("ADMIN_PANEL_URL", "")
 
 
+def get_supabase_url() -> str:
+    return os.getenv("SUPABASE_URL", "")
+
+
+def get_supabase_service_role_key() -> str:
+    return os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+
+
+def get_supabase_storage_bucket() -> str:
+    return os.getenv("SUPABASE_STORAGE_BUCKET", "media")
+
+
+def get_supabase_storage_public_base_url() -> str:
+    return os.getenv("SUPABASE_STORAGE_PUBLIC_BASE_URL", "")
+
+
+def get_media_max_upload_bytes() -> int:
+    raw = os.getenv("MEDIA_MAX_UPLOAD_BYTES", str(5 * 1024 * 1024))
+    try:
+        value = int(raw)
+    except ValueError:
+        return 5 * 1024 * 1024
+    return max(value, 1)
+
+
 def get_admin_phone_allowlist() -> list[str]:
     return parse_csv_env("ADMIN_PHONE_ALLOWLIST", [])
 
