@@ -62,6 +62,7 @@ class Partner(SQLModel, table=True):
     description: str = Field(default="")
     category: str = Field(default="")
     logo_path: Optional[str] = Field(default=None, max_length=512)
+    map_url: Optional[str] = Field(default=None, max_length=1024)
     status: PartnerStatus = Field(
         default=PartnerStatus.PENDING,
         sa_column=Column(Enum(PartnerStatus), nullable=False),
@@ -101,6 +102,7 @@ class Offer(SQLModel, table=True):
     pickup_time: str = Field(default="")
     old_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
     new_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
+    discount_reason: str = Field(default="")
     stock: int = Field(default=0)
     image_path: Optional[str] = Field(default=None, max_length=512)
     is_archived: bool = Field(default=False)

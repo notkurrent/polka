@@ -15,6 +15,7 @@ class PartnerPublicDTO(BaseModel):
     description: str = ""
     logo_path: str | None = None
     logo_url: str | None = None
+    map_url: str | None = None
     lat: float | None = None
     lon: float | None = None
 
@@ -40,6 +41,7 @@ class OfferPublicDTO(BaseModel):
     pickup_time: str
     old_price: Decimal
     new_price: Decimal
+    discount_reason: str = ""
     stock: int
     image_path: str | None = None
     image_url: str | None = None
@@ -63,6 +65,7 @@ class OrderOfferDTO(BaseModel):
     name: str
     old_price: Decimal
     new_price: Decimal
+    discount_reason: str = ""
     type: OfferType
 
 
@@ -71,6 +74,7 @@ class OrderPartnerDTO(BaseModel):
     name: str
     address: str
     hours: str
+    map_url: str | None = None
 
 
 class OrderItemDTO(BaseModel):

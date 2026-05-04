@@ -10,6 +10,7 @@ from app.database import get_session
 from app.dependencies import get_current_admin_user
 from app.models import Partner, PartnerStatus, User
 from app.schemas import AdminPartnerDTO
+from app.services.media_storage import build_public_media_url
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -43,6 +44,9 @@ def build_admin_partner_dto(
         hours=partner.hours,
         category=partner.category or "",
         description=partner.description or "",
+        logo_path=partner.logo_path,
+        logo_url=build_public_media_url(partner.logo_path),
+        map_url=partner.map_url,
         lat=lat,
         lon=lon,
         status=partner.status,

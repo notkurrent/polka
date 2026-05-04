@@ -47,6 +47,7 @@ media_storage = SupabaseMediaStorage()
 
 DEFAULT_DEV_LAT = 43.238949
 DEFAULT_DEV_LON = 76.889709
+MIN_DISCOUNT_MULTIPLIER = Decimal("0.70")
 ALMATY_VIEWBOX = "76.75,43.36,77.05,43.12"
 NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "PolkaMVP/0.1 local-address-search")
@@ -72,6 +73,12 @@ def verify_partner_role(user: User) -> None:
         return
 
     raise HTTPException(status_code=403, detail="Partner role required")
+
+
+def validate_offer_discount(old_price: Decimal, new_price: Decimal) -> None:
+    if new_price <= old_price * MIN_DISCOUNT_MULTIPLIER:
+        return
+    raise HTTPException(status_code=400, detail="Offer discount must be at least 30%")
 
 
 async def apply_partner_location(
@@ -167,6 +174,7 @@ class OfferCreate(BaseModel):
     pickup_time: str = ""
     old_price: Decimal = Field(ge=0)
     new_price: Decimal = Field(ge=0)
+    discount_reason: str = ""
     stock: int = Field(ge=0)
 
 
@@ -176,6 +184,7 @@ class OfferUpdate(BaseModel):
     pickup_time: str | None = None
     old_price: Decimal | None = Field(default=None, ge=0)
     new_price: Decimal | None = Field(default=None, ge=0)
+    discount_reason: str | None = None
     stock: int | None = Field(default=None, ge=0)
 
 
@@ -194,6 +203,7 @@ class PartnerRegister(BaseModel):
     address: str
     description: str = ""
     hours: str | None = None
+    map_url: str | None = None
     lat: float | None = None
     lon: float | None = None
 
@@ -204,6 +214,7 @@ class PartnerProfileUpdate(BaseModel):
     hours: str | None = None
     description: str | None = None
     category: str | None = None
+    map_url: str | None = None
     lat: float | None = None
     lon: float | None = None
 
@@ -373,6 +384,7 @@ async def register_partner(
         hours=req.hours or "09:00-21:00",
         category=req.type,
         description=req.description,
+        map_url=req.map_url,
         status=PartnerStatus.PENDING,
     )
     session.add(partner)
@@ -502,6 +514,7 @@ async def create_partner_offer(
 ):
     await expire_stale_orders(session)
     partner = await get_approved_partner(current_user, session)
+    validate_offer_discount(req.old_price, req.new_price)
 
     new_offer = Offer(
         partner_id=partner.id,
@@ -511,6 +524,7 @@ async def create_partner_offer(
         pickup_time=req.pickup_time,
         old_price=req.old_price,
         new_price=req.new_price,
+        discount_reason=req.discount_reason,
         stock=req.stock,
     )
     session.add(new_offer)
@@ -584,6 +598,9 @@ async def update_partner_offer(
         raise HTTPException(status_code=404, detail="Offer not found")
 
     update_data = req.model_dump(exclude_unset=True)
+    old_price = update_data.get("old_price", offer.old_price)
+    new_price = update_data.get("new_price", offer.new_price)
+    validate_offer_discount(old_price, new_price)
     for key, value in update_data.items():
         setattr(offer, key, value)
 
