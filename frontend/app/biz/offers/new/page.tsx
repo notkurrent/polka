@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
 import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
+import { OfferImagePicker } from "@/components/biz/OfferImagePicker";
 import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -21,12 +22,15 @@ export default function BizCreateOfferPage() {
   const [format, setFormat] = useState<"MAGIC_BOX" | "SPECIFIC">("MAGIC_BOX");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [discountReason, setDiscountReason] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [pickupFrom, setPickupFrom] = useState("19:00");
   const [pickupTo, setPickupTo] = useState("21:00");
   const [price, setPrice] = useState("");
   const [original, setOriginal] = useState("");
   const [qty, setQty] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const discount = useMemo(() => {
@@ -44,6 +48,7 @@ export default function BizCreateOfferPage() {
     if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
     if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
     if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
+    if (newPrice > oldPrice * 0.7) return "Минимальная скидка для Polka — 30%.";
     if (!Number.isInteger(qty) || qty < 1) return "Укажите хотя бы 1 порцию.";
     return "";
   };
@@ -58,15 +63,21 @@ export default function BizCreateOfferPage() {
     setIsSubmitting(true);
     setError("");
     try {
-      await bizApi.createOffer({
+      const payload = {
         type: format,
         name: title.trim(),
         description: description.trim(),
+        discount_reason: discountReason.trim(),
         pickup_time: `${pickupFrom} - ${pickupTo}`,
         old_price: Number(original),
         new_price: Number(price),
         stock: qty,
-      });
+      };
+      const offer = createdOfferId ? await bizApi.updateOffer(createdOfferId, payload) : await bizApi.createOffer(payload);
+      if (!createdOfferId) setCreatedOfferId(offer.id);
+      if (photoFile) {
+        await bizApi.uploadOfferImage(offer.id, photoFile);
+      }
       router.push("/biz/offers");
     } catch (err) {
       setError(partnerErrorMessage(err));
@@ -143,6 +154,29 @@ export default function BizCreateOfferPage() {
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             rows={3}
+            style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
+          />
+        </Field>
+
+        <Field label="Фото">
+          <OfferImagePicker
+            id="offer-photo"
+            file={photoFile}
+            loading={isSubmitting && Boolean(photoFile)}
+            error={error.toLowerCase().includes("image") || error.toLowerCase().includes("фото") ? error : ""}
+            disabled={isSubmitting}
+            onFileChange={setPhotoFile}
+          />
+        </Field>
+
+        <Field label="Почему скидка?">
+          <textarea
+            name="discount-reason"
+            aria-label="Почему скидка"
+            placeholder="Например, выпечка дня или короткий срок годности"
+            value={discountReason}
+            onChange={(event) => setDiscountReason(event.target.value)}
+            rows={2}
             style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
           />
         </Field>

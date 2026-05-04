@@ -1,4 +1,4 @@
-export type OfferType = "SURPLUS" | "MAGIC_BOX" | string;
+export type OfferType = "MAGIC_BOX" | "SPECIFIC" | string;
 export type PartnerStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
 export interface PartnerPublic {
@@ -30,7 +30,10 @@ export interface OfferPublic {
   pickup_time: string;
   old_price: number;
   new_price: number;
+  discount_reason: string;
   stock: number;
+  image_path?: string | null;
+  image_url?: string | null;
   created_at?: string;
 }
 

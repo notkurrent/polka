@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
 import { BizTabBar } from "@/components/biz/BizTabBar";
+import { OfferImagePicker, OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
-import { Badge, PriceTag, StripePlaceholder, tokens, FONT, Icon } from "@/components/ui/primitives";
+import { Badge, PriceTag, tokens, FONT, Icon } from "@/components/ui/primitives";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -28,12 +29,15 @@ export default function BizOffersListScreen() {
   const [draft, setDraft] = useState({
     name: "",
     description: "",
+    discount_reason: "",
     pickup_from: "19:00",
     pickup_to: "21:00",
     old_price: "",
     new_price: "",
     stock: "",
   });
+  const [draftPhoto, setDraftPhoto] = useState<File | null>(null);
+  const [deleteDraftPhoto, setDeleteDraftPhoto] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [pendingDelete, setPendingDelete] = useState<OfferPublic | null>(null);
@@ -46,27 +50,58 @@ export default function BizOffersListScreen() {
     setDraft({
       name: offer.name,
       description: offer.description || "",
+      discount_reason: offer.discount_reason || "",
       pickup_from: from,
       pickup_to: to,
       old_price: String(offer.old_price),
       new_price: String(offer.new_price),
       stock: String(offer.stock),
     });
+    setDraftPhoto(null);
+    setDeleteDraftPhoto(false);
+  };
+
+  const validateDraft = () => {
+    const oldPrice = Number(draft.old_price);
+    const newPrice = Number(draft.new_price);
+    const stock = Number(draft.stock);
+    if (!draft.name.trim()) return "Введите название позиции.";
+    if (!draft.pickup_from.trim() || !draft.pickup_to.trim()) return "Укажите окно выдачи.";
+    if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
+    if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
+    if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
+    if (newPrice > oldPrice * 0.7) return "Минимальная скидка для Polka — 30%.";
+    if (!Number.isInteger(stock) || stock < 0) return "Остаток должен быть целым числом от 0.";
+    return "";
   };
 
   const saveEdit = async (id: number) => {
+    const validationError = validateDraft();
+    if (validationError) {
+      setMessage(validationError);
+      return;
+    }
+
     setBusyId(id);
     setMessage("");
     try {
       await bizApi.updateOffer(id, {
         name: draft.name.trim(),
         description: draft.description.trim(),
+        discount_reason: draft.discount_reason.trim(),
         pickup_time: `${draft.pickup_from} - ${draft.pickup_to}`,
         old_price: Number(draft.old_price),
         new_price: Number(draft.new_price),
         stock: Number(draft.stock),
       });
+      if (draftPhoto) {
+        await bizApi.uploadOfferImage(id, draftPhoto);
+      } else if (deleteDraftPhoto) {
+        await bizApi.deleteOfferImage(id);
+      }
       setEditingId(null);
+      setDraftPhoto(null);
+      setDeleteDraftPhoto(false);
       await mutate();
     } catch (err) {
       setMessage(partnerErrorMessage(err));
@@ -167,10 +202,33 @@ export default function BizOffersListScreen() {
                 alignItems: "flex-start",
               }}
             >
-              <StripePlaceholder label="позиция" w={60} h={60} radius={10} tone={active ? "mint" : "slate"} />
+              <OfferImagePreview
+                imageUrl={offer.image_url}
+                label="позиция"
+                width={60}
+                height={60}
+                radius={10}
+                tone={active ? "mint" : "slate"}
+              />
               <div style={{ flex: 1, minWidth: 0 }}>
                 {isEditing ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <OfferImagePicker
+                      id={`offer-photo-${offer.id}`}
+                      file={draftPhoto}
+                      imageUrl={offer.image_url}
+                      loading={busyId === offer.id && Boolean(draftPhoto)}
+                      disabled={busyId === offer.id}
+                      markedForDelete={deleteDraftPhoto}
+                      onFileChange={(file) => {
+                        setDraftPhoto(file);
+                        setDeleteDraftPhoto(false);
+                      }}
+                      onDelete={() => {
+                        setDraftPhoto(null);
+                        setDeleteDraftPhoto((value) => !value);
+                      }}
+                    />
                     <input
                       value={draft.name}
                       name="offer-name"
@@ -184,6 +242,15 @@ export default function BizOffersListScreen() {
                       aria-label="Описание"
                       placeholder="Кратко о составе"
                       onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+                      rows={2}
+                      style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
+                    />
+                    <textarea
+                      value={draft.discount_reason}
+                      name="discount-reason"
+                      aria-label="Почему скидка"
+                      placeholder="Почему скидка?"
+                      onChange={(event) => setDraft({ ...draft, discount_reason: event.target.value })}
                       rows={2}
                       style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
                     />
@@ -211,7 +278,7 @@ export default function BizOffersListScreen() {
                         value={draft.old_price}
                         name="old-price"
                         aria-label="Обычная цена"
-                        onChange={(event) => setDraft({ ...draft, old_price: event.target.value })}
+                        onChange={(event) => setDraft({ ...draft, old_price: event.target.value.replace(/\D/g, "") })}
                         inputMode="numeric"
                         style={inputStyle(t, fontFn)}
                       />
@@ -219,7 +286,7 @@ export default function BizOffersListScreen() {
                         value={draft.new_price}
                         name="new-price"
                         aria-label="Цена Polka"
-                        onChange={(event) => setDraft({ ...draft, new_price: event.target.value })}
+                        onChange={(event) => setDraft({ ...draft, new_price: event.target.value.replace(/\D/g, "") })}
                         inputMode="numeric"
                         style={inputStyle(t, fontFn)}
                       />
@@ -227,7 +294,7 @@ export default function BizOffersListScreen() {
                         value={draft.stock}
                         name="stock"
                         aria-label="Остаток"
-                        onChange={(event) => setDraft({ ...draft, stock: event.target.value })}
+                        onChange={(event) => setDraft({ ...draft, stock: event.target.value.replace(/\D/g, "") })}
                         inputMode="numeric"
                         style={inputStyle(t, fontFn)}
                       />
@@ -254,6 +321,16 @@ export default function BizOffersListScreen() {
                     <div style={{ fontSize: 14, fontWeight: 750, marginTop: 5 }}>{offer.name}</div>
                     {offer.pickup_time && (
                       <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>Выдача: {offer.pickup_time}</div>
+                    )}
+                    {offer.description && (
+                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 3, lineHeight: 1.35 }}>
+                        {offer.description}
+                      </div>
+                    )}
+                    {offer.discount_reason && (
+                      <div style={{ fontSize: 12, color: t.primaryDeep, marginTop: 3, lineHeight: 1.35 }}>
+                        Почему скидка: {offer.discount_reason}
+                      </div>
                     )}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
                       <PriceTag original={Number(offer.old_price)} now={Number(offer.new_price)} size="sm" />

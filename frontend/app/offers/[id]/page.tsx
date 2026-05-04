@@ -7,7 +7,8 @@ import { api, getApiErrorMessage } from "@/lib/api";
 import { OfferDetail, OrderDetail } from "@/lib/api-types";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/app";
-import { tokens, Icon, FONT, StripePlaceholder, PillButton, PriceTag } from "@/components/ui/primitives";
+import { tokens, Icon, FONT, PillButton, PriceTag } from "@/components/ui/primitives";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -127,11 +128,13 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       }}
     >
       <div style={{ position: "relative" }}>
-        <StripePlaceholder
-          label={offer.type === "MAGIC_BOX" ? "Сюрприз" : undefined}
-          h={240}
+        <OfferImagePreview
+          imageUrl={offer.image_url}
+          label={offer.type === "MAGIC_BOX" ? "Сюрприз" : "позиция"}
+          width="100%"
+          height={240}
           radius={0}
-          tone={offer.type === "MAGIC_BOX" ? "purple" : "orange"}
+          tone={offer.type === "MAGIC_BOX" ? "mint" : "sand"}
         />
         <button
           type="button"
@@ -177,6 +180,22 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
         {offer.description && (
           <div style={{ marginBottom: 24, fontSize: 14, color: t.textSec, lineHeight: 1.4 }}>{offer.description}</div>
+        )}
+        {offer.discount_reason && (
+          <div
+            style={{
+              marginBottom: 24,
+              padding: "12px 14px",
+              borderRadius: 14,
+              background: t.primarySoft,
+              color: t.primaryDeep,
+              fontSize: 13,
+              lineHeight: 1.45,
+              fontWeight: 650,
+            }}
+          >
+            Почему скидка: {offer.discount_reason}
+          </div>
         )}
 
         <div style={{ background: t.surface, borderRadius: 16, padding: "16px", marginBottom: 24 }}>

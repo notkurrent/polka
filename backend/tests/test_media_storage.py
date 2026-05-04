@@ -258,6 +258,42 @@ async def test_offer_archive_with_orders_keeps_storage_image(monkeypatch) -> Non
 
 
 @pytest.mark.asyncio
+async def test_offer_image_delete_endpoint_clears_path_and_storage(monkeypatch) -> None:
+    fake_storage = FakeMediaStorage()
+    monkeypatch.setattr(partner_router, "media_storage", fake_storage)
+    monkeypatch.setenv("SUPABASE_URL", "https://project.supabase.co")
+    run_id = str(uuid4().int % 100000).zfill(5)
+    phone_prefix = f"+7785{run_id}"
+    partner_phone = f"{phone_prefix}01"
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        try:
+            partner_token, _partner_user = await web_register(client, partner_phone, f"Delete Image Partner {run_id}")
+            await register_partner(client, partner_token, f"Delete Image Bakery {run_id}")
+            offer = await create_offer(client, partner_token, f"Delete Image Magic Box {run_id}")
+
+            image_response = await client.post(
+                f"/partner-api/offers/{offer['id']}/image",
+                headers=auth_headers(partner_token),
+                files={"file": ("offer.png", image_bytes(fmt="PNG"), "image/png")},
+            )
+            assert image_response.status_code == 200, image_response.text
+            image_path = image_response.json()["image_path"]
+
+            delete_image_response = await client.delete(
+                f"/partner-api/offers/{offer['id']}/image",
+                headers=auth_headers(partner_token),
+            )
+            assert delete_image_response.status_code == 200, delete_image_response.text
+            assert delete_image_response.json()["image_path"] is None
+            assert delete_image_response.json()["image_url"] is None
+            assert image_path in fake_storage.deletes
+        finally:
+            await cleanup_media_data(phone_prefix)
+
+
+@pytest.mark.asyncio
 async def test_partner_logo_replacement_deletes_old_logo(monkeypatch) -> None:
     fake_storage = FakeMediaStorage()
     monkeypatch.setattr(partner_router, "media_storage", fake_storage)

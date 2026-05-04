@@ -151,6 +151,12 @@ export const bizApi = {
   offers: () => api.get<OfferPublic[]>("/partner-api/offers"),
   createOffer: (body: unknown) => api.post<OfferPublic>("/partner-api/offers", body),
   updateOffer: (id: number, body: unknown) => api.patch<OfferPublic>(`/partner-api/offers/${id}`, body),
+  uploadOfferImage: (id: number, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return api.postForm<OfferPublic>(`/partner-api/offers/${id}/image`, body);
+  },
+  deleteOfferImage: (id: number) => api.delete<OfferPublic>(`/partner-api/offers/${id}/image`),
   deleteOffer: (id: number) => api.delete<{ status: string }>(`/partner-api/offers/${id}`),
   orders: () => api.get<PartnerOrder[]>("/partner-api/orders"),
   verifyCode: (body: { code: string; order_id?: number }) =>

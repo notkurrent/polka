@@ -581,6 +581,34 @@ async def upload_partner_offer_image(
     return build_offer_dto(offer)
 
 
+@router.delete("/offers/{offer_id}/image", response_model=OfferPublicDTO)
+async def delete_partner_offer_image(
+    offer_id: int,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    partner = await get_approved_partner(current_user, session)
+
+    query = select(Offer).where(Offer.id == offer_id, Offer.partner_id == partner.id, Offer.is_archived.is_(False))
+    result = await session.execute(query)
+    offer = result.scalar_one_or_none()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+
+    old_path = offer.image_path
+    offer.image_path = None
+    session.add(offer)
+    await session.commit()
+
+    try:
+        await media_storage.delete(old_path)
+    except MediaStorageError:
+        logger.exception("media.offer_image_delete_failed path=%s", old_path)
+
+    await session.refresh(offer)
+    return build_offer_dto(offer)
+
+
 @router.patch("/offers/{offer_id}", response_model=OfferPublicDTO)
 async def update_partner_offer(
     offer_id: int,

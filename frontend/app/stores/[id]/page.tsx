@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/app";
 import { tokens, Icon, FONT, StripePlaceholder, PriceTag } from "@/components/ui/primitives";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PartnerDetail } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -54,6 +55,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
       tone: (offer.type === "MAGIC_BOX" ? "purple" : "orange") as "purple" | "orange",
       label: offer.type === "MAGIC_BOX" ? "Сюрприз" : "Еда",
       qty: offer.stock,
+      imageUrl: offer.image_url,
     })),
   };
 
@@ -216,7 +218,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                       alignItems: "center",
                     }}
                   >
-                    <StripePlaceholder label={o.label} w={76} h={76} radius={12} tone={o.tone} />
+                    <OfferImagePreview imageUrl={o.imageUrl} label={o.label} width={76} height={76} radius={12} tone="mint" />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: -0.2 }}>{o.title}</div>
                       <div style={{ fontSize: 11, color: t.textSec, margin: "2px 0 4px", textWrap: "pretty" }}>
