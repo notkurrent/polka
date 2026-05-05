@@ -6,13 +6,14 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import type { PartnerDetail } from "@/lib/api-types";
 import { useAppStore } from "@/store/app";
-import { tokens, Icon, StripePlaceholder, Badge, FONT } from "@/components/ui/primitives";
+import { tokens, Icon, Badge, FONT } from "@/components/ui/primitives";
 import { TabBar } from "@/components/TabBar";
 import AppHeader from "@/components/AppHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatPositionsCount } from "@/lib/utils";
+import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 
 export default function FavoritesScreen() {
   const t = tokens();
@@ -101,10 +102,10 @@ export default function FavoritesScreen() {
                 cursor: "pointer",
               }}
             >
-              <StripePlaceholder label={partner.name.slice(0, 10) || "место"} w={64} h={64} radius={10} tone="green" />
+              <BusinessLogoPreview logoUrl={partner.logo_url} businessName={partner.name} size={64} radius={12} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: t.text }}>{partner.name}</div>
-                <div style={{ fontSize: 12, color: t.textSec }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: t.text, overflowWrap: "anywhere" }}>{partner.name}</div>
+                <div style={{ fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>
                   {partner.category || "Заведение"} · {partner.address}
                 </div>
                 <div

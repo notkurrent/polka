@@ -9,6 +9,7 @@ import { api, getApiErrorMessage } from "@/lib/api";
 import { isActiveOrder, OrderDetail, statusLabel } from "@/lib/api-types";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 
 function secondsUntilExpiration(order: OrderDetail, now: number) {
   if (order.expires_at) {
@@ -112,6 +113,8 @@ export default function ActiveOrderScreen() {
           unit_price: order.offer.new_price,
           total_price: order.offer.new_price,
           price: order.offer.new_price,
+          image_path: order.offer.image_path,
+          image_url: order.offer.image_url,
         },
       ];
   const qrValue = `polka://order/${order.id}/${order.code}`;
@@ -219,12 +222,33 @@ export default function ActiveOrderScreen() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ color: t.primaryDeep, display: "flex" }}>{Icon.pin(20)}</span>
-            <div style={{ fontSize: 14, color: t.text }}>{order.partner.address}</div>
+            <div style={{ fontSize: 14, color: t.text, overflowWrap: "anywhere" }}>{order.partner.address}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ color: t.primaryDeep, display: "flex" }}>{Icon.clock(20)}</span>
-            <div style={{ fontSize: 14, color: t.text }}>{order.partner.hours}</div>
+            <div style={{ fontSize: 14, color: t.text, overflowWrap: "anywhere" }}>{order.partner.hours}</div>
           </div>
+          {order.partner.map_url && (
+            <a
+              href={order.partner.map_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                minHeight: 44,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                color: t.primaryDeep,
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: 750,
+                overflowWrap: "anywhere",
+              }}
+            >
+              <span style={{ color: t.primaryDeep, display: "flex" }}>{Icon.pin(20)}</span>
+              Открыть в 2GIS / карте
+            </a>
+          )}
         </div>
 
         {/* Items List */}
@@ -245,14 +269,17 @@ export default function ActiveOrderScreen() {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
                 fontSize: 14,
               }}
             >
-              <span style={{ color: t.text }}>
+              <OfferImagePreview imageUrl={it.image_url || order.offer.image_url} label="позиция" width={52} height={52} radius={12} tone="mint" />
+              <span style={{ color: t.text, flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>
                 {it.title}
                 {it.quantity > 1 ? <span style={{ color: t.textSec }}> · {it.quantity} шт</span> : null}
               </span>
-              <span style={{ fontWeight: 600 }}>{it.total_price} ₸</span>
+              <span style={{ fontWeight: 600, flexShrink: 0 }}>{it.total_price} ₸</span>
             </div>
           ))}
           <div style={{ height: 1, background: t.divider, margin: "4px 0" }} />

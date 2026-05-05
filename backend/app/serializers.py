@@ -116,6 +116,8 @@ def build_order_detail_dto(order: Order, item_rows: list[tuple[OrderItem, Offer]
             quantity=item.quantity,
             unit_price=item.unit_price,
             total_price=item.total_price,
+            image_path=offer.image_path,
+            image_url=build_public_media_url(offer.image_path),
             price=item.unit_price,
         )
         for item, offer in item_rows
@@ -137,6 +139,8 @@ def build_order_detail_dto(order: Order, item_rows: list[tuple[OrderItem, Offer]
             new_price=first_offer.new_price,
             discount_reason=first_offer.discount_reason or "",
             type=first_offer.type,
+            image_path=first_offer.image_path,
+            image_url=build_public_media_url(first_offer.image_path),
         ),
         partner=OrderPartnerDTO(
             id=partner.id,

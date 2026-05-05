@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
-import { StripePlaceholder } from "@/components/ui/primitives";
 import { PriceTag } from "@/components/ui/primitives";
 import { PillButton } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app";
@@ -14,6 +13,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ALMATY_CENTER, formatDistance, NearbyOffer } from "@/lib/api-types";
 import { BUSINESS_CATEGORY_SEARCH_OPTIONS } from "@/lib/business-constants";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -244,10 +244,17 @@ export default function SearchPage() {
                     textAlign: "left",
                   }}
                 >
-                  <StripePlaceholder w={52} h={52} radius={10} />
+                  <OfferImagePreview
+                    imageUrl={item.offer.image_url}
+                    label={item.offer.type === "MAGIC_BOX" ? "сюрприз" : "позиция"}
+                    width={52}
+                    height={52}
+                    radius={10}
+                    tone="mint"
+                  />
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: t.text }}>{item.offer.name}</div>
-                    <div style={{ fontSize: 12, color: t.textSec }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: t.text, overflowWrap: "anywhere" }}>{item.offer.name}</div>
+                    <div style={{ fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>
                       {item.partner.name || item.partner_name} · {formatDistance(item.distance)}
                     </div>
                   </div>

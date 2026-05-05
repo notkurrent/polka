@@ -15,7 +15,6 @@ import {
   tokens,
   Icon,
   FONT,
-  StripePlaceholder,
   Badge,
   PriceTag,
   GridMap,
@@ -24,6 +23,8 @@ import {
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
+import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -177,12 +178,15 @@ export default function AppScreenBuyerPage() {
     partnerLat: o.partner.lat,
     partnerLon: o.partner.lon,
     distanceText: formatDistance(o.distance),
+    logoUrl: o.partner.logo_url,
     pickup: o.offer.pickup_time || o.partner.hours,
     qty: o.offer.stock,
     title: o.offer.name,
     desc: o.offer.description || undefined,
+    discountReason: o.offer.discount_reason || undefined,
     original: o.offer.old_price,
     now: o.offer.new_price,
+    imageUrl: o.offer.image_url,
     label: o.offer.type === "MAGIC_BOX" ? "Сюрприз" : undefined,
     tone: o.offer.type === "MAGIC_BOX" ? "purple" : "orange",
     cat: o.offer.type,
@@ -452,7 +456,14 @@ export default function AppScreenBuyerPage() {
                   }}
                 >
                   <div style={{ position: "relative" }}>
-                    <StripePlaceholder label={offer.label} h={140} radius={0} tone={offer.tone} />
+                    <OfferImagePreview
+                      imageUrl={offer.imageUrl}
+                      label={offer.label || "позиция"}
+                      width="100%"
+                      height={150}
+                      radius={0}
+                      tone={offer.tone === "purple" ? "slate" : "mint"}
+                    />
                     <button
                       type="button"
                       onClick={(e) => {
@@ -504,17 +515,56 @@ export default function AppScreenBuyerPage() {
                   </div>
                   <div style={{ padding: "12px 14px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <BusinessLogoPreview logoUrl={offer.logoUrl} businessName={offer.storeName} size={38} radius={10} />
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 0 }}>{offer.title}</div>
-                        <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 0, overflowWrap: "anywhere" }}>
+                          {offer.title}
+                        </div>
+                        <div style={{ fontSize: 12, color: t.textSec, marginTop: 2, overflowWrap: "anywhere" }}>
                           {offer.storeName} · {offer.distanceText}
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 3, color: t.textSec, fontSize: 12 }}>
+                      <div
+                        style={{ display: "flex", alignItems: "center", gap: 3, color: t.textSec, fontSize: 12, flexShrink: 0 }}
+                      >
                         {Icon.clock(12, t.primaryDeep)}
                         <span style={{ fontWeight: 600, color: t.text }}>{offer.pickup}</span>
                       </div>
                     </div>
+                    {offer.desc && (
+                      <div
+                        style={{
+                          marginTop: 8,
+                          fontSize: 12,
+                          lineHeight: 1.35,
+                          color: t.textSec,
+                          overflow: "hidden",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {offer.desc}
+                      </div>
+                    )}
+                    {offer.discountReason && (
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: "7px 9px",
+                          borderRadius: 10,
+                          background: t.surface,
+                          color: t.primaryDeep,
+                          fontSize: 11,
+                          lineHeight: 1.35,
+                          fontWeight: 700,
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        Почему скидка? {offer.discountReason}
+                      </div>
+                    )}
                     <div
                       style={{
                         marginTop: 10,

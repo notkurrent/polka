@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { Icon, FONT, tokens } from "@/components/ui/primitives";
 
 type ImageState = "idle" | "loading" | "loaded" | "error";
@@ -161,6 +162,82 @@ export function BusinessLogoPicker({
           {statusText || (file ? file.name : "PNG, JPG или WEBP. Будет показан в карточке бизнеса.")}
         </div>
       </div>
+    </div>
+  );
+}
+
+export function BusinessLogoPreview({
+  logoUrl,
+  businessName,
+  size = 48,
+  radius = 12,
+  style = {},
+}: {
+  logoUrl?: string | null;
+  businessName: string;
+  size?: number;
+  radius?: number;
+  style?: CSSProperties;
+}) {
+  const t = tokens();
+  const fontFn = FONT ? FONT() : "system-ui";
+  const [imageStatus, setImageStatus] = useState<{ url: string; state: ImageState }>({ url: "", state: "idle" });
+  const imageState = logoUrl && imageStatus.url === logoUrl ? imageStatus.state : logoUrl ? "loading" : "idle";
+  const showImage = Boolean(logoUrl) && imageState !== "error";
+  const fallbackLetter = businessName.trim().slice(0, 1).toUpperCase() || "Б";
+
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        border: `1px solid ${t.divider}`,
+        background: t.primarySoft,
+        overflow: "hidden",
+        display: "grid",
+        placeItems: "center",
+        position: "relative",
+        flexShrink: 0,
+        ...style,
+      }}
+      aria-label="Логотип бизнеса"
+    >
+      {showImage ? (
+        <img
+          alt=""
+          src={logoUrl || ""}
+          onLoad={() => logoUrl && setImageStatus({ url: logoUrl, state: "loaded" })}
+          onError={() => logoUrl && setImageStatus({ url: logoUrl, state: "error" })}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            opacity: imageState === "loaded" ? 1 : 0,
+            transition: "opacity 140ms ease",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: Math.max(28, size * 0.62),
+            height: Math.max(28, size * 0.62),
+            borderRadius: "50%",
+            background: "#fff",
+            color: t.primaryDeep,
+            display: "grid",
+            placeItems: "center",
+            fontSize: Math.max(14, size * 0.3),
+            fontWeight: 800,
+            fontFamily: fontFn,
+          }}
+        >
+          {fallbackLetter}
+        </div>
+      )}
+      {imageState === "loading" && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.52)" }} />
+      )}
     </div>
   );
 }

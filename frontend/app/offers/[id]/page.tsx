@@ -65,6 +65,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         originalPrice: offer.old_price,
         storeName: partner.name,
         stock: offer.stock,
+        imageUrl: offer.image_url,
       });
     }
     setCartFeedback(
@@ -167,7 +168,9 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       </div>
 
       <div style={{ padding: "20px" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", letterSpacing: -0.6 }}>{offer.name}</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", letterSpacing: 0, overflowWrap: "anywhere" }}>
+          {offer.name}
+        </h1>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 24 }}>
           <PriceTag original={offer.old_price} now={offer.new_price} size="lg" />
@@ -186,7 +189,9 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         </div>
 
         {offer.description && (
-          <div style={{ marginBottom: 24, fontSize: 14, color: t.textSec, lineHeight: 1.4 }}>{offer.description}</div>
+          <div style={{ marginBottom: 24, fontSize: 14, color: t.textSec, lineHeight: 1.45, overflowWrap: "anywhere" }}>
+            {offer.description}
+          </div>
         )}
         {offer.discount_reason && (
           <div
@@ -199,9 +204,13 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
               fontSize: 13,
               lineHeight: 1.45,
               fontWeight: 650,
+              overflowWrap: "anywhere",
             }}
           >
-            Почему скидка: {offer.discount_reason}
+            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>
+              Почему скидка?
+            </div>
+            <div>{offer.discount_reason}</div>
           </div>
         )}
 
@@ -210,10 +219,10 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             Осталось порций: <strong style={{ color: t.text }}>{offer.stock}</strong>
           </p>
           <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-            Заведение: <strong style={{ color: t.text }}>{partner.name}</strong>
+            Заведение: <strong style={{ color: t.text, overflowWrap: "anywhere" }}>{partner.name}</strong>
           </p>
           <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-            Адрес: <strong style={{ color: t.text }}>{partner.address}</strong>
+            Адрес: <strong style={{ color: t.text, overflowWrap: "anywhere" }}>{partner.address}</strong>
           </p>
           {offer.pickup_time ? (
             <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>

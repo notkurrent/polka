@@ -61,6 +61,10 @@ export function orderOffer(order: PartnerOrder) {
   return order.offer_snapshot ?? order.offer;
 }
 
+export function orderImageUrl(order: PartnerOrder) {
+  return order.items?.[0]?.image_url ?? order.offer_snapshot?.image_url ?? order.offer?.image_url ?? null;
+}
+
 export function orderPrice(order: PartnerOrder) {
   return Number(order.total ?? orderOffer(order)?.new_price ?? 0);
 }

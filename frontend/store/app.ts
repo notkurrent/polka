@@ -16,6 +16,7 @@ export interface CartItem {
   originalPrice?: number;
   storeName?: string;
   stock?: number;
+  imageUrl?: string | null;
 }
 
 export type SelectedMode = "buyer" | "business";

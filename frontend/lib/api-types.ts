@@ -57,6 +57,9 @@ export interface OrderOffer {
   old_price: number;
   new_price: number;
   type: OfferType;
+  discount_reason?: string;
+  image_path?: string | null;
+  image_url?: string | null;
 }
 
 export interface OrderPartner {
@@ -64,6 +67,7 @@ export interface OrderPartner {
   name: string;
   address: string;
   hours: string;
+  map_url?: string | null;
 }
 
 export interface OrderItem {
@@ -74,6 +78,8 @@ export interface OrderItem {
   unit_price: number;
   total_price: number;
   price: number;
+  image_path?: string | null;
+  image_url?: string | null;
 }
 
 export interface OrderDetail {

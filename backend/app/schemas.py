@@ -67,6 +67,8 @@ class OrderOfferDTO(BaseModel):
     new_price: Decimal
     discount_reason: str = ""
     type: OfferType
+    image_path: str | None = None
+    image_url: str | None = None
 
 
 class OrderPartnerDTO(BaseModel):
@@ -84,6 +86,8 @@ class OrderItemDTO(BaseModel):
     quantity: int
     unit_price: Decimal
     total_price: Decimal
+    image_path: str | None = None
+    image_url: str | None = None
 
     # Compatibility alias for older screens that read `price`.
     price: Decimal

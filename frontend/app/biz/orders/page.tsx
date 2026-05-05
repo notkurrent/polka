@@ -17,6 +17,7 @@ import {
   money,
   orderCreatedAt,
   orderId,
+  orderImageUrl,
   orderPrice,
   orderSubtitle,
   orderStatus,
@@ -26,6 +27,7 @@ import {
   statusTone,
   type PartnerOrder,
 } from "@/lib/biz-api";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 
 export default function BizOrdersPage() {
   const t = tokens();
@@ -66,24 +68,10 @@ export default function BizOrdersPage() {
           color: t.text,
         }}
       >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            background: activeOrder ? t.primarySoft : t.surface,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: t.primaryDeep,
-            fontWeight: 800,
-          }}
-        >
-          {Icon.check(22, t.primaryDeep)}
-        </div>
+        <OfferImagePreview imageUrl={orderImageUrl(order)} label="позиция" width={48} height={48} radius={14} tone="mint" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ fontSize: 15, fontWeight: 750, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 15, fontWeight: 750, overflowWrap: "anywhere" }}>
               {orderTitle(order)}
             </div>
             <div style={{ fontSize: 14, fontWeight: 750 }}>{money(orderPrice(order))}</div>

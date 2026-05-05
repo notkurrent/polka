@@ -14,6 +14,7 @@ import LoginForm from "@/components/LoginForm";
 import AppHeader from "@/components/AppHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 
 export default function OrdersScreen() {
   const router = useRouter();
@@ -75,6 +76,7 @@ export default function OrdersScreen() {
             const itemsCount = order.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 1;
             const title =
               order.items && order.items.length > 1 ? `${order.items[0].title} +${order.items.length - 1}` : order.offer.name;
+            const imageUrl = order.items?.[0]?.image_url || order.offer.image_url;
             return (
               <button
                 type="button"
@@ -85,18 +87,19 @@ export default function OrdersScreen() {
                   textAlign: "left",
                   background: t.surface,
                   borderRadius: 16,
-                  padding: "16px",
+                  padding: 12,
                   cursor: "pointer",
                   border: `1px solid ${t.divider}`,
                   color: t.text,
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <OfferImagePreview imageUrl={imageUrl} label="позиция" width={58} height={58} radius={12} tone="mint" />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, overflowWrap: "anywhere" }}>
                       {title}
                     </div>
-                    <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
+                    <div style={{ fontSize: 13, color: t.textSec, marginTop: 4, overflowWrap: "anywhere" }}>
                       {order.partner.name} · {itemsCount} шт · {order.total} ₸
                     </div>
                     <div style={{ fontSize: 12, color: t.textSec, marginTop: 4 }}>

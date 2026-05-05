@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/app";
 import { tokens, Icon, FONT, StripePlaceholder, PriceTag } from "@/components/ui/primitives";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
+import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PartnerDetail } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -38,17 +39,20 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
   const store = partner && {
     id: String(partner.id),
     name: partner.name,
+    logoUrl: partner.logo_url,
     imgLabel: partner.name.slice(0, 10) || "...",
     tone: "blue" as const,
     cat: partner.category || "Заведение",
     district: "Алматы",
     address: partner.address,
     hours: partner.hours,
+    mapUrl: partner.map_url,
     about: partner.description || "Свежие позиции по сниженной цене. Забронируйте и заберите в указанное время.",
     offers: (partnerDetail?.offers || []).map((offer) => ({
       id: String(offer.id),
       title: offer.name,
       desc: offer.description || (offer.type === "MAGIC_BOX" ? "Сюрприз-позиция от заведения" : "Готовая позиция"),
+      discountReason: offer.discount_reason || "",
       original: offer.old_price,
       now: offer.new_price,
       pickup: offer.pickup_time || partner.hours,
@@ -105,6 +109,19 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
       {/* hero image */}
       <div style={{ position: "relative" }}>
         <StripePlaceholder label={store.imgLabel} h={200} radius={0} tone={store.tone} />
+        <BusinessLogoPreview
+          logoUrl={store.logoUrl}
+          businessName={store.name}
+          size={82}
+          radius={18}
+          style={{
+            position: "absolute",
+            left: 20,
+            bottom: -34,
+            background: "#fff",
+            boxShadow: "0 12px 32px rgba(17, 23, 20, 0.16)",
+          }}
+        />
         <button
           type="button"
           aria-label="Назад"
@@ -149,13 +166,15 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
         </button>
       </div>
 
-      <div style={{ padding: "16px 20px 24px" }}>
+      <div style={{ padding: "46px 20px 24px" }}>
         <div
           style={{ fontSize: 11, color: t.textSec, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6 }}
         >
           {store.cat}
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "4px 0 6px", letterSpacing: -0.6 }}>{store.name}</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "4px 0 6px", letterSpacing: 0, overflowWrap: "anywhere" }}>
+          {store.name}
+        </h1>
         <div
           style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13, color: t.textSec, marginBottom: 12 }}
         >
@@ -178,15 +197,45 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {Icon.pin(16, t.primaryDeep)}
-            <span style={{ fontSize: 13 }}>{store.address}</span>
+            <span style={{ fontSize: 13, overflowWrap: "anywhere" }}>{store.address}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {Icon.clock(16, t.primaryDeep)}
-            <span style={{ fontSize: 13 }}>{store.hours}</span>
+            <span style={{ fontSize: 13, overflowWrap: "anywhere" }}>{store.hours}</span>
           </div>
+          {store.mapUrl && (
+            <a
+              href={store.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                minHeight: 44,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                color: t.primaryDeep,
+                fontSize: 13,
+                fontWeight: 750,
+                textDecoration: "none",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {Icon.pin(16, t.primaryDeep)}
+              Открыть в 2GIS / карте
+            </a>
+          )}
         </div>
 
-        <p style={{ fontSize: 14, lineHeight: 1.55, color: t.textSec, marginTop: 14, textWrap: "pretty" }}>
+        <p
+          style={{
+            fontSize: 14,
+            lineHeight: 1.55,
+            color: t.textSec,
+            marginTop: 14,
+            textWrap: "pretty",
+            overflowWrap: "anywhere",
+          }}
+        >
           {store.about}
         </p>
 
@@ -220,10 +269,39 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                   >
                     <OfferImagePreview imageUrl={o.imageUrl} label={o.label} width={76} height={76} radius={12} tone="mint" />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: -0.2 }}>{o.title}</div>
-                      <div style={{ fontSize: 11, color: t.textSec, margin: "2px 0 4px", textWrap: "pretty" }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0, overflowWrap: "anywhere" }}>{o.title}</div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: t.textSec,
+                          margin: "2px 0 4px",
+                          textWrap: "pretty",
+                          overflowWrap: "anywhere",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
                         {o.desc}
                       </div>
+                      {o.discountReason && (
+                        <div
+                          style={{
+                            margin: "6px 0",
+                            padding: "6px 8px",
+                            borderRadius: 10,
+                            background: t.primarySoft,
+                            color: t.primaryDeep,
+                            fontSize: 11,
+                            lineHeight: 1.3,
+                            fontWeight: 700,
+                            overflowWrap: "anywhere",
+                          }}
+                        >
+                          Почему скидка? {o.discountReason}
+                        </div>
+                      )}
                       <div
                         style={{
                           fontSize: 11,
@@ -252,6 +330,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                               originalPrice: o.original,
                               storeName: store.name,
                               stock: o.qty,
+                              imageUrl: o.imageUrl,
                             });
                           }}
                           disabled={inCart || unavailable}

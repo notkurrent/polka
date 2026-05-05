@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/app";
-import { tokens, Icon, StripePlaceholder, PillButton, PriceTag } from "@/components/ui/primitives";
+import { tokens, Icon, PillButton, PriceTag } from "@/components/ui/primitives";
 import AppHeader from "@/components/AppHeader";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 
 export default function CartScreen() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function CartScreen() {
                 return (
                   <React.Fragment key={item.offerId}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center", padding: "16px 0" }}>
-                      <StripePlaceholder w={56} h={56} radius={12} tone="green" />
+                      <OfferImagePreview imageUrl={item.imageUrl} label="позиция" width={56} height={56} radius={12} tone="mint" />
 
                       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
                         <div
@@ -80,14 +81,12 @@ export default function CartScreen() {
                             fontSize: 15,
                             fontWeight: 600,
                             color: t.text,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
+                            overflowWrap: "anywhere",
                           }}
                         >
                           {item.name}
                         </div>
-                        <div style={{ fontSize: 13, color: t.textSec }}>{item.storeName || "Заведение"}</div>
+                        <div style={{ fontSize: 13, color: t.textSec, overflowWrap: "anywhere" }}>{item.storeName || "Заведение"}</div>
                         <div style={{ marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                           <PriceTag original={item.originalPrice ?? item.price} now={item.price} size="sm" />
                           <span style={{ fontSize: 13, fontWeight: 750, color: t.text }}>{formatTenge(lineTotal)}</span>
