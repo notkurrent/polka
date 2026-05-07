@@ -154,7 +154,7 @@ export default function BizOffersListScreen() {
           ) : undefined
         }
       />
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="biz-offers-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
         {profileLoading && (
           <>
             <Skeleton w="100%" h={86} radius={12} />

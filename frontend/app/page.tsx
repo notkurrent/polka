@@ -361,7 +361,7 @@ export default function AppScreenBuyerPage() {
 
       {/* map */}
       {(layout === "map+list" || layout === "map-only") && (
-        <div style={{ padding: "12px 16px 0" }}>
+        <div className="app-content" style={{ padding: "12px 16px 0" }}>
           <div
             style={{
               borderRadius: 16,
@@ -385,8 +385,8 @@ export default function AppScreenBuyerPage() {
 
       {/* list of offers */}
       {layout !== "map-only" && (
-        <div style={{ padding: "16px 16px 0", display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+        <div className="app-content buyer-offers-list" style={{ padding: "16px 16px 0", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="buyer-section-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3 }}>Рядом с вами</div>
             <div style={{ fontSize: 12, color: t.textSec }}>{visibleOffers.length} предложений</div>
           </div>
@@ -441,6 +441,7 @@ export default function AppScreenBuyerPage() {
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") router.push(`/offers/${offer.id}`);
                   }}
+                  className="buyer-offer-card"
                   style={{
                     width: "100%",
                     textAlign: "left",

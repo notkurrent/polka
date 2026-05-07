@@ -125,6 +125,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
   return (
     <div
+      className="offer-detail-page"
       style={{
         height: "100vh",
         width: "100%",
@@ -135,7 +136,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         paddingBottom: 148,
       }}
     >
-      <div style={{ position: "relative" }}>
+      <div className="offer-detail-hero" style={{ position: "relative" }}>
         <OfferImagePreview
           imageUrl={offer.image_url}
           label={offer.type === "MAGIC_BOX" ? "Сюрприз" : "позиция"}
@@ -167,7 +168,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         </button>
       </div>
 
-      <div style={{ padding: "20px" }}>
+      <div className="offer-detail-body" style={{ padding: "20px" }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", letterSpacing: 0, overflowWrap: "anywhere" }}>
           {offer.name}
         </h1>
@@ -289,7 +290,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             bottom: 0,
             left: "50%",
             right: "auto",
-            width: "min(100vw, var(--app-shell-max-width))",
+            width: "min(100vw, var(--app-fixed-bar-width))",
             transform: "translateX(-50%)",
             padding: "12px 20px calc(16px + var(--app-safe-bottom))",
             background: "rgba(255,255,255,0.96)",

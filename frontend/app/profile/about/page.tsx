@@ -27,7 +27,7 @@ export default function AboutScreen() {
   return (
     <div className="screen-scroll" style={{ background: t.bg }}>
       <AppHeader title="О сервисе" onBack={() => router.back()} />
-      <main style={{ padding: "18px 20px 32px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <main className="app-readable-content" style={{ padding: "18px 20px 32px", display: "flex", flexDirection: "column", gap: 12 }}>
         {sections.map((section) => (
           <section
             key={section.title}

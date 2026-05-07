@@ -204,7 +204,7 @@ export default function BizProfileEditPage() {
   return (
     <AppScreenBiz>
       <AppHeaderBiz title="Редактировать" onBack={() => router.back()} />
-      <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 14, fontFamily: fontFn }}>
+      <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 14, fontFamily: fontFn }}>
         {loading ? (
           <>
             <Skeleton w="100%" h={68} radius={12} />

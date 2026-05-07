@@ -172,7 +172,7 @@ export default function BizDashboardPage() {
       )}
 
       {!needsProfile && !profileError && !profileLoading && isApproved && (
-        <>
+        <div className="biz-dashboard-main">
           {isTelegramAccountIncomplete(user) && (!completionPromptDismissed || !linkPromptDismissed) && (
             <div style={{ padding: "14px 16px 0" }}>
               <AccountLinkingPrompt
@@ -282,7 +282,7 @@ export default function BizDashboardPage() {
               <ActionCard icon={Icon.list} label="Все заказы" onClick={() => router.push("/biz/orders")} />
             </div>
           </div>
-        </>
+        </div>
       )}
       <BizTabBar />
     </AppScreenBiz>

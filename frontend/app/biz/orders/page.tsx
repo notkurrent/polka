@@ -93,7 +93,7 @@ export default function BizOrdersPage() {
     <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Заказы" />
 
-      <div style={{ padding: "16px 16px" }}>
+      <div className="biz-orders-content" style={{ padding: "16px 16px" }}>
         {loadingOrError(profileLoading, profileError)}
         {!profileLoading && !profileError && profile && !isApproved && (
           <PartnerModerationState profile={profile} compact context="feature" />

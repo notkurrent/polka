@@ -166,7 +166,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
         </button>
       </div>
 
-      <div style={{ padding: "46px 20px 24px" }}>
+      <div className="app-content" style={{ padding: "46px 20px 24px" }}>
         <div
           style={{ fontSize: 11, color: t.textSec, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6 }}
         >
@@ -242,7 +242,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
         {/* offers */}
         <div style={{ marginTop: 20 }}>
           <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, marginBottom: 10 }}>Доступные позиции</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="store-offers-list" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {store.offers.length === 0 && (
               <EmptyState
                 icon={Icon.bag(34, t.textTer)}
@@ -257,6 +257,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
               return (
                 <div key={o.id} style={{ display: "contents" }}>
                   <div
+                    className="store-offer-card"
                     style={{
                       background: t.bg,
                       border: `1px solid ${t.divider}`,
@@ -374,7 +375,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
             bottom: 0,
             left: "50%",
             right: "auto",
-            width: "min(100vw, var(--app-shell-max-width))",
+            width: "min(100vw, var(--app-fixed-bar-width))",
             transform: "translateX(-50%)",
             paddingTop: "16px",
             paddingRight: "16px",

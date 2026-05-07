@@ -131,6 +131,7 @@ export default function SignupPage() {
         }}
       />
       <form
+        className="app-form-content"
         onSubmit={handleSubmit}
         style={{
           minHeight: "calc(100dvh - 92px)",

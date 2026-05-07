@@ -35,7 +35,7 @@ export function TabBar() {
         bottom: 0,
         left: "50%",
         right: "auto",
-        width: "min(100vw, var(--app-shell-max-width))",
+        width: "min(100vw, var(--app-fixed-bar-width))",
         transform: "translateX(-50%)",
         background: "rgba(255,255,255,0.96)",
         backdropFilter: "blur(12px)",

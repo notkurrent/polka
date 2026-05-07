@@ -73,7 +73,7 @@ export default function LinkAccountPage() {
   return (
     <main className="screen-scroll-with-bottom-action" style={{ background: t.bg, color: t.text, fontFamily: fontFn }}>
       <AppHeader title="Связать аккаунт" onBack={() => router.back()} />
-      <form onSubmit={handleSubmit} style={{ minHeight: "calc(100% - 56px - var(--app-safe-top))", padding: "24px 20px", display: "flex", flexDirection: "column", gap: 18, boxSizing: "border-box" }}>
+      <form className="app-form-content" onSubmit={handleSubmit} style={{ minHeight: "calc(100% - 56px - var(--app-safe-top))", padding: "24px 20px", display: "flex", flexDirection: "column", gap: 18, boxSizing: "border-box" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 800 }}>Связать аккаунт</h1>
           <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5, color: t.textSec }}>

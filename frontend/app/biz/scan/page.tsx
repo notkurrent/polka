@@ -159,6 +159,7 @@ export default function BizScanPage() {
       <AppScreenBiz style={{ fontFamily: fontFn }}>
         <AppHeaderBiz title="Выдача" onBack={() => router.back()} />
         <div
+          className="biz-form-content"
           style={{
             padding: "52px 24px",
             textAlign: "center",
@@ -213,7 +214,7 @@ export default function BizScanPage() {
   return (
     <AppScreenBiz style={{ fontFamily: fontFn }}>
       <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
-      <div style={{ padding: "24px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="biz-form-content" style={{ padding: "24px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
         {!scannerActive ? (
           <button
             type="button"

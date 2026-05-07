@@ -16,7 +16,7 @@ export interface BizReservation {
 export function AppScreenBiz({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div
-      className="screen-scroll-with-tabbar"
+      className="screen-scroll-with-tabbar app-screen-biz"
       style={{
         width: "100%",
         height: "100dvh",

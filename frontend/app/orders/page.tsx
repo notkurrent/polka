@@ -45,7 +45,7 @@ export default function OrdersScreen() {
     >
       <AppHeader title="Брони" hideBack size="lg" />
 
-      <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+      <div className="orders-list" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
         {isLoading && (
           <>
             <Skeleton w="100%" h={70} radius={16} />

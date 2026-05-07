@@ -49,6 +49,7 @@ export default function LoginForm() {
 
   return (
     <form
+      className="app-form-content"
       onSubmit={handleSubmit}
       style={{
         display: "flex",

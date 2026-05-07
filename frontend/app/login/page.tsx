@@ -78,6 +78,7 @@ export default function LoginPage() {
       <AppHeader title="Вход" onBack={() => router.push(authEntryRoute())} />
 
       <form
+        className="app-form-content"
         onSubmit={handleSubmit}
         style={{
           flex: 1,

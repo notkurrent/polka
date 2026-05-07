@@ -125,7 +125,7 @@ export default function CompleteAccountPage() {
       <AppHeader title="Добавить телефон и пароль" onBack={() => router.back()} />
 
       {mode === "success" ? (
-        <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="app-form-content" style={{ padding: "28px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
           <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 800 }}>Теперь можно входить на сайте</h1>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5, color: t.textSec }}>
             Телефон и пароль сохранены в вашем аккаунте Polka.
@@ -135,7 +135,7 @@ export default function CompleteAccountPage() {
           </PillButton>
         </div>
       ) : mode === "conflict" ? (
-        <form onSubmit={handleLink} style={{ padding: "24px 20px", display: "flex", flexDirection: "column", gap: 18 }}>
+        <form className="app-form-content" onSubmit={handleLink} style={{ padding: "24px 20px", display: "flex", flexDirection: "column", gap: 18 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 800 }}>Аккаунт с этим номером уже есть</h1>
             <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5, color: t.textSec }}>
@@ -191,7 +191,7 @@ export default function CompleteAccountPage() {
           </button>
         </form>
       ) : (
-        <form onSubmit={handleComplete} style={{ padding: "24px 20px", display: "flex", flexDirection: "column", gap: 18 }}>
+        <form className="app-form-content" onSubmit={handleComplete} style={{ padding: "24px 20px", display: "flex", flexDirection: "column", gap: 18 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 800 }}>Добавить телефон и пароль</h1>
             <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5, color: t.textSec }}>

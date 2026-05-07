@@ -38,7 +38,7 @@ export default function BizAnalyticsScreen() {
   return (
     <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Аналитика" />
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="biz-orders-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         {profileLoading && (
           <>
             <Skeleton w="100%" h={68} radius={12} />

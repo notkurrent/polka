@@ -48,7 +48,7 @@ export default function FavoritesScreen() {
       />
 
       {favorites.length === 0 ? (
-        <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+        <div className="app-readable-content" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
           <EmptyState
             icon={Icon.heart(42, t.textTer)}
             title="Пока пусто"
@@ -57,7 +57,7 @@ export default function FavoritesScreen() {
           />
         </div>
       ) : isLoading ? (
-        <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="app-readable-content" style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           <Skeleton w="100%" h={90} radius={14} />
           <Skeleton w="100%" h={90} radius={14} />
         </div>
@@ -65,6 +65,7 @@ export default function FavoritesScreen() {
         <ErrorState message="Не удалось загрузить избранные заведения. Проверьте соединение и попробуйте ещё раз." />
       ) : (
         <div
+          className="app-content store-offers-list"
           style={{
             padding: "14px 16px",
             display: "flex",
@@ -73,6 +74,7 @@ export default function FavoritesScreen() {
           }}
         >
           <div
+            className="buyer-section-title"
             style={{
               fontSize: 17,
               fontWeight: 700,
@@ -89,6 +91,7 @@ export default function FavoritesScreen() {
               : null;
             return (
             <div
+              className="store-offer-card"
               key={partner.id}
               onClick={() => router.push(`/stores/${partner.id}`)}
               style={{

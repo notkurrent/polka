@@ -54,6 +54,7 @@ export default function ProfileScreen() {
       <AppHeader title="Профиль" hideBack size="lg" />
 
       <div
+        className="app-form-content"
         style={{
           padding: "20px 20px 0",
           display: "flex",

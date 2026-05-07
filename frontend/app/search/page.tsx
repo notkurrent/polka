@@ -55,6 +55,7 @@ export default function SearchPage() {
       }}
     >
       <div
+        className="app-content"
         style={{
           position: "sticky",
           top: 0,
@@ -136,7 +137,7 @@ export default function SearchPage() {
       </div>
 
       {!debouncedQuery ? (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div className="app-readable-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <div
             style={{
               fontSize: 11,
@@ -213,7 +214,7 @@ export default function SearchPage() {
           </div>
         </div>
       ) : (
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div className="app-readable-content" style={{ flex: 1, overflowY: "auto" }}>
           {isLoading && (
             <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 10 }}>
               <Skeleton w="100%" h={76} radius={14} />

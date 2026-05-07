@@ -131,6 +131,7 @@ export default function ActiveOrderScreen() {
       <AppHeader title={order.partner.name} sub={`Бронь #${order.id}`} onBack={() => router.back()} />
 
       <div
+        className="app-readable-content"
         style={{
           padding: "16px 20px",
           display: "flex",

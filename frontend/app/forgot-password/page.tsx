@@ -66,6 +66,7 @@ export default function ForgotPasswordPage() {
       <AppHeader title="Восстановление" onBack={() => router.push("/login")} />
 
       <form
+        className="app-form-content"
         onSubmit={handleSubmit}
         style={{
           flex: 1,

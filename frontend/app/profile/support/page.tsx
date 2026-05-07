@@ -27,7 +27,7 @@ export default function SupportScreen() {
   return (
     <div className="screen-scroll" style={{ background: t.bg }}>
       <AppHeader title="Помощь и поддержка" onBack={() => router.back()} />
-      <main style={{ padding: "18px 20px 32px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <main className="app-readable-content" style={{ padding: "18px 20px 32px", display: "flex", flexDirection: "column", gap: 12 }}>
         {helpItems.map((item) => (
           <section
             key={item.title}

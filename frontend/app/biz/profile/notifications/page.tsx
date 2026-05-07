@@ -26,7 +26,7 @@ export default function BizProfileNotificationsPage() {
   return (
     <AppScreenBiz>
       <AppHeaderBiz title="Уведомления" onBack={() => router.back()} />
-      <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 16, marginTop: 12 }}>
+      <div className="biz-form-content" style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 16, marginTop: 12 }}>
         {toggles.map((item, i) => (
           <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ fontSize: 15, fontWeight: 600, flex: 1, fontFamily: FONT() }}>{item.label}</div>

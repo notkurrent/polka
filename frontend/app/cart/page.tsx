@@ -52,7 +52,10 @@ export default function CartScreen() {
     <div className="screen-scroll" style={{ background: t.bg, display: "flex", flexDirection: "column" }}>
       <AppHeader title="Корзина" onBack={() => router.back()} />
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div
+        className={cart.length === 0 ? "app-readable-content" : "cart-content"}
+        style={{ flex: 1, display: "flex", flexDirection: "column" }}
+      >
         {cart.length === 0 ? (
           <EmptyState
             icon={Icon.bag(40, t.textTer, true)}
@@ -66,7 +69,7 @@ export default function CartScreen() {
           />
         ) : (
           <>
-            <div style={{ padding: "0 16px", display: "flex", flexDirection: "column" }}>
+            <div className="cart-items" style={{ padding: "0 16px", display: "flex", flexDirection: "column" }}>
               {cart.map((item, index) => {
                 const lineTotal = item.price * item.quantity;
                 const canIncrease = item.stock == null || item.quantity < item.stock;
@@ -159,6 +162,7 @@ export default function CartScreen() {
             </div>
 
             <div
+              className="cart-summary"
               style={{
                 marginTop: "auto",
                 paddingTop: "20px",

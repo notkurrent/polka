@@ -102,6 +102,7 @@ export default function BizRegisterPage() {
       <AppScreenBiz>
         <AppHeaderBiz title="Заявка" onBack={() => router.back()} />
         <div
+          className="biz-form-content"
           style={{
             padding: "40px 24px",
             textAlign: "center",
@@ -144,7 +145,7 @@ export default function BizRegisterPage() {
   return (
     <AppScreenBiz>
       <AppHeaderBiz title="Регистрация бизнеса" onBack={() => router.back()} />
-      <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
         <div
           style={{
             background: t.primarySoft,

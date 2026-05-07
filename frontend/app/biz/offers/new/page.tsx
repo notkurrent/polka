@@ -105,7 +105,7 @@ export default function BizCreateOfferPage() {
         <PartnerModerationState profile={profile} context="feature" />
       )}
       {!profileLoading && !profileError && isApproved && (
-      <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
+      <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <Label>Формат</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>

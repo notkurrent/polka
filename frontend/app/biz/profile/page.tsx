@@ -43,7 +43,7 @@ export default function BizProfileScreen() {
   return (
     <div className="screen-scroll-with-tabbar" style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Заведение" />
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="biz-form-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         {isLoading && (
           <>
             <Skeleton w="100%" h={94} radius={12} />
