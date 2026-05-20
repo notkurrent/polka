@@ -274,7 +274,7 @@ export default function AdminPartnersPage() {
 
   return (
     <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
-      <AppHeaderBiz title="Модерация партнёров" onBack={() => router.back()} />
+      <AppHeaderBiz title="Модерация продавцов" onBack={() => router.back()} />
 
       <div style={{ padding: "12px 16px 0" }}>
         <div
@@ -335,7 +335,7 @@ export default function AdminPartnersPage() {
           <EmptyState
             icon={Icon.list(34, t.textTer)}
             title="Заявок нет"
-            description="В этом статусе пока нет партнёров для модерации."
+            description="В этом статусе пока нет продавцов для модерации."
             compact
           />
         ) : null}

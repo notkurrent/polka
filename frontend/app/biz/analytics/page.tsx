@@ -62,21 +62,21 @@ export default function BizAnalyticsScreen() {
           <>
             <div style={{ display: "flex", gap: 8 }}>
               <StatTile value={money(stats.totalRevenue)} label="Выручка всего" accent />
-              <StatTile value={stats.completedOrders} label="Выдано" />
+              <StatTile value={stats.completedOrders} label="Закрыто" />
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <StatTile value={stats.activeOffers} label="Активных позиций" />
+              <StatTile value={stats.activeOffers} label="Активных товаров" />
             </div>
 
             <div style={{ background: t.bg, border: `1px solid ${t.divider}`, borderRadius: 12, overflow: "hidden" }}>
               <div
                 style={{ padding: "12px 16px", fontSize: 13, fontWeight: 750, borderBottom: `1px solid ${t.divider}` }}
               >
-                Последние выдачи
+                Последние заявки
               </div>
               {completed.length === 0 ? (
                 <div style={{ padding: 16, color: t.textSec, fontSize: 13, lineHeight: 1.45 }}>
-                  Здесь появятся завершённые заказы после проверки кода.
+                  Здесь появятся завершённые заявки после подтверждения продавцом.
                 </div>
               ) : (
                 completed.map((order, index) => (
@@ -115,7 +115,7 @@ export default function BizAnalyticsScreen() {
               {Icon.chart(20, t.primaryDeep)}
               <div style={{ fontSize: 12, lineHeight: 1.45 }}>
                 Расширенные графики и отзывы останутся следующим шагом. Сейчас здесь отображаются только реальные суммы
-                и выдачи.
+                и заявки.
               </div>
             </div>
           </>

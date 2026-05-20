@@ -66,7 +66,7 @@ export default function BizScanPage() {
           applyParsed(parsed);
           setError("");
         } else {
-          setError("QR не похож на код Polka.");
+          setError("Данные не похожи на заявку Polka.");
         }
         scanner.clear().catch(() => undefined);
         setScannerActive(false);
@@ -106,7 +106,7 @@ export default function BizScanPage() {
 
   const verify = async () => {
     if (!ready) {
-      setError("Введите 4 цифры кода.");
+      setError("Введите 4 цифры номера.");
       return;
     }
     setLoading(true);
@@ -124,7 +124,7 @@ export default function BizScanPage() {
   if (profileLoading) {
     return (
       <AppScreenBiz style={{ fontFamily: fontFn }}>
-        <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
+        <AppHeaderBiz title="Подтвердить заявку" onBack={() => router.back()} />
         <div style={{ padding: "24px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
           <Skeleton w="100%" h={48} radius={14} />
           <Skeleton w="100%" h={96} radius={14} />
@@ -137,7 +137,7 @@ export default function BizScanPage() {
   if (profileError) {
     return (
       <AppScreenBiz style={{ fontFamily: fontFn }}>
-        <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
+        <AppHeaderBiz title="Подтвердить заявку" onBack={() => router.back()} />
         <div style={{ padding: 16 }}>
           <ErrorState message={partnerErrorMessage(profileError)} />
         </div>
@@ -148,7 +148,7 @@ export default function BizScanPage() {
   if (profile && !isApproved) {
     return (
       <AppScreenBiz style={{ fontFamily: fontFn }}>
-        <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
+        <AppHeaderBiz title="Подтвердить заявку" onBack={() => router.back()} />
         <PartnerModerationState profile={profile} context="feature" />
       </AppScreenBiz>
     );
@@ -157,7 +157,7 @@ export default function BizScanPage() {
   if (completed) {
     return (
       <AppScreenBiz style={{ fontFamily: fontFn }}>
-        <AppHeaderBiz title="Выдача" onBack={() => router.back()} />
+        <AppHeaderBiz title="Заявка" onBack={() => router.back()} />
         <div
           className="biz-form-content"
           style={{
@@ -183,9 +183,9 @@ export default function BizScanPage() {
             {Icon.check(56, t.primaryDeep)}
           </div>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 0 }}>Заказ выдан</div>
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 0 }}>Заявка подтверждена</div>
             <div style={{ fontSize: 13, color: t.textSec, marginTop: 6 }}>
-              Код {completed.code} · {completed.offer.name}
+              Номер {completed.code} · {completed.offer.name}
             </div>
           </div>
           <div
@@ -205,7 +205,7 @@ export default function BizScanPage() {
             <div style={{ height: 1, background: t.divider, margin: "8px 0" }} />
             <SummaryRow label="Ваша выручка" value={money(Number(completed.total) - commission)} strong />
           </div>
-          <PillButtonBiz onClick={() => router.push("/biz/orders")}>К заказам</PillButtonBiz>
+          <PillButtonBiz onClick={() => router.push("/biz/orders")}>К заявкам</PillButtonBiz>
         </div>
       </AppScreenBiz>
     );
@@ -213,7 +213,7 @@ export default function BizScanPage() {
 
   return (
     <AppScreenBiz style={{ fontFamily: fontFn }}>
-      <AppHeaderBiz title="Принять заказ" onBack={() => router.back()} />
+      <AppHeaderBiz title="Подтвердить заявку" onBack={() => router.back()} />
       <div className="biz-form-content" style={{ padding: "24px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
         {!scannerActive ? (
           <button
@@ -237,7 +237,7 @@ export default function BizScanPage() {
             }}
           >
             {Icon.search(20, t.primaryDeep)}
-            Сканировать QR
+            Считать заявку
           </button>
         ) : (
           <div>
@@ -249,9 +249,9 @@ export default function BizScanPage() {
         )}
 
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 20, fontWeight: 750, letterSpacing: 0 }}>Введите код выдачи</div>
+          <div style={{ fontSize: 20, fontWeight: 750, letterSpacing: 0 }}>Введите номер заявки</div>
           <div style={{ fontSize: 13, color: t.textSec, marginTop: 6 }}>
-            4 цифры из заказа покупателя{orderId ? ` · заказ #${orderId}` : ""}
+            4 цифры из заявки покупателя{orderId ? ` · заявка #${orderId}` : ""}
           </div>
         </div>
 
@@ -301,7 +301,7 @@ export default function BizScanPage() {
         {error && <div style={{ textAlign: "center", fontSize: 13, color: t.danger, fontWeight: 650 }}>{error}</div>}
 
         <PillButtonBiz onClick={verify} disabled={!ready || loading} size="lg">
-          {loading ? "Проверяем…" : "Подтвердить выдачу"}
+          {loading ? "Проверяем…" : "Подтвердить заявку"}
         </PillButtonBiz>
       </div>
     </AppScreenBiz>

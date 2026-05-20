@@ -60,10 +60,10 @@ export default function LandingPage() {
               textWrap: "pretty",
             }}
           >
-            Позиции еды.
+            Товары рядом.
             <br />
             <span style={{ color: t.primaryDeep, background: t.primarySoft, padding: "0 8px", borderRadius: 8 }}>
-              По сниженной цене.
+              От локальных продавцов.
             </span>
           </h1>
           <p
@@ -73,7 +73,7 @@ export default function LandingPage() {
               textWrap: "pretty",
             }}
           >
-            Polka помогает выбрать оффер заведения, забронировать позицию и забрать её по коду в указанное время.
+            Polka помогает найти товары в локальных магазинах и оставить заявку, чтобы продавец связался с вами.
           </p>
         </div>
 
@@ -90,9 +90,9 @@ export default function LandingPage() {
           </div>
           <div className="landing-steps">
             {[
-              { title: "Выберите оффер", body: "На главном экране появятся реальные позиции от заведений рядом." },
-              { title: "Забронируйте", body: "После брони заказ будет доступен в разделе броней." },
-              { title: "Заберите по коду", body: "Покажите код сотруднику заведения в указанное время." },
+              { title: "Выберите товар", body: "На главном экране появятся реальные товары от магазинов рядом." },
+              { title: "Оставьте заявку", body: "После отправки интерес будет доступен в разделе заявок." },
+              { title: "Свяжитесь с продавцом", body: "Уточните детали напрямую с магазином в удобное время." },
             ].map((item, i) => (
             <div
               key={i}
@@ -114,7 +114,7 @@ export default function LandingPage() {
         {/* CTAs */}
         <div className="landing-cta">
           <PillButton onClick={() => router.push("/signup")} size="lg">
-            Начать экономить
+            Смотреть товары
           </PillButton>
           <PillButton onClick={() => router.push("/login")} variant="ghost" size="md">
             Уже есть аккаунт · войти

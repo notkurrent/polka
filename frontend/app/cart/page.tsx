@@ -31,7 +31,7 @@ export default function CartScreen() {
       clearCart();
       router.push(`/orders/${order.id}`);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Не удалось забронировать заказ. Корзина сохранена."));
+      setError(getApiErrorMessage(err, "Не удалось отправить заявку. Корзина сохранена."));
     } finally {
       setLoading(false);
     }
@@ -60,10 +60,10 @@ export default function CartScreen() {
           <EmptyState
             icon={Icon.bag(40, t.textTer, true)}
             title="Корзина пуста"
-            description="Добавьте одну или несколько позиций, чтобы забронировать их и получить код выдачи."
+            description="Добавьте один или несколько товаров, чтобы отправить заявку продавцу."
             action={
               <PillButton variant="outline" onClick={() => router.push("/")}>
-                Найти позиции
+                Найти товары
               </PillButton>
             }
           />
@@ -76,7 +76,7 @@ export default function CartScreen() {
                 return (
                   <React.Fragment key={item.offerId}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center", padding: "16px 0" }}>
-                      <OfferImagePreview imageUrl={item.imageUrl} label="позиция" width={56} height={56} radius={12} tone="mint" />
+                      <OfferImagePreview imageUrl={item.imageUrl} label="товар" width={56} height={56} radius={12} tone="mint" />
 
                       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
                         <div
@@ -89,7 +89,7 @@ export default function CartScreen() {
                         >
                           {item.name}
                         </div>
-                        <div style={{ fontSize: 13, color: t.textSec, overflowWrap: "anywhere" }}>{item.storeName || "Заведение"}</div>
+                        <div style={{ fontSize: 13, color: t.textSec, overflowWrap: "anywhere" }}>{item.storeName || "Магазин"}</div>
                         <div style={{ marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                           <PriceTag original={item.originalPrice ?? item.price} now={item.price} size="sm" />
                           <span style={{ fontSize: 13, fontWeight: 750, color: t.text }}>{formatTenge(lineTotal)}</span>
@@ -191,7 +191,7 @@ export default function CartScreen() {
                 </div>
               )}
               <PillButton onClick={handleReserve} variant="dark" size="lg" disabled={cart.length === 0 || loading}>
-                {loading ? "Бронируем…" : "Забронировать"}
+                {loading ? "Отправляем…" : "Отправить заявку"}
               </PillButton>
             </div>
           </>

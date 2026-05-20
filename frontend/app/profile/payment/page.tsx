@@ -15,8 +15,8 @@ export default function PaymentScreen() {
       <AppHeader title="Способы оплаты" onBack={() => router.back()} />
       <EmptyState
         icon={Icon.bag(34, t.textTer)}
-        title="Оплата при получении"
-        description="Сейчас оплата проходит в заведении при выдаче заказа. Онлайн-способы добавим позже."
+        title="Оплата напрямую продавцу"
+        description="Сейчас детали оплаты уточняются с магазином после заявки. Онлайн-способы добавим позже."
       />
     </div>
   );

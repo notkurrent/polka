@@ -68,7 +68,7 @@ export default function BizOrdersPage() {
           color: t.text,
         }}
       >
-        <OfferImagePreview imageUrl={orderImageUrl(order)} label="позиция" width={48} height={48} radius={14} tone="mint" />
+        <OfferImagePreview imageUrl={orderImageUrl(order)} label="товар" width={48} height={48} radius={14} tone="mint" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
             <div style={{ fontSize: 15, fontWeight: 750, overflowWrap: "anywhere" }}>
@@ -91,7 +91,7 @@ export default function BizOrdersPage() {
 
   return (
     <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
-      <AppHeaderBiz title="Заказы" />
+      <AppHeaderBiz title="Заявки" />
 
       <div className="biz-orders-content" style={{ padding: "16px 16px" }}>
         {loadingOrError(profileLoading, profileError)}
@@ -102,8 +102,8 @@ export default function BizOrdersPage() {
         {isApproved && !isLoading && !error && (orders || []).length === 0 && (
           <EmptyState
             icon={Icon.list(34, t.textTer)}
-            title="Пока нет заказов"
-            description="Новые бронирования покупателей появятся здесь."
+            title="Пока нет заявок"
+            description="Новые заявки покупателей появятся здесь."
             compact
           />
         )}
@@ -111,12 +111,12 @@ export default function BizOrdersPage() {
           <>
             <SectionTitle title="Активные" count={active.length} />
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-              {active.length ? active.map(renderOrder) : <EmptyLine>Нет активных заказов</EmptyLine>}
+              {active.length ? active.map(renderOrder) : <EmptyLine>Нет активных заявок</EmptyLine>}
             </div>
 
             <SectionTitle title="Прошлые" count={past.length} />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {past.length ? past.map(renderOrder) : <EmptyLine>Завершённые заказы появятся после выдачи</EmptyLine>}
+              {past.length ? past.map(renderOrder) : <EmptyLine>Завершённые заявки появятся после подтверждения</EmptyLine>}
             </div>
           </>
         )}

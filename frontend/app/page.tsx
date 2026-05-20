@@ -167,7 +167,7 @@ export default function AppScreenBuyerPage() {
   const filters = [
     { id: "all", label: "Все" },
     { id: "Пекарня", label: "Пекарни" },
-    { id: "MAGIC_BOX", label: "Сюрпризы" },
+    { id: "MAGIC_BOX", label: "Подборки" },
   ];
 
   // Map to FlattenedOffer format used by Buyer screens
@@ -187,7 +187,7 @@ export default function AppScreenBuyerPage() {
     original: o.offer.old_price,
     now: o.offer.new_price,
     imageUrl: o.offer.image_url,
-    label: o.offer.type === "MAGIC_BOX" ? "Сюрприз" : undefined,
+    label: o.offer.type === "MAGIC_BOX" ? "Подборка" : undefined,
     tone: o.offer.type === "MAGIC_BOX" ? "purple" : "orange",
     cat: o.offer.type,
   }));
@@ -305,7 +305,7 @@ export default function AppScreenBuyerPage() {
           }}
         >
           {Icon.search(18, t.textTer)}
-          <span style={{ fontSize: 14, color: t.textTer, flex: 1 }}>Кафе, блюда, районы…</span>
+          <span style={{ fontSize: 14, color: t.textTer, flex: 1 }}>Магазины, товары, районы…</span>
           {Icon.filter(18, t.textTer)}
         </div>
 
@@ -388,11 +388,11 @@ export default function AppScreenBuyerPage() {
         <div className="app-content buyer-offers-list" style={{ padding: "16px 16px 0", display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="buyer-section-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3 }}>Рядом с вами</div>
-            <div style={{ fontSize: 12, color: t.textSec }}>{visibleOffers.length} предложений</div>
+            <div style={{ fontSize: 12, color: t.textSec }}>{visibleOffers.length} товаров</div>
           </div>
 
           {error ? (
-            <ErrorState message="Не удалось загрузить предложения рядом. Проверьте соединение и попробуйте ещё раз." />
+            <ErrorState message="Не удалось загрузить товары рядом. Проверьте соединение и попробуйте ещё раз." />
           ) : (isOffersLoading || (!nearbyOffers && !error)) && !error ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${t.divider}` }}>
@@ -418,8 +418,8 @@ export default function AppScreenBuyerPage() {
                 title={filter === "all" ? "Пока ничего рядом" : "По этому фильтру пусто"}
                 description={
                   filter === "all"
-                    ? "Когда рядом появятся новые позиции, они отобразятся здесь. Попробуйте позже или измените район."
-                    : "Сбросьте фильтр или посмотрите другие категории — возможно, рядом есть другие предложения."
+                    ? "Когда рядом появятся новые товары, они отобразятся здесь. Попробуйте позже или измените район."
+                    : "Сбросьте фильтр или посмотрите другие категории — возможно, рядом есть другие товары."
                 }
                 compact
                 action={
@@ -459,7 +459,7 @@ export default function AppScreenBuyerPage() {
                   <div style={{ position: "relative" }}>
                     <OfferImagePreview
                       imageUrl={offer.imageUrl}
-                      label={offer.label || "позиция"}
+                      label={offer.label || "товар"}
                       width="100%"
                       height={150}
                       radius={0}
@@ -563,7 +563,7 @@ export default function AppScreenBuyerPage() {
                           overflowWrap: "anywhere",
                         }}
                       >
-                        Почему скидка? {offer.discountReason}
+                        Комментарий продавца: {offer.discountReason}
                       </div>
                     )}
                     <div
@@ -585,7 +585,7 @@ export default function AppScreenBuyerPage() {
                           fontWeight: 700,
                         }}
                       >
-                        −{Math.round((1 - offer.now / offer.original) * 100)}%
+                        Цена продавца
                       </span>
                     </div>
                   </div>

@@ -161,7 +161,7 @@ export default function ChooseRolePage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {roleCard({
             title: "Я покупатель",
-            description: "Ищу позиции рядом, бронирую и показываю код на выдаче.",
+            description: "Ищу товары рядом и оставляю заявку продавцу.",
             icon: Icon.bag(24, t.primaryDeep),
             active: selectedMode === "buyer",
             onClick: chooseBuyer,
@@ -170,8 +170,8 @@ export default function ChooseRolePage() {
             title: "Я бизнес",
             description:
               user?.role === "PARTNER"
-                ? "Перейти в кабинет, офферы и брони."
-                : "Зарегистрировать заведение и начать принимать брони.",
+                ? "Перейти в кабинет, товары и заявки."
+                : "Зарегистрировать магазин и начать принимать заявки.",
             icon: Icon.home(24, t.primaryDeep),
             active: selectedMode === "business",
             onClick: chooseBusiness,
@@ -192,7 +192,7 @@ export default function ChooseRolePage() {
         <div style={{ flex: 1 }} />
 
         <div style={{ fontSize: 12, color: t.textTer, lineHeight: 1.45, textAlign: "center", paddingTop: 24 }}>
-          Роль партнёра открывает бизнес-кабинет, но не мешает пользоваться покупательским режимом.
+          Роль продавца открывает бизнес-кабинет, но не мешает пользоваться покупательским режимом.
         </div>
       </div>
     </main>

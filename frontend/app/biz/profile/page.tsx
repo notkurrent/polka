@@ -42,7 +42,7 @@ export default function BizProfileScreen() {
 
   return (
     <div className="screen-scroll-with-tabbar" style={{ background: t.bg, fontFamily: fontFn }}>
-      <AppHeaderBiz title="Заведение" />
+      <AppHeaderBiz title="Магазин" />
       <div className="biz-form-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         {isLoading && (
           <>
@@ -137,7 +137,7 @@ export default function BizProfileScreen() {
             </div>
             {isTelegramAccountIncomplete(user) && <AccountLinkingPrompt tone="business" persistent />}
             <PillButtonBiz onClick={() => router.push("/biz/offers/new")} size="md">
-              Создать позицию
+              Создать товар
             </PillButtonBiz>
             <PillButton variant="outline" onClick={switchToBuyer}>
               Перейти в покупателя

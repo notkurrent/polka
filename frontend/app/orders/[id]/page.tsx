@@ -59,7 +59,7 @@ export default function ActiveOrderScreen() {
       const updated = await api.patch<OrderDetail>(`/orders/${id}`, { status: "EXPIRED" });
       mutate(updated, false);
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Не удалось отменить бронь"));
+      setActionError(getApiErrorMessage(err, "Не удалось отменить заявку"));
     } finally {
       setCanceling(false);
     }
@@ -89,8 +89,8 @@ export default function ActiveOrderScreen() {
   if (error || !order) {
     return (
       <div className="screen-scroll" style={{ background: t.bg }}>
-        <AppHeader title="Бронь" onBack={() => router.back()} />
-        <ErrorState message="Не удалось загрузить бронь. Проверьте соединение и попробуйте ещё раз." />
+        <AppHeader title="Заявка" onBack={() => router.back()} />
+        <ErrorState message="Не удалось загрузить заявку. Проверьте соединение и попробуйте ещё раз." />
       </div>
     );
   }
@@ -128,7 +128,7 @@ export default function ActiveOrderScreen() {
         flexDirection: "column",
       }}
     >
-      <AppHeader title={order.partner.name} sub={`Бронь #${order.id}`} onBack={() => router.back()} />
+      <AppHeader title={order.partner.name} sub={`Заявка #${order.id}`} onBack={() => router.back()} />
 
       <div
         className="app-readable-content"
@@ -193,7 +193,7 @@ export default function ActiveOrderScreen() {
                 letterSpacing: 0.6,
               }}
             >
-              Покажите код продавцу
+              Номер заявки для продавца
             </div>
             <div
               style={{
@@ -275,7 +275,7 @@ export default function ActiveOrderScreen() {
                 fontSize: 14,
               }}
             >
-              <OfferImagePreview imageUrl={it.image_url || order.offer.image_url} label="позиция" width={52} height={52} radius={12} tone="mint" />
+              <OfferImagePreview imageUrl={it.image_url || order.offer.image_url} label="товар" width={52} height={52} radius={12} tone="mint" />
               <span style={{ color: t.text, flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>
                 {it.title}
                 {it.quantity > 1 ? <span style={{ color: t.textSec }}> · {it.quantity} шт</span> : null}
@@ -314,7 +314,7 @@ export default function ActiveOrderScreen() {
         >
           {completed ? (
             <PillButton onClick={() => router.push(`/orders/${id}/rating`)} variant="dark" size="lg">
-              Оценить заказ
+              Оценить заявку
             </PillButton>
           ) : active ? (
             <div
@@ -334,16 +334,16 @@ export default function ActiveOrderScreen() {
                 lineHeight: 1.35,
               }}
             >
-              Покажите QR или 4-значный код продавцу
+              Покажите номер заявки продавцу
             </div>
           ) : (
             <PillButton onClick={() => router.push("/")} variant="outline" size="lg">
-              Найти ещё позиции
+              Найти ещё товары
             </PillButton>
           )}
           {active && (
             <PillButton onClick={handleCancel} variant="danger" size="md" disabled={canceling}>
-              {canceling ? "Отменяем…" : "Отменить бронь"}
+              {canceling ? "Отменяем…" : "Отменить заявку"}
             </PillButton>
           )}
         </div>

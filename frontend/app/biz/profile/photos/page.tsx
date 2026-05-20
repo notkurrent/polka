@@ -57,7 +57,7 @@ export default function BizProfilePhotosPage() {
           fontFamily: FONT(),
         }}
       >
-        Фото заведения будут отображаться на публичной странице после загрузки
+        Фото магазина будут отображаться на публичной странице после загрузки
       </div>
     </AppScreenBiz>
   );

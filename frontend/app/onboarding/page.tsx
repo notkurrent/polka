@@ -139,7 +139,7 @@ export default function OnboardingScreen() {
                 margin: 0,
               }}
             >
-              Позиции еды.
+              Товары рядом.
               <br />
               <span
                 style={{
@@ -149,7 +149,7 @@ export default function OnboardingScreen() {
                   color: t.primaryDeep,
                 }}
               >
-                По сниженной цене.
+                От локальных продавцов.
               </span>
             </h1>
             <p
@@ -161,7 +161,7 @@ export default function OnboardingScreen() {
                 margin: 0,
               }}
             >
-              Выбирайте предложения заведений рядом и забирайте их по коду
+              Выбирайте товары локальных магазинов и оставляйте заявку продавцу
             </p>
           </div>
         )}
@@ -201,9 +201,9 @@ export default function OnboardingScreen() {
                 1
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Найдите позицию</div>
+                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Найдите товар</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
-                  Откройте карту и выберите заведение рядом
+                  Откройте карту и выберите магазин рядом
                 </div>
               </div>
             </div>
@@ -226,8 +226,8 @@ export default function OnboardingScreen() {
                 2
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Забронируйте</div>
-                <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>Нажмите кнопку и получите код выдачи</div>
+                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Оставьте заявку</div>
+                <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>Нажмите кнопку, чтобы показать интерес продавцу</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -249,9 +249,9 @@ export default function OnboardingScreen() {
                 3
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Заберите</div>
+                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Свяжитесь</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>
-                  Покажите код на кассе в указанное время
+                  Уточните детали напрямую с магазином
                 </div>
               </div>
             </div>
@@ -284,9 +284,9 @@ export default function OnboardingScreen() {
                   border: `1px solid ${t.divider}`,
                 }}
               >
-                <div style={{ fontSize: 16, fontWeight: 750 }}>Выбирайте оффер</div>
+                <div style={{ fontSize: 16, fontWeight: 750 }}>Выбирайте товар</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 6, lineHeight: 1.45 }}>
-                  На главном экране появятся реальные позиции от заведений, когда они будут доступны рядом.
+                  На главном экране появятся реальные товары от магазинов, когда они будут доступны рядом.
                 </div>
               </div>
               <div
@@ -297,9 +297,9 @@ export default function OnboardingScreen() {
                   border: `1px solid ${t.divider}`,
                 }}
               >
-                <div style={{ fontSize: 16, fontWeight: 750 }}>Бронируйте</div>
+                <div style={{ fontSize: 16, fontWeight: 750 }}>Оставляйте заявки</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 6, lineHeight: 1.45 }}>
-                  После брони заказ появится в разделе броней вместе с кодом выдачи.
+                  После отправки интерес появится в разделе заявок, чтобы вы могли вернуться к деталям.
                 </div>
               </div>
               <div
@@ -310,9 +310,9 @@ export default function OnboardingScreen() {
                   border: `1px solid ${t.divider}`,
                 }}
               >
-                <div style={{ fontSize: 16, fontWeight: 750 }}>Забирайте по коду</div>
+                <div style={{ fontSize: 16, fontWeight: 750 }}>Связывайтесь с продавцом</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 6, lineHeight: 1.45 }}>
-                  Покажите код сотруднику заведения в указанное время.
+                  Уточняйте наличие, оплату и удобный способ получения напрямую.
                 </div>
               </div>
             </div>

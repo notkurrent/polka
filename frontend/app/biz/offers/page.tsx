@@ -65,12 +65,12 @@ export default function BizOffersListScreen() {
     const oldPrice = Number(draft.old_price);
     const newPrice = Number(draft.new_price);
     const stock = Number(draft.stock);
-    if (!draft.name.trim()) return "Введите название позиции.";
-    if (!draft.pickup_from.trim() || !draft.pickup_to.trim()) return "Укажите окно выдачи.";
+    if (!draft.name.trim()) return "Введите название товара.";
+    if (!draft.pickup_from.trim() || !draft.pickup_to.trim()) return "Укажите время для связи.";
     if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
     if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
     if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
-    if (newPrice > oldPrice * 0.7) return "Минимальная скидка для Polka — 30%.";
+    if (newPrice > oldPrice * 0.7) return "Цена Polka должна быть не выше 70% обычной цены.";
     if (!Number.isInteger(stock) || stock < 0) return "Остаток должен быть целым числом от 0.";
     return "";
   };
@@ -127,12 +127,12 @@ export default function BizOffersListScreen() {
   return (
     <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz
-        title="Мои позиции"
+        title="Мои товары"
         right={
           isApproved ? (
           <button
             type="button"
-            aria-label="Создать позицию"
+            aria-label="Создать товар"
             onClick={() => router.push("/biz/offers/new")}
             style={{
               width: 44,
@@ -180,8 +180,8 @@ export default function BizOffersListScreen() {
         {isApproved && !isLoading && !error && (!offers || offers.length === 0) && (
           <EmptyState
             icon={Icon.plus(34, t.textTer)}
-            title="Пока нет позиций"
-            description="Создайте первую позицию, чтобы она появилась в ленте покупателей."
+            title="Пока нет товаров"
+            description="Создайте первый товар, чтобы он появился в ленте покупателей."
             compact
           />
         )}
@@ -204,7 +204,7 @@ export default function BizOffersListScreen() {
             >
               <OfferImagePreview
                 imageUrl={offer.image_url}
-                label="позиция"
+                label="товар"
                 width={60}
                 height={60}
                 radius={10}
@@ -232,7 +232,7 @@ export default function BizOffersListScreen() {
                     <input
                       value={draft.name}
                       name="offer-name"
-                      aria-label="Название позиции"
+                      aria-label="Название товара"
                       onChange={(event) => setDraft({ ...draft, name: event.target.value })}
                       style={inputStyle(t, fontFn)}
                     />
@@ -248,8 +248,8 @@ export default function BizOffersListScreen() {
                     <textarea
                       value={draft.discount_reason}
                       name="discount-reason"
-                      aria-label="Почему скидка"
-                      placeholder="Почему скидка?"
+                      aria-label="Комментарий продавца"
+                      placeholder="Комментарий продавца"
                       onChange={(event) => setDraft({ ...draft, discount_reason: event.target.value })}
                       rows={2}
                       style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
@@ -259,7 +259,7 @@ export default function BizOffersListScreen() {
                         type="time"
                         value={draft.pickup_from}
                         name="offer-pickup_from"
-                        aria-label="Окно выдачи от"
+                        aria-label="Время для связи от"
                         onChange={(event) => setDraft({ ...draft, pickup_from: event.target.value })}
                         style={inputStyle(t, fontFn)}
                       />
@@ -268,7 +268,7 @@ export default function BizOffersListScreen() {
                         type="time"
                         value={draft.pickup_to}
                         name="offer-pickup_to"
-                        aria-label="Окно выдачи до"
+                        aria-label="Время для связи до"
                         onChange={(event) => setDraft({ ...draft, pickup_to: event.target.value })}
                         style={inputStyle(t, fontFn)}
                       />
@@ -315,12 +315,12 @@ export default function BizOffersListScreen() {
                         {active ? "Активно" : "Нет остатков"}
                       </Badge>
                       <span style={{ fontSize: 11, color: t.textSec }}>
-                        {offer.type === "MAGIC_BOX" ? "Сюрприз" : "Состав"}
+                        {offer.type === "MAGIC_BOX" ? "Подборка" : "Состав"}
                       </span>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 750, marginTop: 5 }}>{offer.name}</div>
                     {offer.pickup_time && (
-                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>Выдача: {offer.pickup_time}</div>
+                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>Время для связи: {offer.pickup_time}</div>
                     )}
                     {offer.description && (
                       <div style={{ fontSize: 12, color: t.textSec, marginTop: 3, lineHeight: 1.35 }}>
@@ -329,7 +329,7 @@ export default function BizOffersListScreen() {
                     )}
                     {offer.discount_reason && (
                       <div style={{ fontSize: 12, color: t.primaryDeep, marginTop: 3, lineHeight: 1.35 }}>
-                        Почему скидка: {offer.discount_reason}
+                        Комментарий продавца: {offer.discount_reason}
                       </div>
                     )}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
@@ -367,7 +367,7 @@ export default function BizOffersListScreen() {
               lineHeight: 1.5,
             }}
           >
-            Позиция исчезает из покупательской ленты, когда остаток становится 0.
+            Товар исчезает из покупательской ленты, когда остаток становится 0.
           </div>
         )}
       </div>
@@ -403,10 +403,10 @@ export default function BizOffersListScreen() {
             onClick={(event) => event.stopPropagation()}
           >
             <div id="delete-offer-title" style={{ fontSize: 17, fontWeight: 800, color: t.text, lineHeight: 1.25 }}>
-              Удалить позицию?
+              Удалить товар?
             </div>
             <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.45, color: t.textSec }}>
-              {pendingDelete.name} исчезнет из списка позиций и из покупательской ленты. История уже созданных заказов
+              {pendingDelete.name} исчезнет из списка товаров и из покупательской ленты. История уже созданных заявок
               сохранится.
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8, marginTop: 16 }}>

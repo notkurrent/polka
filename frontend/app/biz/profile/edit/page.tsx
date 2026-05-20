@@ -213,10 +213,10 @@ export default function BizProfileEditPage() {
           </>
         ) : (
           <>
-            <Field label="Название заведения">
+            <Field label="Название магазина">
               <input
                 name="partner-name"
-                aria-label="Название заведения"
+                aria-label="Название магазина"
                 value={data.name}
                 onChange={(event) => setData({ ...data, name: event.target.value })}
                 style={inputStyle(t, fontFn)}
@@ -466,7 +466,7 @@ export default function BizProfileEditPage() {
                 lineHeight: 1.45,
               }}
             >
-              Геопозицию заведения можно будет уточнить отдельно. Сейчас используется точка по умолчанию для Алматы.
+              Геопозицию магазина можно будет уточнить отдельно. Сейчас используется точка по умолчанию для Алматы.
             </div>
 
             {error && <div style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}

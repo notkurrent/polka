@@ -283,7 +283,7 @@ export function ReservationRow({ r, onClick }: { r: BizReservation; onClick: () 
               {Icon.clock(12, t.primaryDeep)} Сегодня
             </div>
           ) : (
-            <div style={{ fontSize: 12, color: t.textTer }}>Выдано</div>
+            <div style={{ fontSize: 12, color: t.textTer }}>Закрыта</div>
           )}
         </div>
       </div>

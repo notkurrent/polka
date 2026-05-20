@@ -583,7 +583,7 @@ export function GridMap({
         <button
           key={i}
           type="button"
-          aria-label={`Открыть предложение ${p.label}`}
+          aria-label={`Открыть товар ${p.label}`}
           onClick={() => onPin && onPin(i)}
           style={{
             position: "absolute",

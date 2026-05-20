@@ -100,7 +100,7 @@ export default function BizDashboardPage() {
             {initials(profile?.name)}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 11, color: t.textSec }}>Партнёр</div>
+            <div style={{ fontSize: 11, color: t.textSec }}>Продавец</div>
             <div style={{ fontSize: 16, fontWeight: 750, letterSpacing: "-0.2px" }}>
               {profile?.name || "Бизнес-кабинет"}
             </div>
@@ -130,8 +130,8 @@ export default function BizDashboardPage() {
         <div style={{ padding: 16 }}>
           <EmptyState
             icon={Icon.user(34, t.textTer)}
-            title="Зарегистрируйте заведение"
-            description="После регистрации здесь появятся офферы, брони и выдача заказов."
+            title="Зарегистрируйте магазин"
+            description="После регистрации здесь появятся товары, заявки и аналитика."
             compact
           />
           <button
@@ -187,8 +187,8 @@ export default function BizDashboardPage() {
 
           <div style={{ padding: "14px 16px 0" }}>
             <div style={{ display: "flex", gap: 8 }}>
-              <StatTile value={stats.activeOrders} label="Активных броней" />
-              <StatTile value={stats.activeOffers} label="Позиций в ленте" />
+              <StatTile value={stats.activeOrders} label="Активных заявок" />
+              <StatTile value={stats.activeOffers} label="Товаров в ленте" />
               <StatTile value={money(stats.todayRevenue)} label="Сегодня" accent />
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function BizDashboardPage() {
           <div style={{ padding: "18px 16px 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px" }}>
-                Активные брони · {stats.activeOrders}
+                Активные заявки · {stats.activeOrders}
               </div>
               <button
                 type="button"
@@ -213,7 +213,7 @@ export default function BizDashboardPage() {
                   fontFamily: fontFn,
                 }}
               >
-                Ввести код
+                Ввести номер
               </button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -251,9 +251,9 @@ export default function BizDashboardPage() {
                     {Icon.list(22, t.textTer)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 750, color: t.text }}>Активных броней нет</div>
+                    <div style={{ fontSize: 14, fontWeight: 750, color: t.text }}>Активных заявок нет</div>
                     <div style={{ marginTop: 3, fontSize: 12, lineHeight: 1.35, color: t.textSec }}>
-                      Новые заказы появятся после публикации позиции.
+                      Новые заявки появятся после публикации товара.
                     </div>
                   </div>
                 </div>
@@ -276,10 +276,10 @@ export default function BizDashboardPage() {
               Быстрые действия
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
-              <ActionCard icon={Icon.plus} label="Новая позиция" onClick={() => router.push("/biz/offers/new")} primary />
-              <ActionCard icon={Icon.check} label="Принять код" onClick={() => router.push("/biz/scan")} />
+              <ActionCard icon={Icon.plus} label="Новый товар" onClick={() => router.push("/biz/offers/new")} primary />
+              <ActionCard icon={Icon.check} label="Подтвердить" onClick={() => router.push("/biz/scan")} />
               <ActionCard icon={Icon.chart} label="Аналитика" onClick={() => router.push("/biz/analytics")} />
-              <ActionCard icon={Icon.list} label="Все заказы" onClick={() => router.push("/biz/orders")} />
+              <ActionCard icon={Icon.list} label="Все заявки" onClick={() => router.push("/biz/orders")} />
             </div>
           </div>
         </div>

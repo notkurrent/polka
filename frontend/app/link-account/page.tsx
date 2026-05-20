@@ -77,7 +77,7 @@ export default function LinkAccountPage() {
         <div>
           <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 800 }}>Связать аккаунт</h1>
           <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5, color: t.textSec }}>
-            Если вы уже входили на сайте по телефону и паролю, свяжите этот web-аккаунт с Telegram. Заказы, профиль и
+            Если вы уже входили на сайте по телефону и паролю, свяжите этот web-аккаунт с Telegram. Заявки, профиль и
             бизнес-кабинет будут общими.
           </p>
         </div>

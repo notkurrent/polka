@@ -41,7 +41,7 @@ export default function SearchPage() {
 
   const categories = [
     ...BUSINESS_CATEGORY_SEARCH_OPTIONS,
-    { label: "Сюрприз-пакеты", query: "Сюрприз-пакеты" },
+    { label: "Подборки", query: "Подборки" },
   ];
 
   return (
@@ -82,8 +82,8 @@ export default function SearchPage() {
           <input
             type="text"
             name="search"
-            aria-label="Поиск предложений"
-            placeholder="Кафе, блюда, районы…"
+            aria-label="Поиск товаров"
+            placeholder="Магазины, товары, районы…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{
@@ -207,9 +207,9 @@ export default function SearchPage() {
             >
               {Icon.search(32, t.textTer)}
             </div>
-            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>Найдите позицию рядом</div>
+            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>Найдите товар рядом</div>
             <div style={{ maxWidth: 300, marginTop: 10, fontSize: 14, lineHeight: 1.5 }}>
-              Введите название заведения, еды или выберите популярную категорию выше.
+              Введите название магазина, товара или выберите популярную категорию выше.
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function SearchPage() {
                 >
                   <OfferImagePreview
                     imageUrl={item.offer.image_url}
-                    label={item.offer.type === "MAGIC_BOX" ? "сюрприз" : "позиция"}
+                    label={item.offer.type === "MAGIC_BOX" ? "подборка" : "товар"}
                     width={52}
                     height={52}
                     radius={10}

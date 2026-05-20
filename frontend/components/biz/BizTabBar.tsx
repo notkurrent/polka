@@ -16,8 +16,8 @@ export function BizTabBar() {
 
   const tabs: Array<{ id: string; label: string; icon: keyof typeof Icon; route: string }> = [
     { id: "dash", label: "Главная", icon: "home", route: "/biz" },
-    { id: "offers", label: "Позиции", icon: "bag", route: "/biz/offers" },
-    { id: "orders", label: "Заказы", icon: "list", route: "/biz/orders" },
+    { id: "offers", label: "Товары", icon: "bag", route: "/biz/offers" },
+    { id: "orders", label: "Заявки", icon: "list", route: "/biz/orders" },
     { id: "profile", label: "Профиль", icon: "user", route: "/biz/profile" },
   ];
 

@@ -110,7 +110,7 @@ export const ALMATY_CENTER = {
 export function statusLabel(status: string) {
   const normalized = status.toUpperCase();
   if (normalized === "RESERVED" || normalized === "PENDING") return "Активна";
-  if (normalized === "COMPLETED") return "Выдан";
+  if (normalized === "COMPLETED") return "Закрыта";
   if (normalized === "EXPIRED") return "Отменен";
   if (normalized === "CANCELLED") return "Отменен";
   return status;

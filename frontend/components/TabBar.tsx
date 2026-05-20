@@ -23,7 +23,7 @@ export function TabBar() {
 
   const tabs: Array<{ id: string; label: string; icon: keyof typeof Icon; route: string }> = [
     { id: "feed", label: "Главная", icon: "home", route: "/" },
-    { id: "orders", label: "Брони", icon: "bag", route: "/orders" },
+    { id: "orders", label: "Заявки", icon: "bag", route: "/orders" },
     { id: "favorites", label: "Избранное", icon: "heart", route: "/favorites" },
     { id: "profile", label: "Профиль", icon: "user", route: "/profile" },
   ];

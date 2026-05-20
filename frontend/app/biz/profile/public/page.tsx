@@ -117,7 +117,7 @@ export default function BizProfilePublicPage() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, flex: 1, fontFamily: FONT() }}>Принимать заказы</div>
+            <div style={{ fontSize: 15, fontWeight: 600, flex: 1, fontFamily: FONT() }}>Принимать заявки</div>
             <div
               onClick={() => setAcceptOrders(!acceptOrders)}
               style={{

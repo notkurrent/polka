@@ -1,6 +1,5 @@
 "use client";
 
-import { QrCode } from "lucide-react";
 import React from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
@@ -8,7 +7,7 @@ import { api } from "@/lib/api";
 import { OrderSummary, statusLabel } from "@/lib/api-types";
 import { useAuth } from "@/hooks/useAuth";
 import { TabBar } from "@/components/TabBar";
-import { tokens, FONT, PillButton } from "@/components/ui/primitives";
+import { tokens, Icon, FONT, PillButton } from "@/components/ui/primitives";
 import { Skeleton } from "@/components/ui/Skeleton";
 import LoginForm from "@/components/LoginForm";
 import AppHeader from "@/components/AppHeader";
@@ -43,7 +42,7 @@ export default function OrdersScreen() {
         flexDirection: "column",
       }}
     >
-      <AppHeader title="Брони" hideBack size="lg" />
+      <AppHeader title="Заявки" hideBack size="lg" />
 
       <div className="orders-list" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
         {isLoading && (
@@ -54,16 +53,16 @@ export default function OrdersScreen() {
           </>
         )}
 
-        {!isLoading && error && <ErrorState message="Не удалось загрузить заказы. Проверьте соединение и попробуйте ещё раз." />}
+        {!isLoading && error && <ErrorState message="Не удалось загрузить заявки. Проверьте соединение и попробуйте ещё раз." />}
 
         {!isLoading && !error && !hasOrders && (
           <EmptyState
-            icon={<QrCode size={40} color={t.textTer} />}
-            title="Пока нет броней"
-            description="Когда забронируете первую позицию, здесь появятся активные и завершённые брони."
+            icon={Icon.bag(40, t.textTer, true)}
+            title="Пока нет заявок"
+            description="Когда отправите интерес к товару, здесь появятся активные и завершённые заявки."
             action={
               <PillButton variant="outline" onClick={() => router.push("/")}>
-                Найти позиции
+                Найти товары
               </PillButton>
             }
           />
@@ -94,7 +93,7 @@ export default function OrdersScreen() {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                  <OfferImagePreview imageUrl={imageUrl} label="позиция" width={58} height={58} radius={12} tone="mint" />
+                  <OfferImagePreview imageUrl={imageUrl} label="товар" width={58} height={58} radius={12} tone="mint" />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontSize: 16, fontWeight: 700, overflowWrap: "anywhere" }}>
                       {title}
@@ -106,7 +105,7 @@ export default function OrdersScreen() {
                       {statusLabel(order.status)} · {new Date(order.created_at).toLocaleDateString("ru-RU")}
                     </div>
                   </div>
-                  {<QrCode size={24} color={t.primaryDeep} />}
+                  {Icon.chevronR(20, t.primaryDeep)}
                 </div>
               </button>
             );

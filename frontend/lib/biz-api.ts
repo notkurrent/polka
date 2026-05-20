@@ -77,7 +77,7 @@ export function orderTitle(order: PartnerOrder) {
   if (order.items?.length) {
     return order.items.length > 1 ? `${order.items[0].title} +${order.items.length - 1}` : order.items[0].title;
   }
-  return orderOffer(order)?.name ?? "Позиция";
+  return orderOffer(order)?.name ?? "Товар";
 }
 
 export function orderSubtitle(order: PartnerOrder) {
@@ -137,12 +137,12 @@ export function parseCodePayload(raw: string): ParsedCodePayload | null {
 export function partnerErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "Не удалось выполнить действие";
   if (message.includes("Partner already exists")) return "Профиль уже создан. Можно перейти в кабинет.";
-  if (message.includes("Partner profile not found")) return "Сначала зарегистрируйте заведение.";
-  if (message.includes("another partner")) return "Этот заказ относится к другому заведению.";
-  if (message.includes("not active")) return "Этот заказ уже закрыт или отменён.";
+  if (message.includes("Partner profile not found")) return "Сначала зарегистрируйте магазин.";
+  if (message.includes("another partner")) return "Эта заявка относится к другому продавцу.";
+  if (message.includes("not active")) return "Эта заявка уже закрыта или отменена.";
   if (message.includes("Multiple orders"))
-    return "Несколько заказов с таким кодом. Откройте заказ из списка и подтвердите его.";
-  if (message.includes("not found")) return "Активный заказ с таким кодом не найден.";
+    return "Несколько заявок с таким номером. Откройте заявку из списка и подтвердите её.";
+  if (message.includes("not found")) return "Активная заявка с таким номером не найдена.";
   return message;
 }
 

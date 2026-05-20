@@ -42,22 +42,22 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
     logoUrl: partner.logo_url,
     imgLabel: partner.name.slice(0, 10) || "...",
     tone: "blue" as const,
-    cat: partner.category || "Заведение",
+    cat: partner.category || "Магазин",
     district: "Алматы",
     address: partner.address,
     hours: partner.hours,
     mapUrl: partner.map_url,
-    about: partner.description || "Свежие позиции по сниженной цене. Забронируйте и заберите в указанное время.",
+    about: partner.description || "Свежие товары от локального продавца. Оставьте заявку и уточните детали напрямую.",
     offers: (partnerDetail?.offers || []).map((offer) => ({
       id: String(offer.id),
       title: offer.name,
-      desc: offer.description || (offer.type === "MAGIC_BOX" ? "Сюрприз-позиция от заведения" : "Готовая позиция"),
+      desc: offer.description || (offer.type === "MAGIC_BOX" ? "Подборка от магазина" : "Готовый товар"),
       discountReason: offer.discount_reason || "",
       original: offer.old_price,
       now: offer.new_price,
       pickup: offer.pickup_time || partner.hours,
       tone: (offer.type === "MAGIC_BOX" ? "purple" : "orange") as "purple" | "orange",
-      label: offer.type === "MAGIC_BOX" ? "Сюрприз" : "Еда",
+      label: offer.type === "MAGIC_BOX" ? "Подборка" : "Товар",
       qty: offer.stock,
       imageUrl: offer.image_url,
     })),
@@ -86,8 +86,8 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
       <div style={{ minHeight: "100dvh", background: t.bg, fontFamily: FONT() }}>
         <EmptyState
           icon={Icon.pin(40, t.textTer)}
-          title="Заведение не найдено"
-          description="Не удалось загрузить страницу заведения. Вернитесь назад или попробуйте открыть другое предложение."
+          title="Магазин не найден"
+          description="Не удалось загрузить страницу магазина. Вернитесь назад или попробуйте открыть другой товар."
         />
       </div>
     );
@@ -241,13 +241,13 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
 
         {/* offers */}
         <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, marginBottom: 10 }}>Доступные позиции</div>
+          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, marginBottom: 10 }}>Доступные товары</div>
           <div className="store-offers-list" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {store.offers.length === 0 && (
               <EmptyState
                 icon={Icon.bag(34, t.textTer)}
-                title="Пока нет доступных позиций"
-                description="Когда заведение добавит офферы, они появятся здесь."
+                title="Пока нет доступных товаров"
+                description="Когда магазин добавит товары, они появятся здесь."
                 compact
               />
             )}
@@ -300,7 +300,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                             overflowWrap: "anywhere",
                           }}
                         >
-                          Почему скидка? {o.discountReason}
+                          Комментарий продавца: {o.discountReason}
                         </div>
                       )}
                       <div
@@ -314,7 +314,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                         }}
                       >
                         {Icon.clock(12, t.primaryDeep)}
-                        Время выдачи: {o.pickup}
+                        Время для связи: {o.pickup}
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <PriceTag original={o.original} now={o.now} size="sm" />

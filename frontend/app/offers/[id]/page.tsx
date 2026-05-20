@@ -47,7 +47,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
       router.push(`/orders/${order.id}`);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Не удалось забронировать позицию. Попробуйте еще раз."));
+      setError(getApiErrorMessage(err, "Не удалось отправить заявку по товару. Попробуйте еще раз."));
     } finally {
       setIsReserving(false);
     }
@@ -70,9 +70,9 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
     }
     setCartFeedback(
       isInCart
-        ? "Позиция уже в корзине."
+        ? "Товар уже в корзине."
         : cartHasOtherPartner
-          ? "Начали новую корзину для этого заведения."
+          ? "Начали новую корзину для этого магазина."
           : "Добавили в корзину.",
     );
   };
@@ -96,7 +96,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         <PillButton variant="outline" full={false} onClick={() => router.back()}>
           Назад
         </PillButton>
-        <ErrorState message="Не удалось открыть оффер. Вернитесь назад или попробуйте другое предложение." />
+        <ErrorState message="Не удалось открыть товар. Вернитесь назад или попробуйте другой товар." />
       </div>
     );
   }
@@ -139,7 +139,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       <div className="offer-detail-hero" style={{ position: "relative" }}>
         <OfferImagePreview
           imageUrl={offer.image_url}
-          label={offer.type === "MAGIC_BOX" ? "Сюрприз" : "позиция"}
+          label={offer.type === "MAGIC_BOX" ? "Подборка" : "товар"}
           width="100%"
           height={240}
           radius={0}
@@ -185,7 +185,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
               fontWeight: 700,
             }}
           >
-            Выгода {Math.round((1 - offer.new_price / offer.old_price) * 100)}%
+            Цена продавца
           </span>
         </div>
 
@@ -209,7 +209,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             }}
           >
             <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>
-              Почему скидка?
+              Комментарий продавца
             </div>
             <div>{offer.discount_reason}</div>
           </div>
@@ -217,17 +217,17 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
         <div style={{ background: t.surface, borderRadius: 16, padding: "16px", marginBottom: 24 }}>
           <p style={{ margin: 0, fontSize: 13, color: t.textSec }}>
-            Осталось порций: <strong style={{ color: t.text }}>{offer.stock}</strong>
+            Осталось товаров: <strong style={{ color: t.text }}>{offer.stock}</strong>
           </p>
           <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-            Заведение: <strong style={{ color: t.text, overflowWrap: "anywhere" }}>{partner.name}</strong>
+            Магазин: <strong style={{ color: t.text, overflowWrap: "anywhere" }}>{partner.name}</strong>
           </p>
           <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
             Адрес: <strong style={{ color: t.text, overflowWrap: "anywhere" }}>{partner.address}</strong>
           </p>
           {offer.pickup_time ? (
             <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-              Выдача: <strong style={{ color: t.text }}>{offer.pickup_time}</strong>
+              Время для связи: <strong style={{ color: t.text }}>{offer.pickup_time}</strong>
             </p>
           ) : (
             <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
@@ -251,7 +251,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
               cursor: "pointer",
             }}
           >
-            Перейти к странице заведения
+            Перейти к странице магазина
           </button>
         </div>
 
@@ -311,7 +311,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             {isInCart ? "Открыть корзину" : "Добавить в корзину"}
           </PillButton>
           <PillButton size="lg" full onClick={handleReserve} disabled={isReserving || isOutOfStock}>
-            {isOutOfStock ? "Нет в наличии" : isReserving ? "Бронируем…" : `Забронировать за ${offer.new_price} ₸`}
+            {isOutOfStock ? "Нет в наличии" : isReserving ? "Отправляем…" : `Отправить заявку за ${offer.new_price} ₸`}
           </PillButton>
         </div>
       </div>

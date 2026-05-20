@@ -44,7 +44,7 @@ export default function FavoritesScreen() {
         title="Избранное"
         hideBack
         size="lg"
-        sub={stores.length > 0 ? `${stores.length} заведений` : undefined}
+        sub={stores.length > 0 ? `${stores.length} магазинов` : undefined}
       />
 
       {favorites.length === 0 ? (
@@ -52,7 +52,7 @@ export default function FavoritesScreen() {
           <EmptyState
             icon={Icon.heart(42, t.textTer)}
             title="Пока пусто"
-            description="Добавляйте заведения в избранное, чтобы быстро возвращаться к любимым местам и следить за новыми позициями."
+            description="Добавляйте магазины в избранное, чтобы быстро возвращаться к любимым продавцам и следить за новыми товарами."
             action={<span aria-hidden="true" style={{ display: "block", height: 48 }} />}
           />
         </div>
@@ -62,7 +62,7 @@ export default function FavoritesScreen() {
           <Skeleton w="100%" h={90} radius={14} />
         </div>
       ) : error ? (
-        <ErrorState message="Не удалось загрузить избранные заведения. Проверьте соединение и попробуйте ещё раз." />
+        <ErrorState message="Не удалось загрузить избранные магазины. Проверьте соединение и попробуйте ещё раз." />
       ) : (
         <div
           className="app-content store-offers-list"
@@ -109,7 +109,7 @@ export default function FavoritesScreen() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: t.text, overflowWrap: "anywhere" }}>{partner.name}</div>
                 <div style={{ fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>
-                  {partner.category || "Заведение"} · {partner.address}
+                  {partner.category || "Магазин"} · {partner.address}
                 </div>
                 <div
                   style={{
@@ -125,7 +125,7 @@ export default function FavoritesScreen() {
                     </Badge>
                   ) : (
                     <Badge tone="neutral" size="sm">
-                      Нет активных позиций
+                      Нет активных товаров
                     </Badge>
                   )}
                 </div>

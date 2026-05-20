@@ -16,7 +16,7 @@ export default function NotificationsScreen() {
       <EmptyState
         icon={Icon.bell(34, t.textTer)}
         title="Пока тихо"
-        description="Здесь появятся статусы заказов, новые предложения рядом и новости от любимых заведений."
+        description="Здесь появятся статусы заявок, новые товары рядом и новости от любимых магазинов."
       />
     </div>
   );

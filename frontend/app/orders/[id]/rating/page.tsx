@@ -98,12 +98,12 @@ export default function RatingScreen() {
               lineHeight: 1.5,
             }}
           >
-            {isLoading && "Загружаем заказ…"}
-            {error && "Не удалось загрузить заказ"}
+            {isLoading && "Загружаем заявку…"}
+            {error && "Не удалось загрузить заявку"}
             {order && (
               <>
-                {order.partner.name} · код {order.code} <br />
-                {order.total} ₸ · Экономия {savings} ₸
+                {order.partner.name} · номер {order.code} <br />
+                {order.total} ₸ · Разница {savings} ₸
               </>
             )}
           </div>
@@ -120,12 +120,12 @@ export default function RatingScreen() {
               textAlign: "center",
             }}
           >
-            Оценка доступна только после выдачи заказа.
+            Оценка доступна только после закрытия заявки.
           </div>
         )}
 
         <div style={{ textAlign: "center", marginTop: 16 }}>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>Как вам заказ?</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Как вам заявка?</div>
           <div
             style={{
               display: "flex",
@@ -207,7 +207,7 @@ export default function RatingScreen() {
               <textarea
                 value={feedback}
                 name="rating-feedback"
-                aria-label="Комментарий к заказу"
+                aria-label="Комментарий к заявке"
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Что понравилось? Что улучшить?"
                 rows={4}

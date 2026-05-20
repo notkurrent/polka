@@ -54,7 +54,7 @@ export function OfferImagePicker({
           ? "Не удалось показать фото. Можно выбрать другой файл."
           : file
             ? file.name
-            : "PNG, JPG или WEBP. Лучше горизонтальное фото позиции.");
+            : "PNG, JPG или WEBP. Лучше горизонтальное фото товара.");
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
@@ -161,7 +161,7 @@ export function OfferImagePicker({
 
 export function OfferImagePreview({
   imageUrl,
-  label = "позиция",
+  label = "товар",
   width = 60,
   height = 60,
   radius = 10,

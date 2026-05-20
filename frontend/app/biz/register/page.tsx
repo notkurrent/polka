@@ -90,9 +90,9 @@ export default function BizRegisterPage() {
     textarea?: boolean;
     placeholder?: string;
   }> = [
-    { id: "name", label: "Название заведения" },
+    { id: "name", label: "Название магазина" },
     { id: "type", label: "Категория", options: BUSINESS_CATEGORIES },
-    { id: "address", label: "Адрес заведения" },
+    { id: "address", label: "Адрес магазина" },
     { id: "map_url", label: "Ссылка на 2GIS / карту", placeholder: "https://2gis.kz/..." },
     { id: "description", label: "Описание", textarea: true },
   ];
@@ -130,7 +130,7 @@ export default function BizRegisterPage() {
               Заявка отправлена на проверку
             </div>
             <div style={{ fontSize: 13, color: t.textSec, marginTop: 8, lineHeight: 1.5, textWrap: "pretty" }}>
-              Мы проверим данные заведения. После одобрения откроются позиции, брони и выдача заказов.
+              Мы проверим данные магазина. После одобрения откроются товары, заявки и кабинет продавца.
             </div>
           </div>
           <Badge tone="amber">Статус · на проверке</Badge>
@@ -156,7 +156,7 @@ export default function BizRegisterPage() {
             color: t.primaryDeep,
           }}
         >
-          После регистрации точку заведения можно будет уточнить в профиле.
+          После регистрации точку магазина можно будет уточнить в профиле.
         </div>
 
         {fields.map((f) => (
@@ -307,7 +307,7 @@ export default function BizRegisterPage() {
             cursor: "pointer",
           }}
         >
-          Я покупатель, перейти к позициям
+          Я покупатель, перейти к товарам
         </button>
       </div>
     </AppScreenBiz>

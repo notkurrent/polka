@@ -195,7 +195,7 @@ export default function CompleteAccountPage() {
           <div>
             <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 800 }}>Добавить телефон и пароль</h1>
             <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.5, color: t.textSec }}>
-              Так вы сможете входить в этот же аккаунт на сайте, а профиль и заказы останутся на месте.
+              Так вы сможете входить в этот же аккаунт на сайте, а профиль и заявки останутся на месте.
             </p>
           </div>
           <div>

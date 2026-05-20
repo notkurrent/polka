@@ -43,13 +43,13 @@ export default function BizCreateOfferPage() {
   const validate = () => {
     const oldPrice = Number(original);
     const newPrice = Number(price);
-    if (!title.trim()) return "Введите название позиции.";
-    if (!pickupFrom.trim() || !pickupTo.trim()) return "Укажите окно выдачи.";
+    if (!title.trim()) return "Введите название товара.";
+    if (!pickupFrom.trim() || !pickupTo.trim()) return "Укажите время для связи.";
     if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
     if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
     if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
-    if (newPrice > oldPrice * 0.7) return "Минимальная скидка для Polka — 30%.";
-    if (!Number.isInteger(qty) || qty < 1) return "Укажите хотя бы 1 порцию.";
+    if (newPrice > oldPrice * 0.7) return "Цена Polka должна быть не выше 70% обычной цены.";
+    if (!Number.isInteger(qty) || qty < 1) return "Укажите хотя бы 1 товар.";
     return "";
   };
 
@@ -88,7 +88,7 @@ export default function BizCreateOfferPage() {
 
   return (
     <AppScreenBiz>
-      <AppHeaderBiz title="Новая позиция" onBack={() => router.back()} />
+      <AppHeaderBiz title="Новый товар" onBack={() => router.back()} />
       {profileLoading && (
         <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
           <Skeleton w="100%" h={78} radius={12} />
@@ -110,7 +110,7 @@ export default function BizCreateOfferPage() {
           <Label>Формат</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
             {[
-              { id: "MAGIC_BOX", label: "Сюрприз", desc: "Случайная позиция дня" },
+              { id: "MAGIC_BOX", label: "Подборка", desc: "Случайный товар дня" },
               { id: "SPECIFIC", label: "Состав", desc: "Понятное содержимое" },
             ].map((opt) => (
               <button
@@ -139,7 +139,7 @@ export default function BizCreateOfferPage() {
           <input
             name="offer-title"
             aria-label="Название"
-            placeholder="Например, вечерняя позиция"
+            placeholder="Например, товар дня"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             style={inputStyle(t, fontFn)}
@@ -169,11 +169,11 @@ export default function BizCreateOfferPage() {
           />
         </Field>
 
-        <Field label="Почему скидка?">
+        <Field label="Комментарий продавца">
           <textarea
             name="discount-reason"
-            aria-label="Почему скидка"
-            placeholder="Например, выпечка дня или короткий срок годности"
+            aria-label="Комментарий продавца"
+            placeholder="Например, особенности товара или условия покупки"
             value={discountReason}
             onChange={(event) => setDiscountReason(event.target.value)}
             rows={2}
@@ -210,7 +210,7 @@ export default function BizCreateOfferPage() {
                 }}
               />
               <div style={{ fontSize: 10, color: t.primaryDeep, marginTop: 4, fontWeight: 650 }}>
-                Скидка {discount}%
+                Разница {discount}%
               </div>
             </div>
           </div>
@@ -242,12 +242,12 @@ export default function BizCreateOfferPage() {
           </div>
         </div>
 
-        <Field label="Окно выдачи">
+        <Field label="Время для связи">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input
               type="time"
               name="pickup-from"
-              aria-label="Окно выдачи от"
+              aria-label="Время для связи от"
               value={pickupFrom}
               onChange={(e) => setPickupFrom(e.target.value)}
               style={inputStyle(t, fontFn)}
@@ -256,7 +256,7 @@ export default function BizCreateOfferPage() {
             <input
               type="time"
               name="pickup-to"
-              aria-label="Окно выдачи до"
+              aria-label="Время для связи до"
               value={pickupTo}
               onChange={(e) => setPickupTo(e.target.value)}
               style={inputStyle(t, fontFn)}
