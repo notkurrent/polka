@@ -6,7 +6,7 @@ import logging
 import random
 
 from app.database import get_session
-from app.models import Order, OrderItem, OrderStatus, Offer, Partner, PartnerStatus, Rating, User
+from app.models import Order, OrderItem, OrderStatus, Offer, OfferAvailability, Partner, PartnerStatus, Rating, User
 from app.dependencies import get_current_user
 from app.schemas import OrderDetailDTO
 from app.serializers import build_order_detail_dto
@@ -106,6 +106,8 @@ async def create_order(
         offers_by_id = {offer.id: offer for offer, _partner in rows}
         for offer_id, quantity in quantities.items():
             offer = offers_by_id[offer_id]
+            if offer.availability != OfferAvailability.IN_STOCK:
+                raise HTTPException(status_code=400, detail="Out of stock")
             if offer.stock < quantity:
                 raise HTTPException(status_code=400, detail="Out of stock")
             offer.stock -= quantity

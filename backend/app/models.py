@@ -21,6 +21,12 @@ class OfferType(str, enum.Enum):
     MAGIC_BOX = "MAGIC_BOX"
     SPECIFIC = "SPECIFIC"
 
+class OfferAvailability(str, enum.Enum):
+    IN_STOCK = "IN_STOCK"
+    OUT_OF_STOCK = "OUT_OF_STOCK"
+    PREORDER = "PREORDER"
+    HIDDEN = "HIDDEN"
+
 class OrderStatus(str, enum.Enum):
     PENDING = "Pending"
     RESERVED = "Reserved"
@@ -96,11 +102,15 @@ class Partner(SQLModel, table=True):
 class Offer(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     partner_id: int = Field(foreign_key="partner.id")
-    type: OfferType = Field(sa_column=Column(Enum(OfferType)))
+    type: OfferType = Field(default=OfferType.SPECIFIC, sa_column=Column(Enum(OfferType)))
+    availability: OfferAvailability = Field(
+        default=OfferAvailability.IN_STOCK,
+        sa_column=Column(Enum(OfferAvailability), nullable=False),
+    )
     name: str
     description: str = Field(default="")
     pickup_time: str = Field(default="")
-    old_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
+    old_price: Optional[Decimal] = Field(default=None, sa_column=Column(sa.Numeric(10, 2), nullable=True))
     new_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))
     discount_reason: str = Field(default="")
     stock: int = Field(default=0)

@@ -34,7 +34,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
   const offer = selectedOfferData?.offer;
   const partner = selectedOfferData?.partner;
-  const isOutOfStock = !!offer && offer.stock <= 0;
+  const isOutOfStock = !!offer && (offer.availability !== "IN_STOCK" || offer.stock <= 0);
   const isInCart = id ? cart.some((item) => item.offerId === id) : false;
   const cartHasOtherPartner = !!partner && cart.length > 0 && cart.some((item) => item.partnerId !== String(partner.id));
 
@@ -60,7 +60,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         offerId: id,
         partnerId: String(partner.id),
         name: offer.name,
-        price: offer.new_price,
+        price: offer.price ?? offer.new_price,
         quantity: 1,
         originalPrice: offer.old_price,
         storeName: partner.name,
@@ -139,11 +139,11 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       <div className="offer-detail-hero" style={{ position: "relative" }}>
         <OfferImagePreview
           imageUrl={offer.image_url}
-          label={offer.type === "MAGIC_BOX" ? "Подборка" : "товар"}
+          label="товар"
           width="100%"
           height={240}
           radius={0}
-          tone={offer.type === "MAGIC_BOX" ? "mint" : "sand"}
+          tone="mint"
         />
         <button
           type="button"
@@ -174,7 +174,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         </h1>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 24 }}>
-          <PriceTag original={offer.old_price} now={offer.new_price} size="lg" />
+          <PriceTag original={offer.old_price ?? null} now={offer.price ?? offer.new_price} size="lg" />
           <span
             style={{
               padding: "5px 10px",
@@ -311,7 +311,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             {isInCart ? "Открыть корзину" : "Добавить в корзину"}
           </PillButton>
           <PillButton size="lg" full onClick={handleReserve} disabled={isReserving || isOutOfStock}>
-            {isOutOfStock ? "Нет в наличии" : isReserving ? "Отправляем…" : `Отправить заявку за ${offer.new_price} ₸`}
+            {isOutOfStock ? "Нет в наличии" : isReserving ? "Отправляем…" : `Отправить заявку за ${offer.price ?? offer.new_price} ₸`}
           </PillButton>
         </div>
       </div>

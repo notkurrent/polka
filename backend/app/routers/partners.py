@@ -14,7 +14,7 @@ from sqlmodel import select
 
 from app.database import get_session
 from app.dependencies import get_current_user
-from app.models import Offer, OfferType, Order, OrderItem, OrderStatus, Partner, PartnerStatus, User, UserRole
+from app.models import Offer, OfferAvailability, OfferType, Order, OrderItem, OrderStatus, Partner, PartnerStatus, User, UserRole
 from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status, restore_order_stock
 from app.schemas import (
     OfferPublicDTO,
@@ -47,7 +47,6 @@ media_storage = SupabaseMediaStorage()
 
 DEFAULT_DEV_LAT = 43.238949
 DEFAULT_DEV_LON = 76.889709
-MIN_DISCOUNT_MULTIPLIER = Decimal("0.70")
 ALMATY_VIEWBOX = "76.75,43.36,77.05,43.12"
 NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "PolkaMVP/0.1 local-address-search")
@@ -73,12 +72,6 @@ def verify_partner_role(user: User) -> None:
         return
 
     raise HTTPException(status_code=403, detail="Partner role required")
-
-
-def validate_offer_discount(old_price: Decimal, new_price: Decimal) -> None:
-    if new_price <= old_price * MIN_DISCOUNT_MULTIPLIER:
-        return
-    raise HTTPException(status_code=400, detail="Offer discount must be at least 30%")
 
 
 async def apply_partner_location(
@@ -178,12 +171,14 @@ def partner_order_response(order: Order, item_rows: list[tuple[OrderItem, Offer]
 
 
 class OfferCreate(BaseModel):
-    type: OfferType
+    type: OfferType = OfferType.SPECIFIC
+    availability: OfferAvailability | None = None
     name: str
     description: str = ""
     pickup_time: str = ""
-    old_price: Decimal = Field(ge=0)
-    new_price: Decimal = Field(ge=0)
+    price: Decimal | None = Field(default=None, ge=0)
+    old_price: Decimal | None = Field(default=None, ge=0)
+    new_price: Decimal | None = Field(default=None, ge=0)
     discount_reason: str = ""
     stock: int = Field(ge=0)
 
@@ -192,6 +187,9 @@ class OfferUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     pickup_time: str | None = None
+    type: OfferType | None = None
+    availability: OfferAvailability | None = None
+    price: Decimal | None = Field(default=None, ge=0)
     old_price: Decimal | None = Field(default=None, ge=0)
     new_price: Decimal | None = Field(default=None, ge=0)
     discount_reason: str | None = None
@@ -234,6 +232,17 @@ class AddressSuggestion(BaseModel):
     lat: float
     lon: float
     place_id: int | None = None
+
+
+def resolve_offer_price(*, price: Decimal | None, new_price: Decimal | None) -> Decimal:
+    resolved = price if price is not None else new_price
+    if resolved is None:
+        raise HTTPException(status_code=422, detail="Product price is required")
+    return resolved
+
+
+def default_offer_availability(stock: int) -> OfferAvailability:
+    return OfferAvailability.IN_STOCK if stock > 0 else OfferAvailability.OUT_OF_STOCK
 
 
 def media_http_exception(exc: Exception) -> HTTPException:
@@ -360,7 +369,12 @@ async def get_partner_detail(
 
     offers_result = await session.execute(
         select(Offer)
-        .where(Offer.partner_id == partner.id, Offer.stock > 0, Offer.is_archived.is_(False))
+        .where(
+            Offer.partner_id == partner.id,
+            Offer.stock > 0,
+            Offer.availability != OfferAvailability.HIDDEN,
+            Offer.is_archived.is_(False),
+        )
         .order_by(Offer.created_at.desc())
     )
 
@@ -524,16 +538,17 @@ async def create_partner_offer(
 ):
     await expire_stale_orders(session)
     partner = await get_approved_partner(current_user, session)
-    validate_offer_discount(req.old_price, req.new_price)
+    price = resolve_offer_price(price=req.price, new_price=req.new_price)
 
     new_offer = Offer(
         partner_id=partner.id,
         type=req.type,
+        availability=req.availability or default_offer_availability(req.stock),
         name=req.name,
         description=req.description,
         pickup_time=req.pickup_time,
         old_price=req.old_price,
-        new_price=req.new_price,
+        new_price=price,
         discount_reason=req.discount_reason,
         stock=req.stock,
     )
@@ -636,9 +651,15 @@ async def update_partner_offer(
         raise HTTPException(status_code=404, detail="Offer not found")
 
     update_data = req.model_dump(exclude_unset=True)
-    old_price = update_data.get("old_price", offer.old_price)
-    new_price = update_data.get("new_price", offer.new_price)
-    validate_offer_discount(old_price, new_price)
+    price = update_data.pop("price", None)
+    if price is not None:
+        update_data["new_price"] = price
+    stock = update_data.get("stock")
+    if stock is not None and "availability" not in update_data:
+        if stock <= 0:
+            update_data["availability"] = OfferAvailability.OUT_OF_STOCK
+        elif offer.availability == OfferAvailability.OUT_OF_STOCK:
+            update_data["availability"] = OfferAvailability.IN_STOCK
     for key, value in update_data.items():
         setattr(offer, key, value)
 
@@ -666,6 +687,7 @@ async def delete_partner_offer(
     order_result = await session.execute(select(OrderItem.id).where(OrderItem.offer_id == offer.id).limit(1))
     if order_result.scalar_one_or_none() is not None:
         offer.is_archived = True
+        offer.availability = OfferAvailability.HIDDEN
         offer.stock = 0
         session.add(offer)
         await session.commit()

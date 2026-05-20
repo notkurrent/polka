@@ -247,7 +247,7 @@ export default function SearchPage() {
                 >
                   <OfferImagePreview
                     imageUrl={item.offer.image_url}
-                    label={item.offer.type === "MAGIC_BOX" ? "подборка" : "товар"}
+                    label="товар"
                     width={52}
                     height={52}
                     radius={10}
@@ -260,7 +260,7 @@ export default function SearchPage() {
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <PriceTag now={item.offer.new_price} original={item.offer.old_price} size="sm" />
+                    <PriceTag now={item.offer.price ?? item.offer.new_price} original={item.offer.old_price ?? null} size="sm" />
                   </div>
                 </button>
               ))

@@ -51,13 +51,13 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
     offers: (partnerDetail?.offers || []).map((offer) => ({
       id: String(offer.id),
       title: offer.name,
-      desc: offer.description || (offer.type === "MAGIC_BOX" ? "Подборка от магазина" : "Готовый товар"),
+      desc: offer.description || "Готовый товар",
       discountReason: offer.discount_reason || "",
       original: offer.old_price,
-      now: offer.new_price,
+      now: offer.price ?? offer.new_price,
       pickup: offer.pickup_time || partner.hours,
-      tone: (offer.type === "MAGIC_BOX" ? "purple" : "orange") as "purple" | "orange",
-      label: offer.type === "MAGIC_BOX" ? "Подборка" : "Товар",
+      tone: "orange" as "purple" | "orange",
+      label: "Товар",
       qty: offer.stock,
       imageUrl: offer.image_url,
     })),
@@ -317,7 +317,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                         Время для связи: {o.pickup}
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <PriceTag original={o.original} now={o.now} size="sm" />
+                        <PriceTag original={o.original ?? null} now={o.now} size="sm" />
                         <button
                           type="button"
                           onClick={() => {

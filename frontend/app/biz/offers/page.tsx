@@ -33,7 +33,8 @@ export default function BizOffersListScreen() {
     pickup_from: "19:00",
     pickup_to: "21:00",
     old_price: "",
-    new_price: "",
+    price: "",
+    availability: "IN_STOCK" as OfferPublic["availability"],
     stock: "",
   });
   const [draftPhoto, setDraftPhoto] = useState<File | null>(null);
@@ -53,8 +54,9 @@ export default function BizOffersListScreen() {
       discount_reason: offer.discount_reason || "",
       pickup_from: from,
       pickup_to: to,
-      old_price: String(offer.old_price),
-      new_price: String(offer.new_price),
+      old_price: offer.old_price != null ? String(offer.old_price) : "",
+      price: String(offer.price ?? offer.new_price),
+      availability: offer.availability,
       stock: String(offer.stock),
     });
     setDraftPhoto(null);
@@ -63,14 +65,12 @@ export default function BizOffersListScreen() {
 
   const validateDraft = () => {
     const oldPrice = Number(draft.old_price);
-    const newPrice = Number(draft.new_price);
+    const productPrice = Number(draft.price);
     const stock = Number(draft.stock);
     if (!draft.name.trim()) return "Введите название товара.";
     if (!draft.pickup_from.trim() || !draft.pickup_to.trim()) return "Укажите время для связи.";
-    if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
-    if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
-    if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
-    if (newPrice > oldPrice * 0.7) return "Цена Polka должна быть не выше 70% обычной цены.";
+    if (draft.old_price.trim() && (!Number.isFinite(oldPrice) || oldPrice <= 0)) return "Старая цена должна быть больше 0.";
+    if (!Number.isFinite(productPrice) || productPrice <= 0) return "Цена должна быть больше 0.";
     if (!Number.isInteger(stock) || stock < 0) return "Остаток должен быть целым числом от 0.";
     return "";
   };
@@ -90,8 +90,9 @@ export default function BizOffersListScreen() {
         description: draft.description.trim(),
         discount_reason: draft.discount_reason.trim(),
         pickup_time: `${draft.pickup_from} - ${draft.pickup_to}`,
-        old_price: Number(draft.old_price),
-        new_price: Number(draft.new_price),
+        old_price: draft.old_price.trim() ? Number(draft.old_price) : null,
+        price: Number(draft.price),
+        availability: draft.availability,
         stock: Number(draft.stock),
       });
       if (draftPhoto) {
@@ -187,7 +188,7 @@ export default function BizOffersListScreen() {
         )}
         {isApproved && offers?.map((offer) => {
           const isEditing = editingId === offer.id;
-          const active = offer.stock > 0;
+          const active = offer.availability === "IN_STOCK" && offer.stock > 0;
 
           return (
             <div
@@ -273,20 +274,32 @@ export default function BizOffersListScreen() {
                         style={inputStyle(t, fontFn)}
                       />
                     </div>
+                    <select
+                      value={draft.availability}
+                      name="availability"
+                      aria-label="Статус наличия"
+                      onChange={(event) => setDraft({ ...draft, availability: event.target.value as OfferPublic["availability"] })}
+                      style={inputStyle(t, fontFn)}
+                    >
+                      <option value="IN_STOCK">В наличии</option>
+                      <option value="OUT_OF_STOCK">Нет в наличии</option>
+                      <option value="PREORDER">Предзаказ</option>
+                      <option value="HIDDEN">Скрыт</option>
+                    </select>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 0.7fr", gap: 8 }}>
                       <input
                         value={draft.old_price}
                         name="old-price"
-                        aria-label="Обычная цена"
+                        aria-label="Старая цена"
                         onChange={(event) => setDraft({ ...draft, old_price: event.target.value.replace(/\D/g, "") })}
                         inputMode="numeric"
                         style={inputStyle(t, fontFn)}
                       />
                       <input
-                        value={draft.new_price}
-                        name="new-price"
-                        aria-label="Цена Polka"
-                        onChange={(event) => setDraft({ ...draft, new_price: event.target.value.replace(/\D/g, "") })}
+                        value={draft.price}
+                        name="price"
+                        aria-label="Цена"
+                        onChange={(event) => setDraft({ ...draft, price: event.target.value.replace(/\D/g, "") })}
                         inputMode="numeric"
                         style={inputStyle(t, fontFn)}
                       />
@@ -312,11 +325,8 @@ export default function BizOffersListScreen() {
                   <>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                       <Badge tone={active ? "solid" : "neutral"} size="sm">
-                        {active ? "Активно" : "Нет остатков"}
+                        {availabilityLabel(offer.availability)}
                       </Badge>
-                      <span style={{ fontSize: 11, color: t.textSec }}>
-                        {offer.type === "MAGIC_BOX" ? "Подборка" : "Состав"}
-                      </span>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 750, marginTop: 5 }}>{offer.name}</div>
                     {offer.pickup_time && (
@@ -333,7 +343,7 @@ export default function BizOffersListScreen() {
                       </div>
                     )}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
-                      <PriceTag original={Number(offer.old_price)} now={Number(offer.new_price)} size="sm" />
+                      <PriceTag original={offer.old_price ?? null} now={Number(offer.price ?? offer.new_price)} size="sm" />
                       <span style={{ fontSize: 11, color: t.textSec }}>· {offer.stock} шт</span>
                     </div>
                     <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
@@ -454,6 +464,13 @@ export default function BizOffersListScreen() {
       <BizTabBar />
     </AppScreenBiz>
   );
+}
+
+function availabilityLabel(availability: OfferPublic["availability"]) {
+  if (availability === "OUT_OF_STOCK") return "Нет в наличии";
+  if (availability === "PREORDER") return "Предзаказ";
+  if (availability === "HIDDEN") return "Скрыт";
+  return "В наличии";
 }
 
 function inputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties {

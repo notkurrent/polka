@@ -66,7 +66,8 @@ export function orderImageUrl(order: PartnerOrder) {
 }
 
 export function orderPrice(order: PartnerOrder) {
-  return Number(order.total ?? orderOffer(order)?.new_price ?? 0);
+  const offer = orderOffer(order);
+  return Number(order.total ?? offer?.price ?? offer?.new_price ?? 0);
 }
 
 export function orderQuantity(order: PartnerOrder) {
@@ -106,7 +107,7 @@ export function buildBizStats(offers: OfferPublic[] = [], orders: PartnerOrder[]
   const completed = orders.filter((order) => orderStatus(order).toUpperCase() === "COMPLETED");
   const todayCompleted = completed.filter((order) => new Date(orderCreatedAt(order)).toDateString() === today);
   const activeOrders = orders.filter((order) => isActiveOrder(orderStatus(order))).length;
-  const activeOffers = offers.filter((offer) => offer.stock > 0).length;
+  const activeOffers = offers.filter((offer) => offer.availability === "IN_STOCK" && offer.stock > 0).length;
   const totalRevenue = completed.reduce((sum, order) => sum + orderPrice(order), 0);
   const todayRevenue = todayCompleted.reduce((sum, order) => sum + orderPrice(order), 0);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
@@ -19,7 +19,6 @@ export default function BizCreateOfferPage() {
   const { data: profile, isLoading: profileLoading, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
   const isApproved = profile?.status === "APPROVED";
 
-  const [format, setFormat] = useState<"MAGIC_BOX" | "SPECIFIC">("MAGIC_BOX");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [discountReason, setDiscountReason] = useState("");
@@ -33,22 +32,13 @@ export default function BizCreateOfferPage() {
   const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
-  const discount = useMemo(() => {
-    const oldPrice = Number(original);
-    const newPrice = Number(price);
-    if (!oldPrice || !newPrice) return 0;
-    return Math.max(0, Math.round((1 - newPrice / oldPrice) * 100));
-  }, [original, price]);
-
   const validate = () => {
     const oldPrice = Number(original);
-    const newPrice = Number(price);
+    const productPrice = Number(price);
     if (!title.trim()) return "Введите название товара.";
     if (!pickupFrom.trim() || !pickupTo.trim()) return "Укажите время для связи.";
-    if (!Number.isFinite(oldPrice) || oldPrice <= 0) return "Обычная цена должна быть больше 0.";
-    if (!Number.isFinite(newPrice) || newPrice <= 0) return "Цена Polka должна быть больше 0.";
-    if (newPrice >= oldPrice) return "Цена Polka должна быть ниже обычной цены.";
-    if (newPrice > oldPrice * 0.7) return "Цена Polka должна быть не выше 70% обычной цены.";
+    if (!Number.isFinite(productPrice) || productPrice <= 0) return "Цена должна быть больше 0.";
+    if (original.trim() && (!Number.isFinite(oldPrice) || oldPrice <= 0)) return "Старая цена должна быть больше 0.";
     if (!Number.isInteger(qty) || qty < 1) return "Укажите хотя бы 1 товар.";
     return "";
   };
@@ -64,13 +54,14 @@ export default function BizCreateOfferPage() {
     setError("");
     try {
       const payload = {
-        type: format,
+        type: "SPECIFIC",
+        availability: qty > 0 ? "IN_STOCK" : "OUT_OF_STOCK",
         name: title.trim(),
         description: description.trim(),
         discount_reason: discountReason.trim(),
         pickup_time: `${pickupFrom} - ${pickupTo}`,
-        old_price: Number(original),
-        new_price: Number(price),
+        old_price: original.trim() ? Number(original) : null,
+        price: Number(price),
         stock: qty,
       };
       const offer = createdOfferId ? await bizApi.updateOffer(createdOfferId, payload) : await bizApi.createOffer(payload);
@@ -106,35 +97,6 @@ export default function BizCreateOfferPage() {
       )}
       {!profileLoading && !profileError && isApproved && (
       <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <Label>Формат</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-            {[
-              { id: "MAGIC_BOX", label: "Подборка", desc: "Случайный товар дня" },
-              { id: "SPECIFIC", label: "Состав", desc: "Понятное содержимое" },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setFormat(opt.id as "MAGIC_BOX" | "SPECIFIC")}
-                style={{
-                  minHeight: 78,
-                  padding: 12,
-                  borderRadius: 12,
-                  textAlign: "left",
-                  border: `1.5px solid ${format === opt.id ? t.primaryDeep : t.divider}`,
-                  background: format === opt.id ? t.primarySoft : "#fff",
-                  cursor: "pointer",
-                  fontFamily: fontFn,
-                }}
-              >
-                <div style={{ fontSize: 13, fontWeight: 750, color: t.text }}>{opt.label}</div>
-                <div style={{ fontSize: 11, color: t.textSec, marginTop: 3, lineHeight: 1.35 }}>{opt.desc}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
         <Field label="Название">
           <input
             name="offer-title"
@@ -193,13 +155,13 @@ export default function BizCreateOfferPage() {
                 inputMode="numeric"
                 style={inputStyle(t, fontFn)}
               />
-              <div style={{ fontSize: 10, color: t.textTer, marginTop: 4 }}>Обычная</div>
+              <div style={{ fontSize: 10, color: t.textTer, marginTop: 4 }}>Старая, если есть</div>
             </div>
             <div style={{ flex: 1 }}>
               <input
                 value={price}
                 name="polka-price"
-                aria-label="Цена Polka"
+                aria-label="Цена товара"
                 onChange={(event) => setPrice(event.target.value.replace(/\D/g, ""))}
                 inputMode="numeric"
                 style={{
@@ -209,9 +171,7 @@ export default function BizCreateOfferPage() {
                   fontWeight: 750,
                 }}
               />
-              <div style={{ fontSize: 10, color: t.primaryDeep, marginTop: 4, fontWeight: 650 }}>
-                Разница {discount}%
-              </div>
+              <div style={{ fontSize: 10, color: t.primaryDeep, marginTop: 4, fontWeight: 650 }}>Цена товара</div>
             </div>
           </div>
         </div>

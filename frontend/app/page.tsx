@@ -167,7 +167,6 @@ export default function AppScreenBuyerPage() {
   const filters = [
     { id: "all", label: "Все" },
     { id: "Пекарня", label: "Пекарни" },
-    { id: "MAGIC_BOX", label: "Подборки" },
   ];
 
   // Map to FlattenedOffer format used by Buyer screens
@@ -185,11 +184,11 @@ export default function AppScreenBuyerPage() {
     desc: o.offer.description || undefined,
     discountReason: o.offer.discount_reason || undefined,
     original: o.offer.old_price,
-    now: o.offer.new_price,
+    now: o.offer.price ?? o.offer.new_price,
     imageUrl: o.offer.image_url,
-    label: o.offer.type === "MAGIC_BOX" ? "Подборка" : undefined,
-    tone: o.offer.type === "MAGIC_BOX" ? "purple" : "orange",
-    cat: o.offer.type,
+    label: undefined,
+    tone: "orange",
+    cat: o.partner.category || o.offer.type,
   }));
 
   // visible filters

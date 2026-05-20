@@ -43,7 +43,7 @@ export default function RatingScreen() {
     }
   };
 
-  const savings = order ? Math.max(0, order.offer.old_price - order.offer.new_price) : 0;
+  const savings = order?.offer.old_price ? Math.max(0, order.offer.old_price - (order.offer.price ?? order.offer.new_price)) : 0;
   const canRate = order?.status === "COMPLETED";
 
   return (

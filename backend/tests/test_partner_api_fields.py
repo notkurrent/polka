@@ -120,22 +120,25 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
                 "/partner-api/offers",
                 headers=auth_headers(partner_token),
                 json={
-                    "type": "MAGIC_BOX",
                     "name": f"API Fields Offer {run_id}",
-                    "old_price": str(Decimal("4200.00")),
-                    "new_price": str(Decimal("1600.00")),
+                    "price": str(Decimal("1600.00")),
                     "discount_reason": "End of day surplus",
                     "stock": 2,
                 },
             )
             assert offer_response.status_code == 200, offer_response.text
+            assert offer_response.json()["type"] == "SPECIFIC"
+            assert offer_response.json()["availability"] == "IN_STOCK"
+            assert offer_response.json()["price"] == "1600.00"
+            assert offer_response.json()["old_price"] is None
+            assert offer_response.json()["new_price"] == "1600.00"
             assert offer_response.json()["discount_reason"] == "End of day surplus"
         finally:
             await cleanup_test_data(phone_prefix)
 
 
 @pytest.mark.asyncio
-async def test_offer_create_and_update_require_minimum_30_percent_discount() -> None:
+async def test_offer_create_and_update_accept_product_price_without_required_discount() -> None:
     run_id = str(uuid4().int % 100000).zfill(5)
     phone_prefix = f"+7762{run_id}"
     partner_phone = f"{phone_prefix}01"
@@ -165,49 +168,45 @@ async def test_offer_create_and_update_require_minimum_30_percent_discount() -> 
             partner = register_response.json()
             await approve_partner(partner["id"])
 
-            invalid_create = await client.post(
-                "/partner-api/offers",
-                headers=auth_headers(partner_token),
-                json={
-                    "type": "MAGIC_BOX",
-                    "name": f"Invalid Discount Offer {run_id}",
-                    "old_price": str(Decimal("1000.00")),
-                    "new_price": str(Decimal("701.00")),
-                    "stock": 1,
-                },
-            )
-            assert invalid_create.status_code == 400, invalid_create.text
-            assert invalid_create.json()["detail"] == "Offer discount must be at least 30%"
-
             offer_response = await client.post(
                 "/partner-api/offers",
                 headers=auth_headers(partner_token),
                 json={
-                    "type": "MAGIC_BOX",
-                    "name": f"Valid Discount Offer {run_id}",
+                    "name": f"Product Price Offer {run_id}",
                     "old_price": str(Decimal("1000.00")),
-                    "new_price": str(Decimal("700.00")),
+                    "price": str(Decimal("950.00")),
                     "stock": 1,
                 },
             )
             assert offer_response.status_code == 200, offer_response.text
             offer = offer_response.json()
-
-            invalid_update = await client.patch(
-                f"/partner-api/offers/{offer['id']}",
-                headers=auth_headers(partner_token),
-                json={"new_price": str(Decimal("701.00"))},
-            )
-            assert invalid_update.status_code == 400, invalid_update.text
-            assert invalid_update.json()["detail"] == "Offer discount must be at least 30%"
+            assert offer["price"] == "950.00"
+            assert offer["new_price"] == "950.00"
+            assert offer["old_price"] == "1000.00"
+            assert offer["type"] == "SPECIFIC"
+            assert offer["availability"] == "IN_STOCK"
 
             valid_update = await client.patch(
                 f"/partner-api/offers/{offer['id']}",
                 headers=auth_headers(partner_token),
-                json={"new_price": str(Decimal("650.00")), "discount_reason": "Short shelf life"},
+                json={"price": str(Decimal("980.00")), "old_price": None, "discount_reason": "Limited batch"},
             )
             assert valid_update.status_code == 200, valid_update.text
-            assert valid_update.json()["new_price"] == "650.00"
-            assert valid_update.json()["discount_reason"] == "Short shelf life"
+            assert valid_update.json()["price"] == "980.00"
+            assert valid_update.json()["new_price"] == "980.00"
+            assert valid_update.json()["old_price"] is None
+            assert valid_update.json()["discount_reason"] == "Limited batch"
+
+            hidden_update = await client.patch(
+                f"/partner-api/offers/{offer['id']}",
+                headers=auth_headers(partner_token),
+                json={"availability": "HIDDEN"},
+            )
+            assert hidden_update.status_code == 200, hidden_update.text
+            assert hidden_update.json()["availability"] == "HIDDEN"
+
+            public_offers = await client.get("/offers/")
+            assert public_offers.status_code == 200, public_offers.text
+            assert all(item["id"] != offer["id"] for item in public_offers.json())
         finally:
             await cleanup_test_data(phone_prefix)

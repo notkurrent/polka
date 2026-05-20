@@ -6,7 +6,7 @@ from typing import Optional
 from geoalchemy2 import Geography
 
 from app.database import get_session
-from app.models import Offer, OfferType, Partner, PartnerStatus
+from app.models import Offer, OfferAvailability, OfferType, Partner, PartnerStatus
 from app.order_lifecycle import expire_stale_orders
 from app.schemas import OfferPublicDTO, OfferWithPartnerDTO
 from app.serializers import build_offer_dto, build_offer_with_partner_dto
@@ -22,7 +22,12 @@ async def get_offers(
     query = (
         select(Offer)
         .join(Partner, Offer.partner_id == Partner.id)
-        .where(Offer.stock > 0, Offer.is_archived.is_(False), Partner.status == PartnerStatus.APPROVED)
+        .where(
+            Offer.stock > 0,
+            Offer.availability != OfferAvailability.HIDDEN,
+            Offer.is_archived.is_(False),
+            Partner.status == PartnerStatus.APPROVED,
+        )
     )
     if type:
         query = query.where(Offer.type == type)
@@ -56,6 +61,7 @@ async def get_nearby_offers(
         .join(Partner, Offer.partner_id == Partner.id)
         .where(
             Offer.stock > 0,
+            Offer.availability != OfferAvailability.HIDDEN,
             Offer.is_archived.is_(False),
             Partner.status == PartnerStatus.APPROVED,
             Partner.location.is_not(None),
@@ -135,7 +141,12 @@ async def get_offer_detail(
             func.ST_X(Partner.location).label("lon"),
         )
         .join(Partner, Offer.partner_id == Partner.id)
-        .where(Offer.id == offer_id, Offer.is_archived.is_(False), Partner.status == PartnerStatus.APPROVED)
+        .where(
+            Offer.id == offer_id,
+            Offer.availability != OfferAvailability.HIDDEN,
+            Offer.is_archived.is_(False),
+            Partner.status == PartnerStatus.APPROVED,
+        )
     )
     result = await session.execute(query)
     row = result.one_or_none()

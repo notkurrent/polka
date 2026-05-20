@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from app.models import OfferType, PartnerStatus
+from app.models import OfferAvailability, OfferType, PartnerStatus
 
 
 class PartnerPublicDTO(BaseModel):
@@ -36,10 +36,12 @@ class OfferPublicDTO(BaseModel):
     id: int
     partner_id: int
     type: OfferType
+    availability: OfferAvailability
     name: str
     description: str
     pickup_time: str
-    old_price: Decimal
+    price: Decimal
+    old_price: Decimal | None = None
     new_price: Decimal
     discount_reason: str = ""
     stock: int
@@ -63,10 +65,12 @@ class PartnerDetailDTO(BaseModel):
 class OrderOfferDTO(BaseModel):
     id: int
     name: str
-    old_price: Decimal
+    price: Decimal
+    old_price: Decimal | None = None
     new_price: Decimal
     discount_reason: str = ""
     type: OfferType
+    availability: OfferAvailability
     image_path: str | None = None
     image_url: str | None = None
 

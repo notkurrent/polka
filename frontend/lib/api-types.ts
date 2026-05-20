@@ -1,4 +1,5 @@
 export type OfferType = "MAGIC_BOX" | "SPECIFIC" | string;
+export type OfferAvailability = "IN_STOCK" | "OUT_OF_STOCK" | "PREORDER" | "HIDDEN";
 export type PartnerStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
 export interface PartnerPublic {
@@ -25,10 +26,12 @@ export interface OfferPublic {
   id: number;
   partner_id: number;
   type: OfferType;
+  availability: OfferAvailability;
   name: string;
   description: string;
   pickup_time: string;
-  old_price: number;
+  price: number;
+  old_price?: number | null;
   new_price: number;
   discount_reason: string;
   stock: number;
@@ -54,9 +57,11 @@ export interface PartnerDetail {
 export interface OrderOffer {
   id: number;
   name: string;
-  old_price: number;
+  price: number;
+  old_price?: number | null;
   new_price: number;
   type: OfferType;
+  availability: OfferAvailability;
   discount_reason?: string;
   image_path?: string | null;
   image_url?: string | null;

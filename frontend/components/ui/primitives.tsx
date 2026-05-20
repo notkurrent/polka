@@ -46,7 +46,7 @@ export interface PillButtonProps {
 }
 
 export interface PriceTagProps {
-  original: number;
+  original?: number | null;
   now: number;
   size?: "sm" | "md" | "lg";
 }
@@ -476,17 +476,19 @@ export function PriceTag({ original, now, size = "md" }: PriceTagProps) {
       >
         {now}&nbsp;₸
       </span>
-      <span
-        style={{
-          fontSize: s.old,
-          color: t.textTer,
-          textDecoration: "line-through",
-          fontFamily: FONT(),
-          whiteSpace: "nowrap",
-        }}
-      >
-        {original}&nbsp;₸
-      </span>
+      {original != null && original > now && (
+        <span
+          style={{
+            fontSize: s.old,
+            color: t.textTer,
+            textDecoration: "line-through",
+            fontFamily: FONT(),
+            whiteSpace: "nowrap",
+          }}
+        >
+          {original}&nbsp;₸
+        </span>
+      )}
     </div>
   );
 }

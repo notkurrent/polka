@@ -85,9 +85,9 @@ export default function FavoritesScreen() {
             Избранное
           </div>
           {stores.map(({ partner, offers }) => {
-            const activeOffers = offers.filter((offer) => offer.stock > 0);
+            const activeOffers = offers.filter((offer) => offer.availability === "IN_STOCK" && offer.stock > 0);
             const minPrice = activeOffers.length
-              ? Math.min(...activeOffers.map((offer) => Number(offer.new_price)))
+              ? Math.min(...activeOffers.map((offer) => Number(offer.price ?? offer.new_price)))
               : null;
             return (
             <div
