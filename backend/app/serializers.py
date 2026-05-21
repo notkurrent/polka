@@ -69,6 +69,9 @@ def build_partner_profile_dto(
         lat=lat,
         lon=lon,
         status=partner.status,
+        plan=partner.plan,
+        subscription_status=partner.subscription_status,
+        subscription_expires_at=partner.subscription_expires_at,
         review_note=partner.review_note,
         reviewed_at=partner.reviewed_at,
     )

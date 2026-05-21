@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.models import OfferAvailability, OfferType, PartnerStatus
+from app.models import OfferAvailability, OfferType, PartnerStatus, SubscriptionPlan, SubscriptionStatus
 
 
 class PartnerPublicDTO(BaseModel):
@@ -28,6 +28,9 @@ class PartnerPublicDTO(BaseModel):
 
 class PartnerProfileDTO(PartnerPublicDTO):
     status: PartnerStatus
+    plan: SubscriptionPlan
+    subscription_status: SubscriptionStatus
+    subscription_expires_at: datetime | None = None
     review_note: str | None = None
     reviewed_at: datetime | None = None
 

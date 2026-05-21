@@ -9,11 +9,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAdminGuard } from "@/hooks/useAdminGuard";
-import { adminApi, type AdminPartner, type AdminPartnerAction } from "@/lib/admin-api";
-import { partnerStatusLabel } from "@/lib/biz-api";
-import type { PartnerStatus } from "@/lib/api-types";
+import { adminApi, type AdminPartner, type AdminPartnerAction, type AdminSubscriptionUpdate } from "@/lib/admin-api";
+import { partnerStatusLabel, subscriptionPlanLabel, subscriptionStatusLabel } from "@/lib/biz-api";
+import type { PartnerStatus, SubscriptionPlan, SubscriptionStatus } from "@/lib/api-types";
 
 const STATUSES: PartnerStatus[] = ["PENDING", "APPROVED", "REJECTED", "SUSPENDED"];
+const SUBSCRIPTION_PLANS: SubscriptionPlan[] = ["FREE", "PRO"];
+const SUBSCRIPTION_STATUSES: SubscriptionStatus[] = ["FREE", "ACTIVE", "EXPIRED", "SUSPENDED"];
 
 const STATUS_TONE: Record<PartnerStatus, "amber" | "solid" | "red" | "neutral"> = {
   PENDING: "amber",
@@ -52,19 +54,35 @@ function needsNote(action: AdminPartnerAction) {
   return action === "reject" || action === "suspend";
 }
 
+function dateInputValue(value?: string | null) {
+  if (!value) return "";
+  return value.slice(0, 10);
+}
+
+function datePayload(value: string) {
+  return value ? `${value}T23:59:59.000Z` : null;
+}
+
 function PartnerCard({
   partner,
   busy,
   onAction,
+  onSubscription,
 }: {
   partner: AdminPartner;
   busy: boolean;
   onAction: (partner: AdminPartner, action: AdminPartnerAction, note?: string) => Promise<boolean>;
+  onSubscription: (partner: AdminPartner, body: AdminSubscriptionUpdate) => Promise<boolean>;
 }) {
   const t = tokens();
   const fontFn = FONT();
   const [noteAction, setNoteAction] = useState<AdminPartnerAction | null>(null);
   const [note, setNote] = useState("");
+  const [subscriptionDraft, setSubscriptionDraft] = useState({
+    plan: partner.plan,
+    subscription_status: partner.subscription_status,
+    subscription_expires_at: dateInputValue(partner.subscription_expires_at),
+  });
 
   const actions = useMemo<AdminPartnerAction[]>(() => {
     if (partner.status === "PENDING") return ["approve", "reject"];
@@ -88,6 +106,14 @@ function PartnerCard({
   const cancelNoteAction = () => {
     setNoteAction(null);
     setNote("");
+  };
+
+  const submitSubscription = async () => {
+    await onSubscription(partner, {
+      plan: subscriptionDraft.plan,
+      subscription_status: subscriptionDraft.subscription_status,
+      subscription_expires_at: datePayload(subscriptionDraft.subscription_expires_at),
+    });
   };
 
   return (
@@ -163,6 +189,75 @@ function PartnerCard({
           {partner.review_note}
         </div>
       ) : null}
+
+      <div
+        style={{
+          borderTop: `1px solid ${t.divider}`,
+          paddingTop: 10,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+          <div style={{ fontSize: 12, fontWeight: 750, color: t.text }}>Подписка</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <Badge tone={partner.subscription_status === "ACTIVE" ? "solid" : "neutral"} size="sm">
+              {subscriptionPlanLabel(partner.plan)}
+            </Badge>
+            <Badge tone={partner.subscription_status === "SUSPENDED" ? "red" : "neutral"} size="sm">
+              {subscriptionStatusLabel(partner.subscription_status)}
+            </Badge>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <select
+            aria-label="Тариф"
+            value={subscriptionDraft.plan}
+            onChange={(event) =>
+              setSubscriptionDraft((draft) => ({ ...draft, plan: event.target.value as SubscriptionPlan }))
+            }
+            style={selectStyle(t, fontFn)}
+          >
+            {SUBSCRIPTION_PLANS.map((plan) => (
+              <option key={plan} value={plan}>
+                {subscriptionPlanLabel(plan)}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Статус подписки"
+            value={subscriptionDraft.subscription_status}
+            onChange={(event) =>
+              setSubscriptionDraft((draft) => ({
+                ...draft,
+                subscription_status: event.target.value as SubscriptionStatus,
+              }))
+            }
+            style={selectStyle(t, fontFn)}
+          >
+            {SUBSCRIPTION_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {subscriptionStatusLabel(status)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+          <input
+            aria-label="Действует до"
+            type="date"
+            value={subscriptionDraft.subscription_expires_at}
+            onChange={(event) =>
+              setSubscriptionDraft((draft) => ({ ...draft, subscription_expires_at: event.target.value }))
+            }
+            style={selectStyle(t, fontFn)}
+          />
+          <PillButton size="sm" variant="muted" disabled={busy} loading={busy} onClick={() => void submitSubscription()}>
+            Сохранить
+          </PillButton>
+        </div>
+      </div>
 
       {noteAction ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -248,6 +343,21 @@ export default function AdminPartnersPage() {
       return true;
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Не удалось выполнить действие");
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleSubscription = async (partner: AdminPartner, body: AdminSubscriptionUpdate) => {
+    setBusyId(partner.id);
+    setMessage("");
+    try {
+      await adminApi.updateSubscription(partner.id, body);
+      await mutate();
+      return true;
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Не удалось сохранить подписку");
       return false;
     } finally {
       setBusyId(null);
@@ -347,10 +457,27 @@ export default function AdminPartnersPage() {
                 partner={partner}
                 busy={busyId === partner.id}
                 onAction={handleAction}
+                onSubscription={handleSubscription}
               />
             ))
           : null}
       </main>
     </AppScreenBiz>
   );
+}
+
+function selectStyle(t: ReturnType<typeof tokens>, fontFn: string) {
+  return {
+    width: "100%",
+    minHeight: 40,
+    borderRadius: 10,
+    border: `1px solid ${t.divider}`,
+    background: t.bg,
+    color: t.text,
+    fontFamily: fontFn,
+    fontSize: 13,
+    fontWeight: 650,
+    padding: "0 10px",
+    outline: "none",
+  };
 }

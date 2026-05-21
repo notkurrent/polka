@@ -1,6 +1,8 @@
 export type OfferType = "SPECIFIC" | string;
 export type OfferAvailability = "IN_STOCK" | "OUT_OF_STOCK" | "PREORDER" | "HIDDEN";
 export type PartnerStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+export type SubscriptionPlan = "FREE" | "PRO";
+export type SubscriptionStatus = "FREE" | "ACTIVE" | "EXPIRED" | "SUSPENDED";
 
 export interface PartnerPublic {
   id: number;
@@ -23,6 +25,9 @@ export interface PartnerPublic {
 
 export interface PartnerProfile extends PartnerPublic {
   status: PartnerStatus;
+  plan: SubscriptionPlan;
+  subscription_status: SubscriptionStatus;
+  subscription_expires_at?: string | null;
   review_note?: string | null;
   reviewed_at?: string | null;
 }

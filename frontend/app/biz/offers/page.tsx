@@ -12,7 +12,7 @@ import { Badge, tokens, FONT, Icon } from "@/components/ui/primitives";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { bizApi, money, partnerErrorMessage } from "@/lib/biz-api";
+import { bizApi, money, partnerErrorMessage, subscriptionPlanLabel, subscriptionStatusLabel } from "@/lib/biz-api";
 import type { OfferAvailability, OfferPublic } from "@/lib/api-types";
 
 export default function BizOffersListScreen() {
@@ -40,6 +40,7 @@ export default function BizOffersListScreen() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [pendingDelete, setPendingDelete] = useState<OfferPublic | null>(null);
+  const activeOfferCount = (offers || []).filter((offer) => offer.availability === "IN_STOCK" && offer.stock > 0).length;
 
   const beginEdit = (offer: OfferPublic) => {
     setEditingId(offer.id);
@@ -167,6 +168,30 @@ export default function BizOffersListScreen() {
         {message && (
           <div role="alert" style={{ color: t.danger, fontSize: 13 }}>
             {message}
+          </div>
+        )}
+        {isApproved && profile && (
+          <div
+            style={{
+              border: `1px solid ${t.divider}`,
+              borderRadius: 12,
+              padding: "11px 12px",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 10,
+              alignItems: "center",
+              background: t.bg,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 750, color: t.text }}>Тариф {subscriptionPlanLabel(profile.plan)}</div>
+              <div style={{ marginTop: 2, fontSize: 12, color: t.textSec }}>
+                {profile.subscription_status === "ACTIVE" ? "Активные товары без лимита" : `${activeOfferCount}/5 активных товаров`}
+              </div>
+            </div>
+            <Badge tone={profile.subscription_status === "ACTIVE" ? "solid" : "neutral"} size="sm">
+              {subscriptionStatusLabel(profile.subscription_status)}
+            </Badge>
           </div>
         )}
         {isApproved && !isLoading && !error && (!offers || offers.length === 0) && (

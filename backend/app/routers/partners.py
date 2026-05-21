@@ -3,6 +3,7 @@ import re
 import asyncio
 import logging
 import time
+from datetime import datetime, timezone
 from decimal import Decimal
 
 import httpx
@@ -24,6 +25,7 @@ from app.models import (
     OrderStatus,
     Partner,
     PartnerStatus,
+    SubscriptionStatus,
     User,
     UserRole,
 )
@@ -66,6 +68,7 @@ NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "PolkaMVP/0.1 local-address-search")
 ADDRESS_CACHE_TTL_SECONDS = 300
 ADDRESS_RATE_LIMIT_SECONDS = 1.0
+FREE_ACTIVE_OFFER_LIMIT = 5
 _address_cache: dict[str, tuple[float, list[dict]]] = {}
 _last_address_lookup_at = 0.0
 
@@ -271,6 +274,58 @@ def resolve_offer_price(*, price: Decimal | None, new_price: Decimal | None) -> 
 
 def default_offer_availability(stock: int) -> OfferAvailability:
     return OfferAvailability.IN_STOCK if stock > 0 else OfferAvailability.OUT_OF_STOCK
+
+
+def is_active_offer(availability: OfferAvailability, stock: int) -> bool:
+    return availability == OfferAvailability.IN_STOCK and stock > 0
+
+
+def has_unlimited_offer_subscription(partner: Partner) -> bool:
+    if partner.subscription_status != SubscriptionStatus.ACTIVE:
+        return False
+    return partner.subscription_expires_at is None or partner.subscription_expires_at > datetime.now(timezone.utc)
+
+
+async def count_active_partner_offers(
+    session: AsyncSession,
+    partner_id: int,
+    *,
+    exclude_offer_id: int | None = None,
+) -> int:
+    query = select(func.count(Offer.id)).where(
+        Offer.partner_id == partner_id,
+        Offer.is_archived.is_(False),
+        Offer.availability == OfferAvailability.IN_STOCK,
+        Offer.stock > 0,
+    )
+    if exclude_offer_id is not None:
+        query = query.where(Offer.id != exclude_offer_id)
+
+    result = await session.execute(query)
+    return int(result.scalar_one())
+
+
+async def enforce_active_offer_limit(
+    session: AsyncSession,
+    partner: Partner,
+    *,
+    availability: OfferAvailability,
+    stock: int,
+    exclude_offer_id: int | None = None,
+) -> None:
+    if not is_active_offer(availability, stock) or has_unlimited_offer_subscription(partner):
+        return
+
+    active_count = await count_active_partner_offers(
+        session,
+        partner.id,
+        exclude_offer_id=exclude_offer_id,
+    )
+    if active_count >= FREE_ACTIVE_OFFER_LIMIT:
+        raise HTTPException(
+            status_code=403,
+            detail=f"FREE plan allows up to {FREE_ACTIVE_OFFER_LIMIT} active offers",
+        )
 
 
 def media_http_exception(exc: Exception) -> HTTPException:
@@ -611,11 +666,18 @@ async def create_partner_offer(
     await expire_stale_orders(session)
     partner = await get_approved_partner(current_user, session)
     price = resolve_offer_price(price=req.price, new_price=req.new_price)
+    availability = req.availability or default_offer_availability(req.stock)
+    await enforce_active_offer_limit(
+        session,
+        partner,
+        availability=availability,
+        stock=req.stock,
+    )
 
     new_offer = Offer(
         partner_id=partner.id,
         type=req.type,
-        availability=req.availability or default_offer_availability(req.stock),
+        availability=availability,
         name=req.name,
         description=req.description,
         category=req.category,
@@ -734,6 +796,15 @@ async def update_partner_offer(
             update_data["availability"] = OfferAvailability.OUT_OF_STOCK
         elif offer.availability == OfferAvailability.OUT_OF_STOCK:
             update_data["availability"] = OfferAvailability.IN_STOCK
+    next_availability = update_data.get("availability", offer.availability)
+    next_stock = update_data.get("stock", offer.stock)
+    await enforce_active_offer_limit(
+        session,
+        partner,
+        availability=next_availability,
+        stock=next_stock,
+        exclude_offer_id=offer.id,
+    )
     for key, value in update_data.items():
         setattr(offer, key, value)
 

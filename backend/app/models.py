@@ -17,6 +17,16 @@ class PartnerStatus(str, enum.Enum):
     REJECTED = "REJECTED"
     SUSPENDED = "SUSPENDED"
 
+class SubscriptionPlan(str, enum.Enum):
+    FREE = "FREE"
+    PRO = "PRO"
+
+class SubscriptionStatus(str, enum.Enum):
+    FREE = "FREE"
+    ACTIVE = "ACTIVE"
+    EXPIRED = "EXPIRED"
+    SUSPENDED = "SUSPENDED"
+
 class OfferType(str, enum.Enum):
     MAGIC_BOX = "MAGIC_BOX"
     SPECIFIC = "SPECIFIC"
@@ -77,6 +87,18 @@ class Partner(SQLModel, table=True):
     status: PartnerStatus = Field(
         default=PartnerStatus.PENDING,
         sa_column=Column(Enum(PartnerStatus), nullable=False),
+    )
+    plan: SubscriptionPlan = Field(
+        default=SubscriptionPlan.FREE,
+        sa_column=Column(Enum(SubscriptionPlan), nullable=False),
+    )
+    subscription_status: SubscriptionStatus = Field(
+        default=SubscriptionStatus.FREE,
+        sa_column=Column(Enum(SubscriptionStatus), nullable=False),
+    )
+    subscription_expires_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
     )
     review_note: Optional[str] = Field(default=None)
     reviewed_at: Optional[datetime] = Field(

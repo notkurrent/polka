@@ -6,7 +6,14 @@ import { tokens, Icon, FONT, Badge } from "@/components/ui/primitives";
 import { BizTabBar } from "@/components/biz/BizTabBar";
 import { AppScreenBiz, StatTile, ActionCard } from "@/components/biz/BizShared";
 import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
-import { bizApi, money, partnerErrorMessage, partnerStatusLabel } from "@/lib/biz-api";
+import {
+  bizApi,
+  money,
+  partnerErrorMessage,
+  partnerStatusLabel,
+  subscriptionPlanLabel,
+  subscriptionStatusLabel,
+} from "@/lib/biz-api";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -31,6 +38,11 @@ function availabilityLabel(offer: OfferPublic) {
   if (offer.availability === "PREORDER") return "Предзаказ";
   if (offer.availability === "OUT_OF_STOCK" || offer.stock <= 0) return "Нет в наличии";
   return "В наличии";
+}
+
+function subscriptionLimitText(status?: string, activeProducts = 0) {
+  if (status === "ACTIVE") return "Активные товары без лимита";
+  return `${activeProducts}/5 активных товаров`;
 }
 
 export default function BizDashboardPage() {
@@ -218,6 +230,32 @@ export default function BizDashboardPage() {
                     {profile.description}
                   </div>
                 )}
+                <div
+                  style={{
+                    marginTop: 10,
+                    paddingTop: 10,
+                    borderTop: `1px solid ${t.divider}`,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 750, color: t.text }}>Тариф</div>
+                    <div style={{ marginTop: 2, fontSize: 12, color: t.textSec }}>
+                      {subscriptionLimitText(profile.subscription_status, activeProducts)}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                    <Badge tone={profile.subscription_status === "ACTIVE" ? "solid" : "neutral"} size="sm">
+                      {subscriptionPlanLabel(profile.plan)}
+                    </Badge>
+                    <Badge tone={profile.subscription_status === "SUSPENDED" ? "red" : "neutral"} size="sm">
+                      {subscriptionStatusLabel(profile.subscription_status)}
+                    </Badge>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

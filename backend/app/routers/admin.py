@@ -8,7 +8,7 @@ from sqlmodel import select
 
 from app.database import get_session
 from app.dependencies import get_current_admin_user
-from app.models import Partner, PartnerStatus, User
+from app.models import Partner, PartnerStatus, SubscriptionPlan, SubscriptionStatus, User
 from app.schemas import AdminPartnerDTO
 from app.services.media_storage import build_public_media_url
 
@@ -17,6 +17,12 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class ModerationRequest(BaseModel):
     note: str | None = None
+
+
+class SubscriptionUpdateRequest(BaseModel):
+    plan: SubscriptionPlan
+    subscription_status: SubscriptionStatus
+    subscription_expires_at: datetime | None = None
 
 
 async def get_partner_location_row(session: AsyncSession, partner_id: int):
@@ -47,9 +53,17 @@ def build_admin_partner_dto(
         logo_path=partner.logo_path,
         logo_url=build_public_media_url(partner.logo_path),
         map_url=partner.map_url,
+        phone=partner.phone,
+        whatsapp_url=partner.whatsapp_url,
+        telegram_url=partner.telegram_url,
+        instagram_url=partner.instagram_url,
+        website_url=partner.website_url,
         lat=lat,
         lon=lon,
         status=partner.status,
+        plan=partner.plan,
+        subscription_status=partner.subscription_status,
+        subscription_expires_at=partner.subscription_expires_at,
         review_note=partner.review_note,
         reviewed_at=partner.reviewed_at,
         created_at=partner.created_at,
@@ -197,4 +211,28 @@ async def return_partner_to_review(
         status=PartnerStatus.PENDING,
         admin=current_admin,
         note=req.note if req else None,
+    )
+
+
+@router.patch("/partners/{partner_id}/subscription", response_model=AdminPartnerDTO)
+async def update_partner_subscription(
+    partner_id: int,
+    req: SubscriptionUpdateRequest,
+    current_admin: User = Depends(get_current_admin_user),
+    session: AsyncSession = Depends(get_session),
+):
+    partner = await get_partner_or_404(session, partner_id)
+    partner.plan = req.plan
+    partner.subscription_status = req.subscription_status
+    partner.subscription_expires_at = req.subscription_expires_at
+
+    session.add(partner)
+    await session.commit()
+
+    row = await get_partner_location_row(session, partner.id)
+    partner, lat, lon = row
+    return build_admin_partner_dto(
+        partner,
+        lat=float(lat) if lat is not None else None,
+        lon=float(lon) if lon is not None else None,
     )

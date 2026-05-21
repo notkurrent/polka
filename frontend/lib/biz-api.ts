@@ -1,7 +1,15 @@
 "use client";
 
 import { api } from "@/lib/api";
-import type { OfferPublic, OrderDetail, PartnerProfile, PartnerPublic, PartnerStatus } from "@/lib/api-types";
+import type {
+  OfferPublic,
+  OrderDetail,
+  PartnerProfile,
+  PartnerPublic,
+  PartnerStatus,
+  SubscriptionPlan,
+  SubscriptionStatus,
+} from "@/lib/api-types";
 import { isActiveOrder, statusLabel } from "@/lib/api-types";
 
 export interface PartnerOrder extends OrderDetail {
@@ -139,6 +147,8 @@ export function partnerErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "Не удалось выполнить действие";
   if (message.includes("Partner already exists")) return "Профиль уже создан. Можно перейти в кабинет.";
   if (message.includes("Partner profile not found")) return "Сначала зарегистрируйте магазин.";
+  if (message.includes("FREE plan allows up to 5 active offers"))
+    return "На FREE тарифе можно держать до 5 активных товаров. Скрытые и распроданные товары не считаются.";
   if (message.includes("another partner")) return "Эта заявка относится к другому продавцу.";
   if (message.includes("not active")) return "Эта заявка уже закрыта или отменена.";
   if (message.includes("Multiple orders"))
@@ -153,6 +163,20 @@ export function partnerStatusLabel(status?: PartnerStatus) {
   if (status === "REJECTED") return "Отклонён";
   if (status === "SUSPENDED") return "Заблокирован";
   return "Статус неизвестен";
+}
+
+export function subscriptionPlanLabel(plan?: SubscriptionPlan) {
+  if (plan === "PRO") return "PRO";
+  if (plan === "FREE") return "FREE";
+  return "Тариф не задан";
+}
+
+export function subscriptionStatusLabel(status?: SubscriptionStatus) {
+  if (status === "FREE") return "FREE";
+  if (status === "ACTIVE") return "Активна";
+  if (status === "EXPIRED") return "Истекла";
+  if (status === "SUSPENDED") return "Приостановлена";
+  return "Статус не задан";
 }
 
 export const bizApi = {
