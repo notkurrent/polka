@@ -1,24 +1,34 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/app";
-import { tokens, Icon, FONT, StripePlaceholder, PriceTag } from "@/components/ui/primitives";
+import { tokens, Icon, FONT, Badge, PillButton, PriceTag, StripePlaceholder } from "@/components/ui/primitives";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PartnerDetail } from "@/lib/api-types";
+import { OfferAvailability, PartnerDetail } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/Skeleton";
+
+function availabilityCopy(availability: OfferAvailability, stock: number) {
+  if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
+  if (availability === "PREORDER") return { label: "Под заказ", tone: "amber" as const };
+  return { label: "В наличии", tone: "green" as const };
+}
+
+function socialLinksFromText(text: string) {
+  const matches = text.match(/https?:\/\/[^\s,]+/g) || [];
+  return matches.filter((url) => /instagram|t\.me|telegram|wa\.me|whatsapp|vk\.com/i.test(url));
+}
 
 export default function StoreScreen({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const t = tokens();
   const { isAuthenticated } = useAuth();
-  const { cart, addToCart, cartTotal, favorites, toggleFavorite } = useAppStore();
-
+  const { favorites, toggleFavorite } = useAppStore();
   const [id, setId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,6 +45,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
 
   const fav = id ? favorites.includes(id) : false;
   const partner = partnerDetail?.partner;
+  const socialLinks = useMemo(() => socialLinksFromText(partner?.description || ""), [partner?.description]);
 
   const store = partner && {
     id: String(partner.id),
@@ -43,28 +54,21 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
     imgLabel: partner.name.slice(0, 10) || "...",
     tone: "blue" as const,
     cat: partner.category || "Магазин",
-    district: "Алматы",
     address: partner.address,
     hours: partner.hours,
     mapUrl: partner.map_url,
-    about: partner.description || "Свежие товары от локального продавца. Оставьте заявку и уточните детали напрямую.",
+    about: partner.description || "Публичная витрина локального продавца. Здесь собраны товары и основные контакты магазина.",
     offers: (partnerDetail?.offers || []).map((offer) => ({
       id: String(offer.id),
       title: offer.name,
-      desc: offer.description || "Готовый товар",
-      discountReason: offer.discount_reason || "",
+      desc: offer.description || "Описание появится у продавца позже.",
       original: offer.old_price,
       now: offer.price ?? offer.new_price,
-      pickup: offer.pickup_time || partner.hours,
-      tone: "orange" as "purple" | "orange",
-      label: "Товар",
       qty: offer.stock,
       imageUrl: offer.image_url,
+      availability: offer.availability,
     })),
   };
-
-  const cartQuantity = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalPrice = cartTotal();
 
   if (!id || isLoading) {
     return (
@@ -103,10 +107,9 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
         fontFamily: FONT(),
         color: t.text,
         WebkitFontSmoothing: "antialiased",
-        paddingBottom: cartQuantity > 0 ? "calc(var(--app-safe-bottom) + 80px)" : 0,
+        paddingBottom: "calc(var(--app-safe-bottom) + 24px)",
       }}
     >
-      {/* hero image */}
       <div style={{ position: "relative" }}>
         <StripePlaceholder label={store.imgLabel} h={200} radius={0} tone={store.tone} />
         <BusinessLogoPreview
@@ -168,38 +171,45 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
 
       <div className="app-content" style={{ padding: "46px 20px 24px" }}>
         <div
-          style={{ fontSize: 11, color: t.textSec, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6 }}
+          style={{ fontSize: 11, color: t.textSec, fontWeight: 650, textTransform: "uppercase", letterSpacing: 0.6 }}
         >
           {store.cat}
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "4px 0 6px", letterSpacing: 0, overflowWrap: "anywhere" }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "4px 0 8px", letterSpacing: 0, overflowWrap: "anywhere" }}>
           {store.name}
         </h1>
-        <div
-          style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 13, color: t.textSec, marginBottom: 12 }}
+        <p
+          style={{
+            fontSize: 14,
+            lineHeight: 1.55,
+            color: t.textSec,
+            margin: "0 0 16px",
+            textWrap: "pretty",
+            overflowWrap: "anywhere",
+          }}
         >
-          <span>Самовывоз</span>
-          <span>·</span>
-          <span>{store.district}</span>
-        </div>
+          {store.about}
+        </p>
 
-        {/* info card */}
-        <div
+        <section
+          id="contacts"
           style={{
             background: t.surface,
             borderRadius: 14,
             padding: "12px 14px",
             display: "flex",
             flexDirection: "column",
-            gap: 8,
+            gap: 10,
             border: `1px solid ${t.divider}`,
+            scrollMarginTop: 20,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 15, fontWeight: 750 }}>Контакты</div>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             {Icon.pin(16, t.primaryDeep)}
             <span style={{ fontSize: 13, overflowWrap: "anywhere" }}>{store.address}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             {Icon.clock(16, t.primaryDeep)}
             <span style={{ fontSize: 13, overflowWrap: "anywhere" }}>{store.hours}</span>
           </div>
@@ -221,206 +231,112 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
               }}
             >
               {Icon.pin(16, t.primaryDeep)}
-              Открыть в 2GIS / карте
+              Открыть карту
             </a>
           )}
-        </div>
+          <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10 }}>
+            <div style={{ fontSize: 12, color: t.textSec, marginBottom: 8 }}>Соцсети</div>
+            {socialLinks.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {socialLinks.map((link) => (
+                  <a
+                    key={link}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: t.primaryDeep, fontSize: 13, fontWeight: 700, textDecoration: "none", overflowWrap: "anywhere" }}
+                  >
+                    {link}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 13, color: t.textSec }}>Пока не указаны.</div>
+            )}
+          </div>
+        </section>
 
-        <p
-          style={{
-            fontSize: 14,
-            lineHeight: 1.55,
-            color: t.textSec,
-            marginTop: 14,
-            textWrap: "pretty",
-            overflowWrap: "anywhere",
-          }}
-        >
-          {store.about}
-        </p>
-
-        {/* offers */}
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, marginBottom: 10 }}>Доступные товары</div>
+        <section style={{ marginTop: 22 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+            <div style={{ fontSize: 17, fontWeight: 750, letterSpacing: 0 }}>Товары</div>
+            <div style={{ fontSize: 12, color: t.textSec }}>{store.offers.length}</div>
+          </div>
           <div className="store-offers-list" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {store.offers.length === 0 && (
               <EmptyState
                 icon={Icon.bag(34, t.textTer)}
-                title="Пока нет доступных товаров"
+                title="Пока нет товаров"
                 description="Когда магазин добавит товары, они появятся здесь."
                 compact
               />
             )}
-            {store.offers.map((o) => {
-              const inCart = cart.some((c) => c.offerId === o.id);
-              const unavailable = o.qty <= 0;
+            {store.offers.map((offer) => {
+              const availability = availabilityCopy(offer.availability, offer.qty);
+              const unavailable = offer.availability === "OUT_OF_STOCK" || offer.qty <= 0;
               return (
-                <div key={o.id} style={{ display: "contents" }}>
-                  <div
-                    className="store-offer-card"
-                    style={{
-                      background: t.bg,
-                      border: `1px solid ${t.divider}`,
-                      borderRadius: 16,
-                      padding: 12,
-                      display: "flex",
-                      gap: 12,
-                      alignItems: "center",
-                    }}
-                  >
-                    <OfferImagePreview imageUrl={o.imageUrl} label={o.label} width={76} height={76} radius={12} tone="mint" />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0, overflowWrap: "anywhere" }}>{o.title}</div>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: t.textSec,
-                          margin: "2px 0 4px",
-                          textWrap: "pretty",
-                          overflowWrap: "anywhere",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}
+                <article
+                  key={offer.id}
+                  onClick={() => router.push(`/offers/${offer.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") router.push(`/offers/${offer.id}`);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className="store-offer-card"
+                  style={{
+                    background: t.bg,
+                    border: `1px solid ${t.divider}`,
+                    borderRadius: 16,
+                    padding: 12,
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <OfferImagePreview imageUrl={offer.imageUrl} label="товар" width={76} height={76} radius={12} tone="mint" />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 750, letterSpacing: 0, overflowWrap: "anywhere" }}>{offer.title}</div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: t.textSec,
+                        margin: "3px 0 8px",
+                        textWrap: "pretty",
+                        overflowWrap: "anywhere",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {offer.desc}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <PriceTag original={offer.original ?? null} now={offer.now} size="sm" />
+                        <Badge tone={availability.tone} size="sm">
+                          {availability.label}
+                        </Badge>
+                      </div>
+                      <PillButton
+                        variant="outline"
+                        size="sm"
+                        full={false}
+                        onClick={() => router.push(`/offers/${offer.id}`)}
+                        disabled={unavailable}
+                        style={{ minWidth: 112 }}
                       >
-                        {o.desc}
-                      </div>
-                      {o.discountReason && (
-                        <div
-                          style={{
-                            margin: "6px 0",
-                            padding: "6px 8px",
-                            borderRadius: 10,
-                            background: t.primarySoft,
-                            color: t.primaryDeep,
-                            fontSize: 11,
-                            lineHeight: 1.3,
-                            fontWeight: 700,
-                            overflowWrap: "anywhere",
-                          }}
-                        >
-                          Комментарий продавца: {o.discountReason}
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: t.primaryDeep,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          marginBottom: 6,
-                        }}
-                      >
-                        {Icon.clock(12, t.primaryDeep)}
-                        Время для связи: {o.pickup}
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <PriceTag original={o.original ?? null} now={o.now} size="sm" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (unavailable || inCart) return;
-                            addToCart({
-                              offerId: o.id,
-                              partnerId: store.id,
-                              name: o.title,
-                              price: o.now,
-                              quantity: 1,
-                              originalPrice: o.original,
-                              storeName: store.name,
-                              stock: o.qty,
-                              imageUrl: o.imageUrl,
-                            });
-                          }}
-                          disabled={inCart || unavailable}
-                          aria-label={
-                            unavailable ? "Нет в наличии" : inCart ? "Уже в корзине" : `Добавить ${o.title} в корзину`
-                          }
-                          style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: "50%",
-                            border: "none",
-                            background: inCart ? t.primaryDeep : unavailable ? t.surface : t.primary,
-                            color: inCart ? "#fff" : unavailable ? t.textTer : t.primaryDeep,
-                            cursor: inCart || unavailable ? "default" : "pointer",
-                            opacity: unavailable ? 0.6 : 1,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {inCart
-                            ? Icon.check(18, "#fff")
-                            : unavailable
-                              ? Icon.close(18, t.textTer)
-                              : Icon.plus(18, t.primaryDeep)}
-                        </button>
-                      </div>
+                        Связаться
+                      </PillButton>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
-        </div>
+        </section>
       </div>
-
-      {cartQuantity > 0 && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 0,
-            left: "50%",
-            right: "auto",
-            width: "min(100vw, var(--app-fixed-bar-width))",
-            transform: "translateX(-50%)",
-            paddingTop: "16px",
-            paddingRight: "16px",
-            paddingBottom: "calc(16px + var(--app-safe-bottom))",
-            paddingLeft: "16px",
-            background: "rgba(255,255,255,0.96)",
-            backdropFilter: "blur(12px)",
-            borderTop: `1px solid ${t.divider}`,
-            zIndex: 50,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => router.push("/cart")}
-            style={{
-              width: "100%",
-              minHeight: 56,
-              padding: "0 16px",
-              borderRadius: 100,
-              border: "none",
-              background: t.primaryDeep,
-              color: "#fff",
-              fontSize: 16,
-              fontWeight: 700,
-              cursor: "pointer",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span
-              style={{
-                background: "rgba(255,255,255,0.2)",
-                padding: "4px 10px",
-                borderRadius: 20,
-                fontSize: 14,
-              }}
-            >
-              {cartQuantity} шт
-            </span>
-            <span>Перейти в корзину</span>
-            <span style={{ fontSize: 15 }}>{totalPrice} ₸</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 }

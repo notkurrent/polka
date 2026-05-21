@@ -1,44 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
-import { ALMATY_CENTER, formatDistance, NearbyOffer } from "@/lib/api-types";
+import { ALMATY_CENTER, NearbyOffer, OfferAvailability } from "@/lib/api-types";
 import { isTelegramAuthContext, nextRouteForBusiness } from "@/lib/auth-routing";
 import { isTelegramAccountIncomplete } from "@/lib/account-linking";
 import { useAppStore } from "@/store/app";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";
 import { TabBar } from "@/components/TabBar";
-import {
-  tokens,
-  Icon,
-  FONT,
-  Badge,
-  PriceTag,
-  GridMap,
-  PillButton,
-} from "@/components/ui/primitives";
+import { tokens, Icon, FONT, Badge, PriceTag, PillButton } from "@/components/ui/primitives";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-
-function mapPinPosition(
-  lat: number | null | undefined,
-  lon: number | null | undefined,
-  centerLat: number,
-  centerLon: number,
-) {
-  if (lat == null || lon == null) return null;
-  return {
-    x: clamp(50 + (lon - centerLon) * 900, 10, 90),
-    y: clamp(50 - (lat - centerLat) * 1100, 10, 90),
-  };
+function availabilityCopy(availability: OfferAvailability, stock: number) {
+  if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
+  if (availability === "PREORDER") return { label: "Под заказ", tone: "amber" as const };
+  return { label: stock <= 2 ? `В наличии: ${stock}` : "В наличии", tone: "green" as const };
 }
 
 export default function AppScreenBuyerPage() {
@@ -49,7 +32,6 @@ export default function AppScreenBuyerPage() {
 
   const {
     location,
-    cart,
     onboardingDone,
     selectedMode,
     favorites,
@@ -60,22 +42,17 @@ export default function AppScreenBuyerPage() {
     dismissAccountLinkPrompt,
     dismissAccountCompletionPrompt,
   } = useAppStore();
-  const cartCount = cart.reduce((a, c) => a + c.quantity, 0);
 
-  const [layout] = useState<"map+list" | "list-only" | "map-only">("list-only");
   const [filter, setFilter] = useState("all");
-  const [selectedPin, setSelectedPin] = useState(-1);
-
-  // Default to Almaty coordinates if not present
   const lat = location?.lat || ALMATY_CENTER.lat;
   const lon = location?.lon || ALMATY_CENTER.lon;
 
   const {
-    data: nearbyOffers,
+    data: catalogOffers,
     isLoading: isOffersLoading,
     error,
   } = useSWR<NearbyOffer[]>(
-    isAuthenticated && selectedMode === "buyer" ? `/offers/nearby?lat=${lat}&lon=${lon}&radius=5000` : null,
+    isAuthenticated && selectedMode === "buyer" ? `/offers/nearby?lat=${lat}&lon=${lon}&radius=50000` : null,
     (url: string) => api.get<NearbyOffer[]>(url),
     { keepPreviousData: true },
   );
@@ -90,19 +67,12 @@ export default function AppScreenBuyerPage() {
         : null;
 
     if (!isAuthenticated) {
-      if (isTMA) {
-        // TMA: auth happens automatically in useAuth hook
-        // Do not redirect to landing
-      } else {
-        router.replace("/landing");
-      }
+      if (!isTMA) router.replace("/landing");
       return;
     }
 
     if (requestedMode === "buyer") {
-      if (user?.id) {
-        setSelectedModeForUser(user.id, "buyer");
-      }
+      if (user?.id) setSelectedModeForUser(user.id, "buyer");
       window.sessionStorage.removeItem("polka:requested-mode");
       if (!onboardingDone) {
         router.replace("/onboarding");
@@ -120,6 +90,58 @@ export default function AppScreenBuyerPage() {
       router.replace("/onboarding");
     }
   }, [authLoading, isAuthenticated, onboardingDone, router, selectedMode, setSelectedModeForUser, user]);
+
+  const products = useMemo(
+    () =>
+      (catalogOffers || []).map((item) => ({
+        id: String(item.offer.id),
+        storeId: String(item.offer.partner_id),
+        storeName: item.partner.name || item.partner_name,
+        title: item.offer.name,
+        desc: item.offer.description || "Описание появится у продавца позже.",
+        original: item.offer.old_price,
+        now: item.offer.price ?? item.offer.new_price,
+        imageUrl: item.offer.image_url,
+        logoUrl: item.partner.logo_url,
+        cat: item.partner.category || item.offer.type,
+        availability: item.offer.availability,
+        stock: item.offer.stock,
+        storeAddress: item.partner.address,
+      })),
+    [catalogOffers],
+  );
+
+  const filters = useMemo(
+    () => [
+      { id: "all", label: "Все" },
+      { id: "Кофейня", label: "Кофейни" },
+      { id: "Пекарня", label: "Пекарни" },
+      { id: "Ресторан", label: "Рестораны" },
+      { id: "Кондитерская", label: "Десерты" },
+      { id: "Магазин", label: "Магазины" },
+    ],
+    [],
+  );
+  const visibleProducts = filter === "all" ? products : products.filter((product) => product.cat === filter);
+  const stores = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; logoUrl?: string | null; category: string; address: string; count: number }>();
+    visibleProducts.forEach((product) => {
+      const current = map.get(product.storeId);
+      if (current) {
+        current.count += 1;
+        return;
+      }
+      map.set(product.storeId, {
+        id: product.storeId,
+        name: product.storeName,
+        logoUrl: product.logoUrl,
+        category: product.cat || "Магазин",
+        address: product.storeAddress,
+        count: 1,
+      });
+    });
+    return Array.from(map.values());
+  }, [visibleProducts]);
 
   if (!authLoading && isTelegramAuthContext() && !isAuthenticated && telegramAuthError) {
     const telegramAuthCopy = {
@@ -164,52 +186,6 @@ export default function AppScreenBuyerPage() {
     return <div style={{ height: "100vh", background: t.bg }} />;
   }
 
-  const filters = [
-    { id: "all", label: "Все" },
-    { id: "Пекарня", label: "Пекарни" },
-  ];
-
-  // Map to FlattenedOffer format used by Buyer screens
-  const ALL_OFFERS = (nearbyOffers || []).map((o) => ({
-    id: String(o.offer.id),
-    storeId: String(o.offer.partner_id),
-    storeName: o.partner.name || o.partner_name,
-    partnerLat: o.partner.lat,
-    partnerLon: o.partner.lon,
-    distanceText: formatDistance(o.distance),
-    logoUrl: o.partner.logo_url,
-    pickup: o.offer.pickup_time || o.partner.hours,
-    qty: o.offer.stock,
-    title: o.offer.name,
-    desc: o.offer.description || undefined,
-    discountReason: o.offer.discount_reason || undefined,
-    original: o.offer.old_price,
-    now: o.offer.price ?? o.offer.new_price,
-    imageUrl: o.offer.image_url,
-    label: undefined,
-    tone: "orange",
-    cat: o.partner.category || o.offer.type,
-  }));
-
-  // visible filters
-  const visibleOffers = filter === "all" ? ALL_OFFERS : ALL_OFFERS.filter((o) => o.cat === filter);
-
-  // Group by store for stable map pins.
-  const stores = Array.from(new Set(visibleOffers.map((o) => o.storeId))).map((storeId) => {
-    const o = visibleOffers.find((off) => off.storeId === storeId)!;
-    const point = mapPinPosition(o.partnerLat, o.partnerLon, lat, lon);
-    return {
-      id: storeId,
-      offerId: o.id,
-      cat: o.cat,
-      x: point?.x ?? 50,
-      y: point?.y ?? 50,
-      offers: [o],
-    };
-  });
-
-  const pins = stores.map((s) => ({ x: s.x, y: s.y, label: `${s.offers[0].now} ₸` }));
-
   return (
     <div
       style={{
@@ -220,95 +196,68 @@ export default function AppScreenBuyerPage() {
         fontFamily: fontFn,
         color: t.text,
         WebkitFontSmoothing: "antialiased",
-        paddingBottom: "calc(72px + var(--app-safe-bottom))",
+        paddingBottom: "calc(88px + var(--app-safe-bottom))",
       }}
     >
-      {/* Header (location + search) */}
       <div
         style={{
-          paddingTop: "calc(12px + var(--app-safe-top))",
-          paddingRight: "16px",
-          paddingBottom: "8px",
-          paddingLeft: "16px",
+          paddingTop: "calc(14px + var(--app-safe-top))",
+          paddingRight: 16,
+          paddingBottom: 10,
+          paddingLeft: 16,
           background: t.bg,
           position: "sticky",
           top: 0,
           zIndex: 30,
+          borderBottom: `1px solid ${t.divider}`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, color: t.primaryDeep }}>
-            {Icon.pin(16, t.primaryDeep)}
-            <div>
-              <div style={{ fontSize: 10, color: t.textSec, lineHeight: 1 }}>Доставка</div>
-              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: -0.2 }}>Самовывоз · Алматы</div>
-            </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 28, lineHeight: 1.05, fontWeight: 850, letterSpacing: 0 }}>Каталог</div>
+            <div style={{ marginTop: 4, fontSize: 13, color: t.textSec }}>Товары и магазины Polka</div>
           </div>
-          <div style={{ flex: 1 }} />
           <button
             type="button"
-            aria-label="Открыть корзину"
-            onClick={() => router.push("/cart")}
+            aria-label="Открыть избранное"
+            onClick={() => router.push("/favorites")}
             style={{
               width: 44,
               height: 44,
               borderRadius: "50%",
-              border: "none",
+              border: `1px solid ${t.divider}`,
               cursor: "pointer",
-              background: cartCount > 0 ? t.primary : t.surface,
-              color: t.primaryDeep,
-              position: "relative",
+              background: t.surface,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            {Icon.bag(18, t.primaryDeep)}
-            {cartCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: -2,
-                  right: -2,
-                  minWidth: 16,
-                  height: 16,
-                  padding: "0 4px",
-                  borderRadius: 8,
-                  background: t.primaryDeep,
-                  color: "#fff",
-                  fontSize: 9,
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {cartCount}
-              </span>
-            )}
+            {Icon.heart(18, t.primaryDeep)}
           </button>
         </div>
 
-        {/* Search */}
-        <div
+        <button
+          type="button"
           onClick={() => router.push("/search")}
           style={{
-            marginTop: 10,
+            width: "100%",
+            marginTop: 12,
             background: t.surface,
             borderRadius: 12,
+            border: `1px solid ${t.divider}`,
             display: "flex",
             alignItems: "center",
             gap: 8,
-            padding: "10px 12px",
+            padding: "11px 12px",
             cursor: "pointer",
+            textAlign: "left",
           }}
         >
           {Icon.search(18, t.textTer)}
-          <span style={{ fontSize: 14, color: t.textTer, flex: 1 }}>Магазины, товары, районы…</span>
-          {Icon.filter(18, t.textTer)}
-        </div>
+          <span style={{ fontSize: 14, color: t.textTer, flex: 1 }}>Искать товары и магазины</span>
+        </button>
 
-        {/* Filter chips */}
         <div
           style={{
             display: "flex",
@@ -320,28 +269,28 @@ export default function AppScreenBuyerPage() {
             padding: "0 16px",
           }}
         >
-          {filters.map((f) => (
+          {filters.map((item) => (
             <button
-              key={f.id}
+              key={item.id}
               type="button"
-              onClick={() => setFilter(f.id)}
+              onClick={() => setFilter(item.id)}
               style={{
                 flexShrink: 0,
                 minHeight: 44,
                 padding: "6px 14px",
                 borderRadius: 9999,
                 fontSize: 13,
-                fontWeight: 600,
+                fontWeight: 650,
                 fontFamily: fontFn,
-                border: `1px solid ${filter === f.id ? t.primaryDeep : t.divider}`,
-                background: filter === f.id ? t.primaryDeep : "#fff",
-                color: filter === f.id ? "#fff" : t.text,
+                border: `1px solid ${filter === item.id ? t.primaryDeep : t.divider}`,
+                background: filter === item.id ? t.primaryDeep : "#fff",
+                color: filter === item.id ? "#fff" : t.text,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 letterSpacing: 0,
               }}
             >
-              {f.label}
+              {item.label}
             </button>
           ))}
         </div>
@@ -358,243 +307,204 @@ export default function AppScreenBuyerPage() {
         </div>
       )}
 
-      {/* map */}
-      {(layout === "map+list" || layout === "map-only") && (
-        <div className="app-content" style={{ padding: "12px 16px 0" }}>
-          <div
-            style={{
-              borderRadius: 16,
-              overflow: "hidden",
-              border: `1px solid ${t.divider}`,
-            }}
-          >
-            <GridMap
-              height={layout === "map-only" ? 400 : 180}
-              pins={pins}
-              selectedIdx={selectedPin}
-              onPin={(i: number) => {
-                setSelectedPin(i);
-                router.push(`/offers/${stores[i].offerId}`);
-              }}
-              centerLabel={location ? "Вы здесь" : "Алматы · по умолчанию"}
+      <div className="app-content" style={{ padding: "16px 16px 0" }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontSize: 17, fontWeight: 750, letterSpacing: 0 }}>Магазины</div>
+          <div style={{ fontSize: 12, color: t.textSec }}>{stores.length}</div>
+        </div>
+        {isOffersLoading || (!catalogOffers && !error) ? (
+          <div style={{ display: "flex", gap: 10, overflowX: "auto" }}>
+            <Skeleton w={180} h={82} radius={14} />
+            <Skeleton w={180} h={82} radius={14} />
+          </div>
+        ) : stores.length > 0 ? (
+          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 2 }}>
+            {stores.map((store) => (
+              <button
+                key={store.id}
+                type="button"
+                onClick={() => router.push(`/stores/${store.id}`)}
+                style={{
+                  width: 210,
+                  flexShrink: 0,
+                  minHeight: 88,
+                  padding: 12,
+                  borderRadius: 14,
+                  border: `1px solid ${t.divider}`,
+                  background: t.bg,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+              >
+                <BusinessLogoPreview logoUrl={store.logoUrl} businessName={store.name} size={48} radius={12} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 750, overflowWrap: "anywhere" }}>{store.name}</div>
+                  <div style={{ marginTop: 2, fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>{store.category}</div>
+                  <div style={{ marginTop: 5, fontSize: 11, color: t.primaryDeep, fontWeight: 700 }}>
+                    {store.count} товар{store.count === 1 ? "" : "а"}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div
+        className="app-content buyer-offers-list"
+        style={{ padding: "18px 16px 0", display: "flex", flexDirection: "column", gap: 10 }}
+      >
+        <div className="buyer-section-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 17, fontWeight: 750, letterSpacing: 0 }}>Товары</div>
+          <div style={{ fontSize: 12, color: t.textSec }}>{visibleProducts.length}</div>
+        </div>
+
+        {error ? (
+          <ErrorState message="Не удалось загрузить каталог. Проверьте соединение и попробуйте ещё раз." />
+        ) : (isOffersLoading || (!catalogOffers && !error)) && !error ? (
+          Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${t.divider}` }}>
+              <Skeleton w="100%" h={150} radius={0} />
+              <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                <Skeleton w={200} h={16} />
+                <Skeleton w={140} h={12} />
+                <Skeleton w={100} h={20} />
+              </div>
+            </div>
+          ))
+        ) : visibleProducts.length === 0 ? (
+          <div style={{ background: t.bg, borderRadius: 18, border: `1px solid ${t.divider}`, overflow: "hidden" }}>
+            <EmptyState
+              icon={Icon.bag(34, t.textTer)}
+              title={filter === "all" ? "Каталог пока пуст" : "В этой категории пока пусто"}
+              description={
+                filter === "all"
+                  ? "Когда продавцы добавят товары, они появятся в каталоге."
+                  : "Сбросьте фильтр или выберите другую категорию."
+              }
+              compact
+              action={
+                filter === "all" ? undefined : (
+                  <PillButton variant="outline" onClick={() => setFilter("all")}>
+                    Показать все
+                  </PillButton>
+                )
+              }
             />
           </div>
-        </div>
-      )}
-
-      {/* list of offers */}
-      {layout !== "map-only" && (
-        <div className="app-content buyer-offers-list" style={{ padding: "16px 16px 0", display: "flex", flexDirection: "column", gap: 10 }}>
-          <div className="buyer-section-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3 }}>Рядом с вами</div>
-            <div style={{ fontSize: 12, color: t.textSec }}>{visibleOffers.length} товаров</div>
-          </div>
-
-          {error ? (
-            <ErrorState message="Не удалось загрузить товары рядом. Проверьте соединение и попробуйте ещё раз." />
-          ) : (isOffersLoading || (!nearbyOffers && !error)) && !error ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${t.divider}` }}>
-                <Skeleton w="100%" h={140} radius={0} />
-                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-                  <Skeleton w={200} h={16} />
-                  <Skeleton w={140} h={12} />
-                  <Skeleton w={100} h={20} />
+        ) : (
+          visibleProducts.map((product) => {
+            const availability = availabilityCopy(product.availability, product.stock);
+            return (
+              <article
+                key={product.id}
+                onClick={() => router.push(`/offers/${product.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") router.push(`/offers/${product.id}`);
+                }}
+                role="button"
+                tabIndex={0}
+                className="buyer-offer-card"
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  background: t.bg,
+                  borderRadius: 18,
+                  overflow: "hidden",
+                  border: `1px solid ${t.divider}`,
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: 0,
+                  color: t.text,
+                }}
+              >
+                <div style={{ position: "relative" }}>
+                  <OfferImagePreview imageUrl={product.imageUrl} label="товар" width="100%" height={150} radius={0} tone="mint" />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleFavorite(product.storeId);
+                    }}
+                    aria-label={favorites.includes(product.storeId) ? "Убрать магазин из избранного" : "Добавить магазин в избранное"}
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      width: 44,
+                      height: 44,
+                      borderRadius: "50%",
+                      background: "rgba(255,255,255,0.92)",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      backdropFilter: "blur(6px)",
+                    }}
+                  >
+                    {Icon.heart(
+                      16,
+                      favorites.includes(product.storeId) ? t.danger : t.text,
+                      favorites.includes(product.storeId),
+                    )}
+                  </button>
                 </div>
-              </div>
-            ))
-          ) : visibleOffers.length === 0 ? (
-            <div
-              style={{
-                background: t.bg,
-                borderRadius: 18,
-                border: `1px solid ${t.divider}`,
-                overflow: "hidden",
-              }}
-            >
-              <EmptyState
-                icon={Icon.bag(34, t.textTer)}
-                title={filter === "all" ? "Пока ничего рядом" : "По этому фильтру пусто"}
-                description={
-                  filter === "all"
-                    ? "Когда рядом появятся новые товары, они отобразятся здесь. Попробуйте позже или измените район."
-                    : "Сбросьте фильтр или посмотрите другие категории — возможно, рядом есть другие товары."
-                }
-                compact
-                action={
-                  filter === "all" ? undefined : (
-                    <PillButton variant="outline" onClick={() => setFilter("all")}>
-                      Показать все
-                    </PillButton>
-                  )
-                }
-              />
-            </div>
-          ) : (
-            visibleOffers.map((offer) => (
-              <div key={offer.id} style={{ display: "contents" }}>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => router.push(`/offers/${offer.id}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") router.push(`/offers/${offer.id}`);
-                  }}
-                  className="buyer-offer-card"
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    background: t.bg,
-                    borderRadius: 18,
-                    overflow: "hidden",
-                    border: `1px solid ${t.divider}`,
-                    cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column",
-                    padding: 0,
-                    color: t.text,
-                  }}
-                >
-                  <div style={{ position: "relative" }}>
-                    <OfferImagePreview
-                      imageUrl={offer.imageUrl}
-                      label={offer.label || "товар"}
-                      width="100%"
-                      height={150}
-                      radius={0}
-                      tone={offer.tone === "purple" ? "slate" : "mint"}
-                    />
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(offer.storeId);
-                      }}
-                      aria-label={favorites.includes(offer.storeId) ? "Убрать из избранного" : "Добавить в избранное"}
-                      style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        width: 44,
-                        height: 44,
-                        borderRadius: "50%",
-                        background: "rgba(255,255,255,0.92)",
-                        border: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        backdropFilter: "blur(6px)",
-                      }}
-                    >
-                      {Icon.heart(
-                        16,
-                        favorites.includes(offer.storeId) ? t.danger : t.text,
-                        favorites.includes(offer.storeId),
-                      )}
-                    </button>
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 10,
-                        left: 10,
-                        display: "flex",
-                        gap: 6,
-                      }}
-                    >
-                      <Badge tone="dark" size="sm">
-                        <span>●</span>
-                        {offer.pickup}
-                      </Badge>
-                      {offer.qty <= 2 && (
-                        <Badge tone="amber" size="sm">
-                          Осталось {offer.qty}
-                        </Badge>
-                      )}
+
+                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <BusinessLogoPreview logoUrl={product.logoUrl} businessName={product.storeName} size={38} radius={10} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <h2 style={{ margin: 0, fontSize: 15, fontWeight: 750, letterSpacing: 0, overflowWrap: "anywhere" }}>
+                        {product.title}
+                      </h2>
+                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 2, overflowWrap: "anywhere" }}>
+                        {product.storeName}
+                      </div>
                     </div>
                   </div>
-                  <div style={{ padding: "12px 14px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                      <BusinessLogoPreview logoUrl={offer.logoUrl} businessName={offer.storeName} size={38} radius={10} />
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 0, overflowWrap: "anywhere" }}>
-                          {offer.title}
-                        </div>
-                        <div style={{ fontSize: 12, color: t.textSec, marginTop: 2, overflowWrap: "anywhere" }}>
-                          {offer.storeName} · {offer.distanceText}
-                        </div>
-                      </div>
-                      <div
-                        style={{ display: "flex", alignItems: "center", gap: 3, color: t.textSec, fontSize: 12, flexShrink: 0 }}
-                      >
-                        {Icon.clock(12, t.primaryDeep)}
-                        <span style={{ fontWeight: 600, color: t.text }}>{offer.pickup}</span>
-                      </div>
-                    </div>
-                    {offer.desc && (
-                      <div
-                        style={{
-                          marginTop: 8,
-                          fontSize: 12,
-                          lineHeight: 1.35,
-                          color: t.textSec,
-                          overflow: "hidden",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflowWrap: "anywhere",
-                        }}
-                      >
-                        {offer.desc}
-                      </div>
-                    )}
-                    {offer.discountReason && (
-                      <div
-                        style={{
-                          marginTop: 8,
-                          padding: "7px 9px",
-                          borderRadius: 10,
-                          background: t.surface,
-                          color: t.primaryDeep,
-                          fontSize: 11,
-                          lineHeight: 1.35,
-                          fontWeight: 700,
-                          overflowWrap: "anywhere",
-                        }}
-                      >
-                        Комментарий продавца: {offer.discountReason}
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        marginTop: 10,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <PriceTag original={offer.original} now={offer.now} size="md" />
-                      <span
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: 9999,
-                          fontSize: 11,
-                          background: t.primarySoft,
-                          color: t.primaryDeep,
-                          fontWeight: 700,
-                        }}
-                      >
-                        Цена продавца
-                      </span>
-                    </div>
+
+                  <div
+                    style={{
+                      fontSize: 12,
+                      lineHeight: 1.35,
+                      color: t.textSec,
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {product.desc}
                   </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                    <PriceTag original={product.original} now={product.now} size="md" />
+                    <Badge tone={availability.tone} size="sm">
+                      {availability.label}
+                    </Badge>
+                  </div>
+
+                  <PillButton
+                    variant="dark"
+                    size="sm"
+                    onClick={() => router.push(`/offers/${product.id}`)}
+                    disabled={product.availability === "OUT_OF_STOCK" || product.stock <= 0}
+                  >
+                    Связаться
+                  </PillButton>
                 </div>
-              </div>
-            ))
-          )}
-          <div style={{ height: 16 }} />
-        </div>
-      )}
+              </article>
+            );
+          })
+        )}
+        <div style={{ height: 16 }} />
+      </div>
 
       <TabBar />
     </div>

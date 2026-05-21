@@ -2,28 +2,21 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
-import { useAppStore } from "@/store/app";
 
 export function TabBar() {
   const pathname = usePathname();
   const router = useRouter();
   const t = tokens();
   const fontFn = FONT ? FONT() : "system-ui";
-  const { cart } = useAppStore();
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  let active = "feed";
-  if (pathname.includes("/orders")) active = "orders";
+  let active = "catalog";
+  if (pathname.includes("/search")) active = "search";
   if (pathname.includes("/favorites")) active = "favorites";
   if (pathname.includes("/profile")) active = "profile";
 
-  const unread = {
-    orders: cartCount > 0,
-  };
-
   const tabs: Array<{ id: string; label: string; icon: keyof typeof Icon; route: string }> = [
-    { id: "feed", label: "Главная", icon: "home", route: "/" },
-    { id: "orders", label: "Заявки", icon: "bag", route: "/orders" },
+    { id: "catalog", label: "Каталог", icon: "home", route: "/" },
+    { id: "search", label: "Поиск", icon: "search", route: "/search" },
     { id: "favorites", label: "Избранное", icon: "heart", route: "/favorites" },
     { id: "profile", label: "Профиль", icon: "user", route: "/profile" },
   ];
@@ -86,20 +79,6 @@ export function TabBar() {
           >
             <div style={{ position: "relative" }}>
               {tab.icon === "heart" && on ? IconFn(22, t.danger, true) : IconFn(22, c)}
-              {unread[tab.id as keyof typeof unread] && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: -2,
-                    right: -4,
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: t.danger,
-                    border: "2px solid #fff",
-                  }}
-                />
-              )}
             </div>
             <span style={{ fontSize: 10, fontWeight: on ? 700 : 500 }}>{tab.label}</span>
           </button>

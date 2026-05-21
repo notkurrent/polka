@@ -4,16 +4,20 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { api } from "@/lib/api";
-import { tokens, Icon, FONT } from "@/components/ui/primitives";
-import { PriceTag } from "@/components/ui/primitives";
-import { PillButton } from "@/components/ui/primitives";
+import { tokens, Icon, FONT, Badge, PriceTag, PillButton } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ALMATY_CENTER, formatDistance, NearbyOffer } from "@/lib/api-types";
+import { ALMATY_CENTER, NearbyOffer, OfferAvailability } from "@/lib/api-types";
 import { BUSINESS_CATEGORY_SEARCH_OPTIONS } from "@/lib/business-constants";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
+
+function availabilityCopy(availability: OfferAvailability, stock: number) {
+  if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
+  if (availability === "PREORDER") return { label: "Под заказ", tone: "amber" as const };
+  return { label: "В наличии", tone: "green" as const };
+}
 
 export default function SearchPage() {
   const router = useRouter();
@@ -34,15 +38,12 @@ export default function SearchPage() {
     error,
   } = useSWR<NearbyOffer[]>(
     debouncedQuery
-      ? `/offers/nearby?lat=${lat}&lon=${lon}&radius=5000&search=${encodeURIComponent(debouncedQuery)}`
+      ? `/offers/nearby?lat=${lat}&lon=${lon}&radius=50000&search=${encodeURIComponent(debouncedQuery)}`
       : null,
     (url: string) => api.get<NearbyOffer[]>(url),
   );
 
-  const categories = [
-    ...BUSINESS_CATEGORY_SEARCH_OPTIONS,
-    { label: "Подборки", query: "Подборки" },
-  ];
+  const categories = [...BUSINESS_CATEGORY_SEARCH_OPTIONS, { label: "Товары", query: "Товары" }];
 
   return (
     <div
@@ -82,8 +83,8 @@ export default function SearchPage() {
           <input
             type="text"
             name="search"
-            aria-label="Поиск товаров"
-            placeholder="Магазины, товары, районы…"
+            aria-label="Поиск товаров и магазинов"
+            placeholder="Товары и магазины"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{
@@ -207,7 +208,7 @@ export default function SearchPage() {
             >
               {Icon.search(32, t.textTer)}
             </div>
-            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>Найдите товар рядом</div>
+            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>Найдите товар или магазин</div>
             <div style={{ maxWidth: 300, marginTop: 10, fontSize: 14, lineHeight: 1.5 }}>
               Введите название магазина, товара или выберите популярную категорию выше.
             </div>
@@ -217,9 +218,9 @@ export default function SearchPage() {
         <div className="app-readable-content" style={{ flex: 1, overflowY: "auto" }}>
           {isLoading && (
             <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 10 }}>
-              <Skeleton w="100%" h={76} radius={14} />
-              <Skeleton w="100%" h={76} radius={14} />
-              <Skeleton w="100%" h={76} radius={14} />
+              <Skeleton w="100%" h={96} radius={14} />
+              <Skeleton w="100%" h={96} radius={14} />
+              <Skeleton w="100%" h={96} radius={14} />
             </div>
           )}
           {error && (
@@ -245,22 +246,35 @@ export default function SearchPage() {
                     textAlign: "left",
                   }}
                 >
-                  <OfferImagePreview
-                    imageUrl={item.offer.image_url}
-                    label="товар"
-                    width={52}
-                    height={52}
-                    radius={10}
-                    tone="mint"
-                  />
+                  <OfferImagePreview imageUrl={item.offer.image_url} label="товар" width={64} height={64} radius={10} tone="mint" />
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: t.text, overflowWrap: "anywhere" }}>{item.offer.name}</div>
                     <div style={{ fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>
-                      {item.partner.name || item.partner_name} · {formatDistance(item.distance)}
+                      {item.partner.name || item.partner_name}
                     </div>
+                    {item.offer.description && (
+                      <div
+                        style={{
+                          marginTop: 4,
+                          fontSize: 12,
+                          lineHeight: 1.35,
+                          color: t.textSec,
+                          overflow: "hidden",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {item.offer.description}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center" }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", gap: 8 }}>
                     <PriceTag now={item.offer.price ?? item.offer.new_price} original={item.offer.old_price ?? null} size="sm" />
+                    <Badge tone={availabilityCopy(item.offer.availability, item.offer.stock).tone} size="sm">
+                      {availabilityCopy(item.offer.availability, item.offer.stock).label}
+                    </Badge>
                   </div>
                 </button>
               ))

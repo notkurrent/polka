@@ -1,26 +1,27 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { api, getApiErrorMessage } from "@/lib/api";
-import { OfferDetail, OrderDetail } from "@/lib/api-types";
+import { api } from "@/lib/api";
+import { OfferAvailability, OfferDetail } from "@/lib/api-types";
 import { useAuth } from "@/hooks/useAuth";
-import { useAppStore } from "@/store/app";
-import { tokens, Icon, FONT, PillButton, PriceTag } from "@/components/ui/primitives";
+import { tokens, Icon, FONT, Badge, PillButton, PriceTag } from "@/components/ui/primitives";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
+import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
+
+function availabilityCopy(availability: OfferAvailability, stock: number) {
+  if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
+  if (availability === "PREORDER") return { label: "Под заказ", tone: "amber" as const };
+  return { label: stock <= 2 ? `В наличии: ${stock}` : "В наличии", tone: "green" as const };
+}
 
 export default function OfferDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const t = tokens();
-  const { addToCart, cart } = useAppStore();
-  const [isReserving, setIsReserving] = useState(false);
-  const [error, setError] = useState("");
-  const [cartFeedback, setCartFeedback] = useState("");
-
   const [id, setId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,56 +33,16 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
     (url: string) => api.get<OfferDetail>(url),
   );
 
-  const offer = selectedOfferData?.offer;
-  const partner = selectedOfferData?.partner;
-  const isOutOfStock = !!offer && (offer.availability !== "IN_STOCK" || offer.stock <= 0);
-  const isInCart = id ? cart.some((item) => item.offerId === id) : false;
-  const cartHasOtherPartner = !!partner && cart.length > 0 && cart.some((item) => item.partnerId !== String(partner.id));
-
-  const handleReserve = useCallback(async () => {
-    if (!id || isOutOfStock || isReserving) return;
-    setError("");
-    try {
-      setIsReserving(true);
-      const order = await api.post<OrderDetail>("/orders", { items: [{ offer_id: Number(id), quantity: 1 }] });
-
-      router.push(`/orders/${order.id}`);
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Не удалось отправить заявку по товару. Попробуйте еще раз."));
-    } finally {
-      setIsReserving(false);
-    }
-  }, [id, isOutOfStock, isReserving, router]);
-
-  const handleAddToCart = () => {
-    if (!id || !offer || !partner || isOutOfStock) return;
-    if (!isInCart) {
-      addToCart({
-        offerId: id,
-        partnerId: String(partner.id),
-        name: offer.name,
-        price: offer.price ?? offer.new_price,
-        quantity: 1,
-        originalPrice: offer.old_price,
-        storeName: partner.name,
-        stock: offer.stock,
-        imageUrl: offer.image_url,
-      });
-    }
-    setCartFeedback(
-      isInCart
-        ? "Товар уже в корзине."
-        : cartHasOtherPartner
-          ? "Начали новую корзину для этого магазина."
-          : "Добавили в корзину.",
-    );
-  };
-
   useEffect(() => {
     const mainButton = window.Telegram?.WebApp?.MainButton;
     mainButton?.hide?.();
     return () => mainButton?.hide?.();
   }, []);
+
+  const offer = selectedOfferData?.offer;
+  const partner = selectedOfferData?.partner;
+  const availability = offer ? availabilityCopy(offer.availability, offer.stock) : null;
+  const contactRoute = partner ? `/stores/${partner.id}#contacts` : "/search";
 
   if (loadError) {
     return (
@@ -101,7 +62,7 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  if (!offer || !partner) {
+  if (!offer || !partner || !availability) {
     return (
       <div
         style={{
@@ -133,18 +94,11 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
         background: t.bg,
         fontFamily: FONT ? FONT() : "system-ui",
         color: t.text,
-        paddingBottom: 148,
+        paddingBottom: 104,
       }}
     >
       <div className="offer-detail-hero" style={{ position: "relative" }}>
-        <OfferImagePreview
-          imageUrl={offer.image_url}
-          label="товар"
-          width="100%"
-          height={240}
-          radius={0}
-          tone="mint"
-        />
+        <OfferImagePreview imageUrl={offer.image_url} label="товар" width="100%" height={240} radius={0} tone="mint" />
         <button
           type="button"
           aria-label="Назад"
@@ -169,76 +123,67 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       </div>
 
       <div className="offer-detail-body" style={{ padding: "20px" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", letterSpacing: 0, overflowWrap: "anywhere" }}>
-          {offer.name}
-        </h1>
-
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 24 }}>
-          <PriceTag original={offer.old_price ?? null} now={offer.price ?? offer.new_price} size="lg" />
-          <span
-            style={{
-              padding: "5px 10px",
-              borderRadius: 9999,
-              fontSize: 13,
-              background: t.primarySoft,
-              color: t.primaryDeep,
-              fontWeight: 700,
-            }}
-          >
-            Цена продавца
-          </span>
-        </div>
-
-        {offer.description && (
-          <div style={{ marginBottom: 24, fontSize: 14, color: t.textSec, lineHeight: 1.45, overflowWrap: "anywhere" }}>
-            {offer.description}
-          </div>
-        )}
-        {offer.discount_reason && (
-          <div
-            style={{
-              marginBottom: 24,
-              padding: "12px 14px",
-              borderRadius: 14,
-              background: t.primarySoft,
-              color: t.primaryDeep,
-              fontSize: 13,
-              lineHeight: 1.45,
-              fontWeight: 650,
-              overflowWrap: "anywhere",
-            }}
-          >
-            <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 4 }}>
-              Комментарий продавца
-            </div>
-            <div>{offer.discount_reason}</div>
-          </div>
-        )}
-
-        <div style={{ background: t.surface, borderRadius: 16, padding: "16px", marginBottom: 24 }}>
-          <p style={{ margin: 0, fontSize: 13, color: t.textSec }}>
-            Осталось товаров: <strong style={{ color: t.text }}>{offer.stock}</strong>
-          </p>
-          <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-            Магазин: <strong style={{ color: t.text, overflowWrap: "anywhere" }}>{partner.name}</strong>
-          </p>
-          <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-            Адрес: <strong style={{ color: t.text, overflowWrap: "anywhere" }}>{partner.address}</strong>
-          </p>
-          {offer.pickup_time ? (
-            <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-              Время для связи: <strong style={{ color: t.text }}>{offer.pickup_time}</strong>
-            </p>
-          ) : (
-            <p style={{ margin: "8px 0 0 0", fontSize: 13, color: t.textSec }}>
-              Режим работы: <strong style={{ color: t.text }}>{partner.hours}</strong>
-            </p>
-          )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <BusinessLogoPreview logoUrl={partner.logo_url} businessName={partner.name} size={40} radius={10} />
           <button
             type="button"
             onClick={() => router.push(`/stores/${partner.id}`)}
             style={{
-              marginTop: 12,
+              minWidth: 0,
+              flex: 1,
+              border: "none",
+              padding: 0,
+              background: "transparent",
+              textAlign: "left",
+              cursor: "pointer",
+              color: t.text,
+            }}
+          >
+            <div style={{ fontSize: 13, color: t.textSec }}>Магазин</div>
+            <div style={{ fontSize: 15, fontWeight: 750, overflowWrap: "anywhere" }}>{partner.name}</div>
+          </button>
+          <Badge tone={availability.tone} size="sm">
+            {availability.label}
+          </Badge>
+        </div>
+
+        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 14px", letterSpacing: 0, overflowWrap: "anywhere" }}>
+          {offer.name}
+        </h1>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 20 }}>
+          <PriceTag original={offer.old_price ?? null} now={offer.price ?? offer.new_price} size="lg" />
+        </div>
+
+        {offer.description && (
+          <div style={{ marginBottom: 20, fontSize: 14, color: t.textSec, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+            {offer.description}
+          </div>
+        )}
+
+        <div style={{ background: t.surface, borderRadius: 16, padding: "16px", marginBottom: 18 }}>
+          <div style={{ fontSize: 15, fontWeight: 750, marginBottom: 12 }}>О продавце</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              {Icon.pin(16, t.primaryDeep)}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, color: t.textSec }}>Адрес</div>
+                <div style={{ fontSize: 13, fontWeight: 650, overflowWrap: "anywhere" }}>{partner.address}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              {Icon.clock(16, t.primaryDeep)}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, color: t.textSec }}>График</div>
+                <div style={{ fontSize: 13, fontWeight: 650, overflowWrap: "anywhere" }}>{partner.hours}</div>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push(`/stores/${partner.id}`)}
+            style={{
+              marginTop: 14,
               width: "100%",
               minHeight: 44,
               padding: "10px",
@@ -247,42 +192,20 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
               background: "transparent",
               color: t.primaryDeep,
               fontSize: 13,
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: "pointer",
             }}
           >
-            Перейти к странице магазина
+            Открыть витрину магазина
           </button>
         </div>
 
-        {error && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              borderRadius: 12,
-              background: "#FDE8E8",
-              color: t.danger,
-              fontSize: 13,
-            }}
-          >
-            {error}
+        <div style={{ background: t.bg, border: `1px solid ${t.divider}`, borderRadius: 16, padding: "16px" }}>
+          <div style={{ fontSize: 15, fontWeight: 750, marginBottom: 8 }}>Контакт продавца</div>
+          <div style={{ fontSize: 13, color: t.textSec, lineHeight: 1.45 }}>
+            Перейдите на витрину магазина, чтобы посмотреть адрес, карту и доступные способы связи.
           </div>
-        )}
-        {cartFeedback && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              borderRadius: 12,
-              background: t.primarySoft,
-              color: t.primaryDeep,
-              fontSize: 13,
-            }}
-          >
-            {cartFeedback}
-          </div>
-        )}
+        </div>
 
         <div
           style={{
@@ -296,22 +219,10 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             background: "rgba(255,255,255,0.96)",
             borderTop: `1px solid ${t.divider}`,
             backdropFilter: "blur(12px)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
           }}
         >
-          <PillButton
-            size="md"
-            variant={isInCart ? "ghost" : "outline"}
-            full
-            onClick={isInCart ? () => router.push("/cart") : handleAddToCart}
-            disabled={isOutOfStock}
-          >
-            {isInCart ? "Открыть корзину" : "Добавить в корзину"}
-          </PillButton>
-          <PillButton size="lg" full onClick={handleReserve} disabled={isReserving || isOutOfStock}>
-            {isOutOfStock ? "Нет в наличии" : isReserving ? "Отправляем…" : `Отправить заявку за ${offer.price ?? offer.new_price} ₸`}
+          <PillButton size="lg" full onClick={() => router.push(contactRoute)} disabled={offer.availability === "OUT_OF_STOCK" || offer.stock <= 0}>
+            {offer.availability === "OUT_OF_STOCK" || offer.stock <= 0 ? "Нет в наличии" : "Написать продавцу"}
           </PillButton>
         </div>
       </div>
