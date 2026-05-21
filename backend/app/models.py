@@ -69,6 +69,11 @@ class Partner(SQLModel, table=True):
     category: str = Field(default="")
     logo_path: Optional[str] = Field(default=None, max_length=512)
     map_url: Optional[str] = Field(default=None, max_length=1024)
+    phone: Optional[str] = Field(default=None, max_length=64)
+    whatsapp_url: Optional[str] = Field(default=None, max_length=1024)
+    telegram_url: Optional[str] = Field(default=None, max_length=1024)
+    instagram_url: Optional[str] = Field(default=None, max_length=1024)
+    website_url: Optional[str] = Field(default=None, max_length=1024)
     status: PartnerStatus = Field(
         default=PartnerStatus.PENDING,
         sa_column=Column(Enum(PartnerStatus), nullable=False),
@@ -96,6 +101,21 @@ class Partner(SQLModel, table=True):
             default=lambda: datetime.now(timezone.utc),
             onupdate=lambda: datetime.now(timezone.utc),
             nullable=False
+        )
+    )
+
+
+class Inquiry(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    partner_id: int = Field(foreign_key="partner.id", index=True)
+    offer_id: Optional[int] = Field(default=None, foreign_key="offer.id", index=True)
+    channel: str = Field(max_length=32)
+    target_url: str = Field(default="", max_length=1024)
+    created_at: datetime = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            default=lambda: datetime.now(timezone.utc),
+            nullable=False,
         )
     )
 

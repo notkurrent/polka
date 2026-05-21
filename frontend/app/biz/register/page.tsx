@@ -23,6 +23,11 @@ export default function BizRegisterPage() {
     type: DEFAULT_BUSINESS_CATEGORY,
     address: "",
     map_url: "",
+    phone: "",
+    whatsapp_url: "",
+    telegram_url: "",
+    instagram_url: "",
+    website_url: "",
     description: "",
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -46,6 +51,11 @@ export default function BizRegisterPage() {
         await api.post("/partner-api/register", {
           ...data,
           map_url: data.map_url.trim() || null,
+          phone: data.phone.trim() || null,
+          whatsapp_url: data.whatsapp_url.trim() || null,
+          telegram_url: data.telegram_url.trim() || null,
+          instagram_url: data.instagram_url.trim() || null,
+          website_url: data.website_url.trim() || null,
           lat: 43.238949,
           lon: 76.889709,
         });
@@ -94,6 +104,11 @@ export default function BizRegisterPage() {
     { id: "type", label: "Категория", options: BUSINESS_CATEGORIES },
     { id: "address", label: "Адрес магазина" },
     { id: "map_url", label: "Ссылка на 2GIS / карту", placeholder: "https://2gis.kz/..." },
+    { id: "phone", label: "Телефон", placeholder: "+7 700 123 45 67" },
+    { id: "whatsapp_url", label: "WhatsApp", placeholder: "https://wa.me/77001234567" },
+    { id: "telegram_url", label: "Telegram", placeholder: "https://t.me/store" },
+    { id: "instagram_url", label: "Instagram", placeholder: "https://instagram.com/store" },
+    { id: "website_url", label: "Сайт", placeholder: "https://example.kz" },
     { id: "description", label: "Описание", textarea: true },
   ];
 

@@ -6,22 +6,18 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/app";
-import { tokens, Icon, FONT, Badge, PillButton, PriceTag, StripePlaceholder } from "@/components/ui/primitives";
+import { tokens, Icon, FONT, Badge, PriceTag, StripePlaceholder } from "@/components/ui/primitives";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { OfferAvailability, PartnerDetail } from "@/lib/api-types";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { primaryContactLink, secondaryContactLinks, trackInquiryClick } from "@/lib/contact-links";
 
 function availabilityCopy(availability: OfferAvailability, stock: number) {
   if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
   if (availability === "PREORDER") return { label: "Под заказ", tone: "amber" as const };
   return { label: "В наличии", tone: "green" as const };
-}
-
-function socialLinksFromText(text: string) {
-  const matches = text.match(/https?:\/\/[^\s,]+/g) || [];
-  return matches.filter((url) => /instagram|t\.me|telegram|wa\.me|whatsapp|vk\.com/i.test(url));
 }
 
 export default function StoreScreen({ params }: { params: Promise<{ id: string }> }) {
@@ -30,6 +26,7 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
   const { isAuthenticated } = useAuth();
   const { favorites, toggleFavorite } = useAppStore();
   const [id, setId] = useState<string | null>(null);
+  const [copyDone, setCopyDone] = useState(false);
 
   useEffect(() => {
     Promise.resolve(params).then((p) => setId(p.id));
@@ -45,7 +42,8 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
 
   const fav = id ? favorites.includes(id) : false;
   const partner = partnerDetail?.partner;
-  const socialLinks = useMemo(() => socialLinksFromText(partner?.description || ""), [partner?.description]);
+  const contactLink = useMemo(() => primaryContactLink(partner), [partner]);
+  const contactLinks = useMemo(() => secondaryContactLinks(partner), [partner]);
 
   const store = partner && {
     id: String(partner.id),
@@ -68,6 +66,13 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
       imageUrl: offer.image_url,
       availability: offer.availability,
     })),
+  };
+
+  const copyStoreLink = async () => {
+    if (!partner || typeof window === "undefined") return;
+    await navigator.clipboard.writeText(`${window.location.origin}/stores/${partner.id}`);
+    setCopyDone(true);
+    window.setTimeout(() => setCopyDone(false), 1800);
   };
 
   if (!id || isLoading) {
@@ -234,19 +239,72 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
               Открыть карту
             </a>
           )}
+          {contactLink && partner && (
+            <a
+              href={contactLink.href}
+              target={contactLink.channel === "phone" ? undefined : "_blank"}
+              rel={contactLink.channel === "phone" ? undefined : "noopener noreferrer"}
+              onClick={() =>
+                trackInquiryClick({
+                  partnerId: partner.id,
+                  channel: contactLink.channel,
+                  targetUrl: contactLink.href,
+                })
+              }
+              style={{
+                minHeight: 48,
+                borderRadius: 9999,
+                background: t.primaryDeep,
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: 800,
+              }}
+            >
+              Написать продавцу
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={copyStoreLink}
+            style={{
+              minHeight: 44,
+              borderRadius: 12,
+              border: `1px solid ${t.primary}`,
+              background: "#fff",
+              color: t.primaryDeep,
+              fontSize: 13,
+              fontWeight: 750,
+              cursor: "pointer",
+              fontFamily: FONT(),
+            }}
+          >
+            {copyDone ? "Ссылка скопирована" : "Скопировать ссылку на магазин"}
+          </button>
           <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 10 }}>
-            <div style={{ fontSize: 12, color: t.textSec, marginBottom: 8 }}>Соцсети</div>
-            {socialLinks.length > 0 ? (
+            <div style={{ fontSize: 12, color: t.textSec, marginBottom: 8 }}>Способы связи</div>
+            {contactLinks.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {socialLinks.map((link) => (
+                {contactLinks.map((link) => (
                   <a
-                    key={link}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    key={`${link.channel}-${link.href}`}
+                    href={link.href}
+                    target={link.channel === "phone" ? undefined : "_blank"}
+                    rel={link.channel === "phone" ? undefined : "noopener noreferrer"}
+                    onClick={() =>
+                      partner &&
+                      trackInquiryClick({
+                        partnerId: partner.id,
+                        channel: link.channel,
+                        targetUrl: link.href,
+                      })
+                    }
                     style={{ color: t.primaryDeep, fontSize: 13, fontWeight: 700, textDecoration: "none", overflowWrap: "anywhere" }}
                   >
-                    {link}
+                    {link.label}
                   </a>
                 ))}
               </div>
@@ -319,16 +377,40 @@ export default function StoreScreen({ params }: { params: Promise<{ id: string }
                           {availability.label}
                         </Badge>
                       </div>
-                      <PillButton
-                        variant="outline"
-                        size="sm"
-                        full={false}
-                        onClick={() => router.push(`/offers/${offer.id}`)}
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (contactLink && partner) {
+                            trackInquiryClick({
+                              partnerId: partner.id,
+                              offerId: Number(offer.id),
+                              channel: contactLink.channel,
+                              targetUrl: contactLink.href,
+                            });
+                            window.location.href = contactLink.href;
+                            return;
+                          }
+                          router.push(`/offers/${offer.id}`);
+                        }}
                         disabled={unavailable}
-                        style={{ minWidth: 112 }}
+                        style={{
+                          minWidth: 112,
+                          minHeight: 44,
+                          padding: "0 16px",
+                          borderRadius: 9999,
+                          border: `1.5px solid ${t.primary}`,
+                          background: "#fff",
+                          color: t.primaryDeep,
+                          fontSize: 14,
+                          fontWeight: 650,
+                          fontFamily: FONT(),
+                          cursor: unavailable ? "not-allowed" : "pointer",
+                          opacity: unavailable ? 0.58 : 1,
+                        }}
                       >
-                        Связаться
-                      </PillButton>
+                        Написать
+                      </button>
                     </div>
                   </div>
                 </article>

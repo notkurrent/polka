@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -16,6 +17,11 @@ class PartnerPublicDTO(BaseModel):
     logo_path: str | None = None
     logo_url: str | None = None
     map_url: str | None = None
+    phone: str | None = None
+    whatsapp_url: str | None = None
+    telegram_url: str | None = None
+    instagram_url: str | None = None
+    website_url: str | None = None
     lat: float | None = None
     lon: float | None = None
 
@@ -62,6 +68,21 @@ class OfferWithPartnerDTO(BaseModel):
 class PartnerDetailDTO(BaseModel):
     partner: PartnerPublicDTO
     offers: list[OfferPublicDTO] = Field(default_factory=list)
+
+
+class InquiryCreateDTO(BaseModel):
+    offer_id: int | None = None
+    channel: Literal["whatsapp", "telegram", "phone", "website", "instagram"]
+    target_url: str = Field(default="", max_length=1024)
+
+
+class InquiryDTO(BaseModel):
+    id: int
+    partner_id: int
+    offer_id: int | None = None
+    channel: str
+    target_url: str
+    created_at: datetime
 
 
 class OrderOfferDTO(BaseModel):

@@ -24,6 +24,11 @@ type PartnerProfileForm = {
   category: string;
   address: string;
   map_url: string;
+  phone: string;
+  whatsapp_url: string;
+  telegram_url: string;
+  instagram_url: string;
+  website_url: string;
   hours: string;
   description: string;
 };
@@ -85,6 +90,11 @@ export default function BizProfileEditPage() {
     category: DEFAULT_BUSINESS_CATEGORY,
     address: "",
     map_url: "",
+    phone: "",
+    whatsapp_url: "",
+    telegram_url: "",
+    instagram_url: "",
+    website_url: "",
     hours: "09:00-21:00",
     description: "",
   });
@@ -109,6 +119,11 @@ export default function BizProfileEditPage() {
           category: profile.category || DEFAULT_BUSINESS_CATEGORY,
           address: profile.address || "",
           map_url: profile.map_url || "",
+          phone: profile.phone || "",
+          whatsapp_url: profile.whatsapp_url || "",
+          telegram_url: profile.telegram_url || "",
+          instagram_url: profile.instagram_url || "",
+          website_url: profile.website_url || "",
           hours,
           description: profile.description || "",
         });
@@ -176,6 +191,11 @@ export default function BizProfileEditPage() {
         hours: formattedHours,
         description: data.description.trim(),
         map_url: data.map_url.trim() || null,
+        phone: data.phone.trim() || null,
+        whatsapp_url: data.whatsapp_url.trim() || null,
+        telegram_url: data.telegram_url.trim() || null,
+        instagram_url: data.instagram_url.trim() || null,
+        website_url: data.website_url.trim() || null,
         lat: selectedAddress.lat,
         lon: selectedAddress.lon,
       });
@@ -361,6 +381,61 @@ export default function BizProfileEditPage() {
                 value={data.map_url}
                 onChange={(event) => setData({ ...data, map_url: event.target.value })}
                 placeholder="https://2gis.kz/..."
+                style={inputStyle(t, fontFn)}
+              />
+            </Field>
+
+            <Field label="Телефон">
+              <input
+                name="partner-phone"
+                aria-label="Телефон"
+                value={data.phone}
+                onChange={(event) => setData({ ...data, phone: event.target.value })}
+                placeholder="+7 700 123 45 67"
+                style={inputStyle(t, fontFn)}
+              />
+            </Field>
+
+            <Field label="WhatsApp">
+              <input
+                name="partner-whatsapp"
+                aria-label="WhatsApp"
+                value={data.whatsapp_url}
+                onChange={(event) => setData({ ...data, whatsapp_url: event.target.value })}
+                placeholder="https://wa.me/77001234567"
+                style={inputStyle(t, fontFn)}
+              />
+            </Field>
+
+            <Field label="Telegram">
+              <input
+                name="partner-telegram"
+                aria-label="Telegram"
+                value={data.telegram_url}
+                onChange={(event) => setData({ ...data, telegram_url: event.target.value })}
+                placeholder="https://t.me/store"
+                style={inputStyle(t, fontFn)}
+              />
+            </Field>
+
+            <Field label="Instagram">
+              <input
+                name="partner-instagram"
+                aria-label="Instagram"
+                value={data.instagram_url}
+                onChange={(event) => setData({ ...data, instagram_url: event.target.value })}
+                placeholder="https://instagram.com/store"
+                style={inputStyle(t, fontFn)}
+              />
+            </Field>
+
+            <Field label="Сайт">
+              <input
+                name="partner-website"
+                aria-label="Сайт"
+                value={data.website_url}
+                onChange={(event) => setData({ ...data, website_url: event.target.value })}
+                placeholder="https://example.kz"
                 style={inputStyle(t, fontFn)}
               />
             </Field>

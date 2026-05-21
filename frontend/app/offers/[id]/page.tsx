@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { api } from "@/lib/api";
@@ -11,6 +11,7 @@ import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { primaryContactLink, secondaryContactLinks, trackInquiryClick } from "@/lib/contact-links";
 
 function availabilityCopy(availability: OfferAvailability, stock: number) {
   if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
@@ -42,7 +43,8 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
   const offer = selectedOfferData?.offer;
   const partner = selectedOfferData?.partner;
   const availability = offer ? availabilityCopy(offer.availability, offer.stock) : null;
-  const contactRoute = partner ? `/stores/${partner.id}#contacts` : "/search";
+  const contactLink = useMemo(() => primaryContactLink(partner), [partner]);
+  const contactLinks = useMemo(() => secondaryContactLinks(partner), [partner]);
 
   if (loadError) {
     return (
@@ -202,9 +204,33 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
         <div style={{ background: t.bg, border: `1px solid ${t.divider}`, borderRadius: 16, padding: "16px" }}>
           <div style={{ fontSize: 15, fontWeight: 750, marginBottom: 8 }}>Контакт продавца</div>
-          <div style={{ fontSize: 13, color: t.textSec, lineHeight: 1.45 }}>
-            Перейдите на витрину магазина, чтобы посмотреть адрес, карту и доступные способы связи.
-          </div>
+          {contactLinks.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {contactLinks.map((link) => (
+                <a
+                  key={`${link.channel}-${link.href}`}
+                  href={link.href}
+                  target={link.channel === "phone" ? undefined : "_blank"}
+                  rel={link.channel === "phone" ? undefined : "noopener noreferrer"}
+                  onClick={() =>
+                    trackInquiryClick({
+                      partnerId: partner.id,
+                      offerId: offer.id,
+                      channel: link.channel,
+                      targetUrl: link.href,
+                    })
+                  }
+                  style={{ color: t.primaryDeep, fontSize: 13, fontWeight: 750, textDecoration: "none" }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 13, color: t.textSec, lineHeight: 1.45 }}>
+              Продавец пока не указал прямые контакты. Откройте витрину магазина, чтобы посмотреть адрес и карту.
+            </div>
+          )}
         </div>
 
         <div
@@ -221,7 +247,24 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             backdropFilter: "blur(12px)",
           }}
         >
-          <PillButton size="lg" full onClick={() => router.push(contactRoute)} disabled={offer.availability === "OUT_OF_STOCK" || offer.stock <= 0}>
+          <PillButton
+            size="lg"
+            full
+            onClick={() => {
+              if (!contactLink) {
+                router.push(`/stores/${partner.id}#contacts`);
+                return;
+              }
+              trackInquiryClick({
+                partnerId: partner.id,
+                offerId: offer.id,
+                channel: contactLink.channel,
+                targetUrl: contactLink.href,
+              });
+              window.location.href = contactLink.href;
+            }}
+            disabled={offer.availability === "OUT_OF_STOCK" || offer.stock <= 0}
+          >
             {offer.availability === "OUT_OF_STOCK" || offer.stock <= 0 ? "Нет в наличии" : "Написать продавцу"}
           </PillButton>
         </div>

@@ -14,9 +14,23 @@ from sqlmodel import select
 
 from app.database import get_session
 from app.dependencies import get_current_user
-from app.models import Offer, OfferAvailability, OfferType, Order, OrderItem, OrderStatus, Partner, PartnerStatus, User, UserRole
+from app.models import (
+    Inquiry,
+    Offer,
+    OfferAvailability,
+    OfferType,
+    Order,
+    OrderItem,
+    OrderStatus,
+    Partner,
+    PartnerStatus,
+    User,
+    UserRole,
+)
 from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status, restore_order_stock
 from app.schemas import (
+    InquiryCreateDTO,
+    InquiryDTO,
     OfferPublicDTO,
     OrderDetailDTO,
     PartnerDetailDTO,
@@ -216,6 +230,11 @@ class PartnerRegister(BaseModel):
     description: str = ""
     hours: str | None = None
     map_url: str | None = None
+    phone: str | None = None
+    whatsapp_url: str | None = None
+    telegram_url: str | None = None
+    instagram_url: str | None = None
+    website_url: str | None = None
     lat: float | None = None
     lon: float | None = None
 
@@ -227,6 +246,11 @@ class PartnerProfileUpdate(BaseModel):
     description: str | None = None
     category: str | None = None
     map_url: str | None = None
+    phone: str | None = None
+    whatsapp_url: str | None = None
+    telegram_url: str | None = None
+    instagram_url: str | None = None
+    website_url: str | None = None
     lat: float | None = None
     lon: float | None = None
 
@@ -392,6 +416,45 @@ async def get_partner_detail(
     )
 
 
+@public_router.post("/{partner_id}/inquiries", response_model=InquiryDTO)
+async def create_partner_inquiry(
+    partner_id: int,
+    req: InquiryCreateDTO,
+    session: AsyncSession = Depends(get_session),
+):
+    partner = await session.get(Partner, partner_id)
+    if not partner or partner.status != PartnerStatus.APPROVED:
+        raise HTTPException(status_code=404, detail="Partner not found")
+
+    if req.offer_id is not None:
+        offer = await session.get(Offer, req.offer_id)
+        if (
+            not offer
+            or offer.partner_id != partner.id
+            or offer.availability == OfferAvailability.HIDDEN
+            or offer.is_archived
+        ):
+            raise HTTPException(status_code=404, detail="Offer not found")
+
+    inquiry = Inquiry(
+        partner_id=partner.id,
+        offer_id=req.offer_id,
+        channel=req.channel,
+        target_url=req.target_url,
+    )
+    session.add(inquiry)
+    await session.commit()
+    await session.refresh(inquiry)
+    return InquiryDTO(
+        id=inquiry.id,
+        partner_id=inquiry.partner_id,
+        offer_id=inquiry.offer_id,
+        channel=inquiry.channel,
+        target_url=inquiry.target_url,
+        created_at=inquiry.created_at,
+    )
+
+
 @router.post("/register", response_model=PartnerProfileDTO)
 async def register_partner(
     req: PartnerRegister,
@@ -413,6 +476,11 @@ async def register_partner(
         category=req.type,
         description=req.description,
         map_url=req.map_url,
+        phone=req.phone,
+        whatsapp_url=req.whatsapp_url,
+        telegram_url=req.telegram_url,
+        instagram_url=req.instagram_url,
+        website_url=req.website_url,
         status=PartnerStatus.PENDING,
     )
     session.add(partner)

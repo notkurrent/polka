@@ -10,7 +10,7 @@ from sqlmodel import select
 
 from app.database import AsyncSessionLocal
 from app.main import app
-from app.models import Offer, Order, OrderItem, Partner, PartnerStatus, Rating, User
+from app.models import Inquiry, Offer, Order, OrderItem, Partner, PartnerStatus, Rating, User
 
 
 ALMATY_LAT = 43.238949
@@ -68,6 +68,10 @@ async def cleanup_test_data(phone_prefix: str) -> None:
             await session.execute(delete(OrderItem).where(OrderItem.order_id.in_(order_ids)))
             await session.execute(delete(Order).where(Order.id.in_(order_ids)))
         if offer_ids:
+            await session.execute(delete(Inquiry).where(Inquiry.offer_id.in_(offer_ids)))
+        if partner_ids:
+            await session.execute(delete(Inquiry).where(Inquiry.partner_id.in_(partner_ids)))
+        if offer_ids:
             await session.execute(delete(Offer).where(Offer.id.in_(offer_ids)))
         if partner_ids:
             await session.execute(delete(Partner).where(Partner.id.in_(partner_ids)))
@@ -99,6 +103,11 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
                     "description": "API fields test partner",
                     "hours": "09:00-21:00",
                     "map_url": "https://2gis.kz/almaty/geo/70000001000000000",
+                    "phone": "+77001234567",
+                    "whatsapp_url": "https://wa.me/77001234567",
+                    "telegram_url": "https://t.me/polka_store",
+                    "instagram_url": "https://instagram.com/polka_store",
+                    "website_url": "https://polka.example/store",
                     "lat": ALMATY_LAT,
                     "lon": ALMATY_LON,
                 },
@@ -106,14 +115,20 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
             assert register_response.status_code == 200, register_response.text
             partner = register_response.json()
             assert partner["map_url"] == "https://2gis.kz/almaty/geo/70000001000000000"
+            assert partner["phone"] == "+77001234567"
+            assert partner["whatsapp_url"] == "https://wa.me/77001234567"
+            assert partner["telegram_url"] == "https://t.me/polka_store"
+            assert partner["instagram_url"] == "https://instagram.com/polka_store"
+            assert partner["website_url"] == "https://polka.example/store"
 
             profile_response = await client.patch(
                 "/partner-api/profile",
                 headers=auth_headers(partner_token),
-                json={"map_url": "https://go.2gis.com/example"},
+                json={"map_url": "https://go.2gis.com/example", "phone": "+77007654321"},
             )
             assert profile_response.status_code == 200, profile_response.text
             assert profile_response.json()["map_url"] == "https://go.2gis.com/example"
+            assert profile_response.json()["phone"] == "+77007654321"
 
             await approve_partner(partner["id"])
             offer_response = await client.post(
@@ -137,6 +152,27 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
             assert offer_response.json()["category"] == "bakery"
             assert offer_response.json()["tags"] == "bread,local"
             assert offer_response.json()["discount_reason"] == "End of day surplus"
+
+            public_partner_response = await client.get(f"/partners/{partner['id']}")
+            assert public_partner_response.status_code == 200, public_partner_response.text
+            public_partner = public_partner_response.json()["partner"]
+            assert public_partner["phone"] == "+77007654321"
+            assert public_partner["whatsapp_url"] == "https://wa.me/77001234567"
+
+            inquiry_response = await client.post(
+                f"/partners/{partner['id']}/inquiries",
+                json={
+                    "offer_id": offer_response.json()["id"],
+                    "channel": "whatsapp",
+                    "target_url": "https://wa.me/77001234567",
+                },
+            )
+            assert inquiry_response.status_code == 200, inquiry_response.text
+            inquiry = inquiry_response.json()
+            assert inquiry["partner_id"] == partner["id"]
+            assert inquiry["offer_id"] == offer_response.json()["id"]
+            assert inquiry["channel"] == "whatsapp"
+            assert inquiry["target_url"] == "https://wa.me/77001234567"
         finally:
             await cleanup_test_data(phone_prefix)
 

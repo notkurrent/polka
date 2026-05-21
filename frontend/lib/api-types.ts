@@ -12,6 +12,11 @@ export interface PartnerPublic {
   logo_path?: string | null;
   logo_url?: string | null;
   map_url?: string | null;
+  phone?: string | null;
+  whatsapp_url?: string | null;
+  telegram_url?: string | null;
+  instagram_url?: string | null;
+  website_url?: string | null;
   lat?: number | null;
   lon?: number | null;
 }
