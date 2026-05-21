@@ -72,6 +72,8 @@ def build_offer_dto(offer: Offer) -> OfferPublicDTO:
         availability=offer.availability,
         name=offer.name,
         description=offer.description,
+        category=offer.category or "",
+        tags=offer.tags or "",
         pickup_time=offer.pickup_time,
         price=offer.new_price,
         old_price=offer.old_price,

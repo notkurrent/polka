@@ -11,13 +11,11 @@ export function BizTabBar() {
 
   let active = "dash";
   if (pathname.includes("/biz/offers")) active = "offers";
-  if (pathname.includes("/biz/orders") || pathname.includes("/biz/scan")) active = "orders";
   if (pathname.includes("/biz/profile")) active = "profile";
 
   const tabs: Array<{ id: string; label: string; icon: keyof typeof Icon; route: string }> = [
     { id: "dash", label: "Главная", icon: "home", route: "/biz" },
     { id: "offers", label: "Товары", icon: "bag", route: "/biz/offers" },
-    { id: "orders", label: "Заявки", icon: "list", route: "/biz/orders" },
     { id: "profile", label: "Профиль", icon: "user", route: "/biz/profile" },
   ];
 

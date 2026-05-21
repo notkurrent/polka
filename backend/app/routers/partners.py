@@ -175,6 +175,8 @@ class OfferCreate(BaseModel):
     availability: OfferAvailability | None = None
     name: str
     description: str = ""
+    category: str = ""
+    tags: str = ""
     pickup_time: str = ""
     price: Decimal | None = Field(default=None, ge=0)
     old_price: Decimal | None = Field(default=None, ge=0)
@@ -186,6 +188,8 @@ class OfferCreate(BaseModel):
 class OfferUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+    category: str | None = None
+    tags: str | None = None
     pickup_time: str | None = None
     type: OfferType | None = None
     availability: OfferAvailability | None = None
@@ -546,6 +550,8 @@ async def create_partner_offer(
         availability=req.availability or default_offer_availability(req.stock),
         name=req.name,
         description=req.description,
+        category=req.category,
+        tags=req.tags,
         pickup_time=req.pickup_time,
         old_price=req.old_price,
         new_price=price,

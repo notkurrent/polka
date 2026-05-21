@@ -1,4 +1,4 @@
-export type OfferType = "MAGIC_BOX" | "SPECIFIC" | string;
+export type OfferType = "SPECIFIC" | string;
 export type OfferAvailability = "IN_STOCK" | "OUT_OF_STOCK" | "PREORDER" | "HIDDEN";
 export type PartnerStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
@@ -29,6 +29,8 @@ export interface OfferPublic {
   availability: OfferAvailability;
   name: string;
   description: string;
+  category: string;
+  tags: string;
   pickup_time: string;
   price: number;
   old_price?: number | null;

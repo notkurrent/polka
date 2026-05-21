@@ -8,12 +8,12 @@ import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizS
 import { BizTabBar } from "@/components/biz/BizTabBar";
 import { OfferImagePicker, OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
-import { Badge, PriceTag, tokens, FONT, Icon } from "@/components/ui/primitives";
+import { Badge, tokens, FONT, Icon } from "@/components/ui/primitives";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
-import type { OfferPublic } from "@/lib/api-types";
+import { bizApi, money, partnerErrorMessage } from "@/lib/biz-api";
+import type { OfferAvailability, OfferPublic } from "@/lib/api-types";
 
 export default function BizOffersListScreen() {
   const router = useRouter();
@@ -29,12 +29,10 @@ export default function BizOffersListScreen() {
   const [draft, setDraft] = useState({
     name: "",
     description: "",
-    discount_reason: "",
-    pickup_from: "19:00",
-    pickup_to: "21:00",
-    old_price: "",
+    category: "",
+    tags: "",
     price: "",
-    availability: "IN_STOCK" as OfferPublic["availability"],
+    availability: "IN_STOCK" as OfferAvailability,
     stock: "",
   });
   const [draftPhoto, setDraftPhoto] = useState<File | null>(null);
@@ -46,15 +44,11 @@ export default function BizOffersListScreen() {
   const beginEdit = (offer: OfferPublic) => {
     setEditingId(offer.id);
     setMessage("");
-    const defaultTime = offer.pickup_time || "19:00 - 21:00";
-    const [from = "19:00", to = "21:00"] = defaultTime.split("-").map((s) => s.trim());
     setDraft({
       name: offer.name,
       description: offer.description || "",
-      discount_reason: offer.discount_reason || "",
-      pickup_from: from,
-      pickup_to: to,
-      old_price: offer.old_price != null ? String(offer.old_price) : "",
+      category: offer.category || "",
+      tags: offer.tags || "",
       price: String(offer.price ?? offer.new_price),
       availability: offer.availability,
       stock: String(offer.stock),
@@ -64,14 +58,12 @@ export default function BizOffersListScreen() {
   };
 
   const validateDraft = () => {
-    const oldPrice = Number(draft.old_price);
     const productPrice = Number(draft.price);
     const stock = Number(draft.stock);
     if (!draft.name.trim()) return "Введите название товара.";
-    if (!draft.pickup_from.trim() || !draft.pickup_to.trim()) return "Укажите время для связи.";
-    if (draft.old_price.trim() && (!Number.isFinite(oldPrice) || oldPrice <= 0)) return "Старая цена должна быть больше 0.";
     if (!Number.isFinite(productPrice) || productPrice <= 0) return "Цена должна быть больше 0.";
     if (!Number.isInteger(stock) || stock < 0) return "Остаток должен быть целым числом от 0.";
+    if (draft.availability === "IN_STOCK" && stock <= 0) return "Для статуса в наличии укажите остаток больше 0.";
     return "";
   };
 
@@ -88,9 +80,8 @@ export default function BizOffersListScreen() {
       await bizApi.updateOffer(id, {
         name: draft.name.trim(),
         description: draft.description.trim(),
-        discount_reason: draft.discount_reason.trim(),
-        pickup_time: `${draft.pickup_from} - ${draft.pickup_to}`,
-        old_price: draft.old_price.trim() ? Number(draft.old_price) : null,
+        category: draft.category.trim(),
+        tags: draft.tags.trim(),
         price: Number(draft.price),
         availability: draft.availability,
         stock: Number(draft.stock),
@@ -131,27 +122,27 @@ export default function BizOffersListScreen() {
         title="Мои товары"
         right={
           isApproved ? (
-          <button
-            type="button"
-            aria-label="Создать товар"
-            onClick={() => router.push("/biz/offers/new")}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              border: "none",
-              background: t.primary,
-              color: t.primaryDeep,
-              cursor: "pointer",
-              display: "grid",
-              placeItems: "center",
-              padding: 0,
-            }}
-          >
-            <span style={{ display: "grid", placeItems: "center", width: 22, height: 22 }}>
-              {Icon.plus(20, t.primaryDeep)}
-            </span>
-          </button>
+            <button
+              type="button"
+              aria-label="Создать товар"
+              onClick={() => router.push("/biz/offers/new")}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                border: "none",
+                background: t.primary,
+                color: t.primaryDeep,
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+                padding: 0,
+              }}
+            >
+              <span style={{ display: "grid", placeItems: "center", width: 22, height: 22 }}>
+                {Icon.plus(20, t.primaryDeep)}
+              </span>
+            </button>
           ) : undefined
         }
       />
@@ -182,7 +173,7 @@ export default function BizOffersListScreen() {
           <EmptyState
             icon={Icon.plus(34, t.textTer)}
             title="Пока нет товаров"
-            description="Создайте первый товар, чтобы он появился в ленте покупателей."
+            description="Создайте первый товар, чтобы он появился в магазине и ленте покупателей."
             compact
           />
         )}
@@ -241,44 +232,32 @@ export default function BizOffersListScreen() {
                       value={draft.description}
                       name="offer-description"
                       aria-label="Описание"
-                      placeholder="Кратко о составе"
+                      placeholder="Описание товара"
                       onChange={(event) => setDraft({ ...draft, description: event.target.value })}
                       rows={2}
                       style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
                     />
-                    <textarea
-                      value={draft.discount_reason}
-                      name="discount-reason"
-                      aria-label="Комментарий продавца"
-                      placeholder="Комментарий продавца"
-                      onChange={(event) => setDraft({ ...draft, discount_reason: event.target.value })}
-                      rows={2}
-                      style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
+                    <input
+                      value={draft.category}
+                      name="offer-category"
+                      aria-label="Категория"
+                      placeholder="Категория"
+                      onChange={(event) => setDraft({ ...draft, category: event.target.value })}
+                      style={inputStyle(t, fontFn)}
                     />
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <input
-                        type="time"
-                        value={draft.pickup_from}
-                        name="offer-pickup_from"
-                        aria-label="Время для связи от"
-                        onChange={(event) => setDraft({ ...draft, pickup_from: event.target.value })}
-                        style={inputStyle(t, fontFn)}
-                      />
-                      <span style={{ color: t.textSec }}>—</span>
-                      <input
-                        type="time"
-                        value={draft.pickup_to}
-                        name="offer-pickup_to"
-                        aria-label="Время для связи до"
-                        onChange={(event) => setDraft({ ...draft, pickup_to: event.target.value })}
-                        style={inputStyle(t, fontFn)}
-                      />
-                    </div>
+                    <input
+                      value={draft.tags}
+                      name="offer-tags"
+                      aria-label="Теги"
+                      placeholder="Теги через запятую"
+                      onChange={(event) => setDraft({ ...draft, tags: event.target.value })}
+                      style={inputStyle(t, fontFn)}
+                    />
                     <select
                       value={draft.availability}
                       name="availability"
                       aria-label="Статус наличия"
-                      onChange={(event) => setDraft({ ...draft, availability: event.target.value as OfferPublic["availability"] })}
+                      onChange={(event) => setDraft({ ...draft, availability: event.target.value as OfferAvailability })}
                       style={inputStyle(t, fontFn)}
                     >
                       <option value="IN_STOCK">В наличии</option>
@@ -286,15 +265,7 @@ export default function BizOffersListScreen() {
                       <option value="PREORDER">Предзаказ</option>
                       <option value="HIDDEN">Скрыт</option>
                     </select>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 0.7fr", gap: 8 }}>
-                      <input
-                        value={draft.old_price}
-                        name="old-price"
-                        aria-label="Старая цена"
-                        onChange={(event) => setDraft({ ...draft, old_price: event.target.value.replace(/\D/g, "") })}
-                        inputMode="numeric"
-                        style={inputStyle(t, fontFn)}
-                      />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 0.7fr", gap: 8 }}>
                       <input
                         value={draft.price}
                         name="price"
@@ -314,7 +285,7 @@ export default function BizOffersListScreen() {
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <PillButtonBiz onClick={() => saveEdit(offer.id)} disabled={busyId === offer.id}>
-                        {busyId === offer.id ? "Сохраняем…" : "Сохранить"}
+                        {busyId === offer.id ? "Сохраняем..." : "Сохранить"}
                       </PillButtonBiz>
                       <button type="button" onClick={() => setEditingId(null)} style={secondaryButton(t, fontFn)}>
                         Отмена
@@ -327,23 +298,39 @@ export default function BizOffersListScreen() {
                       <Badge tone={active ? "solid" : "neutral"} size="sm">
                         {availabilityLabel(offer.availability)}
                       </Badge>
+                      {offer.category && (
+                        <Badge tone="neutral" size="sm">
+                          {offer.category}
+                        </Badge>
+                      )}
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 750, marginTop: 5 }}>{offer.name}</div>
-                    {offer.pickup_time && (
-                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>Время для связи: {offer.pickup_time}</div>
-                    )}
                     {offer.description && (
                       <div style={{ fontSize: 12, color: t.textSec, marginTop: 3, lineHeight: 1.35 }}>
                         {offer.description}
                       </div>
                     )}
-                    {offer.discount_reason && (
-                      <div style={{ fontSize: 12, color: t.primaryDeep, marginTop: 3, lineHeight: 1.35 }}>
-                        Комментарий продавца: {offer.discount_reason}
+                    {offer.tags && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                        {tagsToArray(offer.tags).map((tag, index) => (
+                          <span
+                            key={`${tag}-${index}`}
+                            style={{
+                              padding: "3px 7px",
+                              borderRadius: 999,
+                              background: t.surface,
+                              color: t.textSec,
+                              fontSize: 11,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                     )}
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
-                      <PriceTag original={offer.old_price ?? null} now={Number(offer.price ?? offer.new_price)} size="sm" />
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 7, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: t.primaryDeep }}>{money(offer.price ?? offer.new_price)}</span>
                       <span style={{ fontSize: 11, color: t.textSec }}>· {offer.stock} шт</span>
                     </div>
                     <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
@@ -356,7 +343,7 @@ export default function BizOffersListScreen() {
                         disabled={busyId === offer.id}
                         style={{ ...secondaryButton(t, fontFn), color: t.danger }}
                       >
-                        {busyId === offer.id ? "Удаляем…" : "Удалить"}
+                        {busyId === offer.id ? "Удаляем..." : "Удалить"}
                       </button>
                     </div>
                   </>
@@ -377,7 +364,7 @@ export default function BizOffersListScreen() {
               lineHeight: 1.5,
             }}
           >
-            Товар исчезает из покупательской ленты, когда остаток становится 0.
+            Товар скрывается из покупательской ленты, когда статус &quot;Скрыт&quot; или остаток равен 0.
           </div>
         )}
       </div>
@@ -471,6 +458,14 @@ function availabilityLabel(availability: OfferPublic["availability"]) {
   if (availability === "PREORDER") return "Предзаказ";
   if (availability === "HIDDEN") return "Скрыт";
   return "В наличии";
+}
+
+function tagsToArray(tags: string) {
+  return tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .slice(0, 6);
 }
 
 function inputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties {

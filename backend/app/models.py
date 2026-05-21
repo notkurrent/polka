@@ -109,6 +109,8 @@ class Offer(SQLModel, table=True):
     )
     name: str
     description: str = Field(default="")
+    category: str = Field(default="")
+    tags: str = Field(default="")
     pickup_time: str = Field(default="")
     old_price: Optional[Decimal] = Field(default=None, sa_column=Column(sa.Numeric(10, 2), nullable=True))
     new_price: Decimal = Field(sa_column=Column(sa.Numeric(10, 2)), default=Decimal("0"))

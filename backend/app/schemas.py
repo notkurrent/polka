@@ -39,6 +39,8 @@ class OfferPublicDTO(BaseModel):
     availability: OfferAvailability
     name: str
     description: str
+    category: str = ""
+    tags: str = ""
     pickup_time: str
     price: Decimal
     old_price: Decimal | None = None

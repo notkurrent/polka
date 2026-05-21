@@ -2,28 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { tokens, Icon, FONT } from "@/components/ui/primitives";
+import { tokens, Icon, FONT, Badge } from "@/components/ui/primitives";
 import { BizTabBar } from "@/components/biz/BizTabBar";
-import { AppScreenBiz, StatTile, ActionCard, ReservationRow, type BizReservation } from "@/components/biz/BizShared";
+import { AppScreenBiz, StatTile, ActionCard } from "@/components/biz/BizShared";
 import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
-import {
-  bizApi,
-  buildBizStats,
-  formatOrderDate,
-  isActiveOrder,
-  money,
-  orderCreatedAt,
-  orderId,
-  orderPrice,
-  orderSubtitle,
-  orderStatus,
-  orderTitle,
-  partnerErrorMessage,
-  type PartnerOrder,
-} from "@/lib/biz-api";
+import { bizApi, money, partnerErrorMessage, partnerStatusLabel } from "@/lib/biz-api";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import type { OfferPublic } from "@/lib/api-types";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/app";
@@ -39,16 +26,11 @@ function initials(name?: string) {
     .toUpperCase();
 }
 
-function toReservation(order: PartnerOrder): BizReservation {
-  return {
-    id: String(orderId(order)),
-    user: `Клиент #${orderId(order)}`,
-    offer: `${orderTitle(order)} · ${orderSubtitle(order)}`,
-    price: money(orderPrice(order)),
-    code: "",
-    status: isActiveOrder(orderStatus(order)) ? "active" : orderStatus(order).toUpperCase() === "COMPLETED" ? "completed" : "expired",
-    time: formatOrderDate(orderCreatedAt(order)),
-  };
+function availabilityLabel(offer: OfferPublic) {
+  if (offer.availability === "HIDDEN") return "Скрыт";
+  if (offer.availability === "PREORDER") return "Предзаказ";
+  if (offer.availability === "OUT_OF_STOCK" || offer.stock <= 0) return "Нет в наличии";
+  return "В наличии";
 }
 
 export default function BizDashboardPage() {
@@ -63,11 +45,13 @@ export default function BizDashboardPage() {
 
   const { data: profile, error: profileError, isLoading: profileLoading } = useSWR("/partner-api/profile", bizApi.profile);
   const isApproved = profile?.status === "APPROVED";
-  const { data: offers } = useSWR<OfferPublic[]>(isApproved ? "/partner-api/offers" : null, bizApi.offers);
-  const { data: orders, isLoading } = useSWR<PartnerOrder[]>(isApproved ? "/partner-api/orders" : null, bizApi.orders);
+  const { data: offers, isLoading: offersLoading } = useSWR<OfferPublic[]>(
+    isApproved ? "/partner-api/offers" : null,
+    bizApi.offers,
+  );
 
-  const stats = buildBizStats(offers, orders);
-  const activeReservations = (orders || []).filter((order) => isActiveOrder(orderStatus(order))).slice(0, 3);
+  const activeProducts = (offers || []).filter((offer) => offer.availability === "IN_STOCK" && offer.stock > 0).length;
+  const hiddenProducts = (offers || []).filter((offer) => offer.availability === "HIDDEN").length;
   const needsProfile = profileError && partnerErrorMessage(profileError).includes("зарегистрируйте");
 
   return (
@@ -100,14 +84,14 @@ export default function BizDashboardPage() {
             {initials(profile?.name)}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 11, color: t.textSec }}>Продавец</div>
+            <div style={{ fontSize: 11, color: t.textSec }}>Кабинет продавца</div>
             <div style={{ fontSize: 16, fontWeight: 750, letterSpacing: "-0.2px" }}>
-              {profile?.name || "Бизнес-кабинет"}
+              {profile?.name || "Мой магазин"}
             </div>
           </div>
           <button
             type="button"
-            aria-label="Открыть профиль бизнеса"
+            aria-label="Открыть профиль магазина"
             onClick={() => router.push("/biz/profile")}
             style={{
               width: 44,
@@ -131,7 +115,7 @@ export default function BizDashboardPage() {
           <EmptyState
             icon={Icon.user(34, t.textTer)}
             title="Зарегистрируйте магазин"
-            description="После регистрации здесь появятся товары, заявки и аналитика."
+            description="После регистрации здесь появится статус магазина и управление товарами."
             compact
           />
           <button
@@ -171,7 +155,7 @@ export default function BizDashboardPage() {
         <PartnerModerationState profile={profile} />
       )}
 
-      {!needsProfile && !profileError && !profileLoading && isApproved && (
+      {!needsProfile && !profileError && !profileLoading && isApproved && profile && (
         <div className="biz-dashboard-main">
           {isTelegramAccountIncomplete(user) && (!completionPromptDismissed || !linkPromptDismissed) && (
             <div style={{ padding: "14px 16px 0" }}>
@@ -187,20 +171,63 @@ export default function BizDashboardPage() {
 
           <div style={{ padding: "14px 16px 0" }}>
             <div style={{ display: "flex", gap: 8 }}>
-              <StatTile value={stats.activeOrders} label="Активных заявок" />
-              <StatTile value={stats.activeOffers} label="Товаров в ленте" />
-              <StatTile value={money(stats.todayRevenue)} label="Сегодня" accent />
+              <StatTile value={activeProducts} label="В продаже" accent />
+              <StatTile value={offers?.length || 0} label="Всего товаров" />
+              <StatTile value={hiddenProducts} label="Скрыто" />
+            </div>
+          </div>
+
+          <div style={{ padding: "16px 16px 0" }}>
+            <div
+              style={{
+                border: `1px solid ${t.divider}`,
+                borderRadius: 14,
+                padding: 14,
+                background: t.bg,
+                display: "flex",
+                gap: 12,
+                alignItems: "flex-start",
+              }}
+            >
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
+                  background: t.primarySoft,
+                  color: t.primaryDeep,
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {Icon.bag(22, t.primaryDeep)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                  <div style={{ fontSize: 15, fontWeight: 750, color: t.text }}>Магазин</div>
+                  <Badge tone="solid" size="sm">
+                    {partnerStatusLabel(profile.status)}
+                  </Badge>
+                </div>
+                <div style={{ marginTop: 5, fontSize: 13, lineHeight: 1.45, color: t.textSec }}>
+                  {profile.category || "Категория не указана"} · {profile.address}
+                </div>
+                {profile.description && (
+                  <div style={{ marginTop: 5, fontSize: 12, lineHeight: 1.45, color: t.textSec }}>
+                    {profile.description}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <div style={{ padding: "18px 16px 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px" }}>
-                Активные заявки · {stats.activeOrders}
-              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px" }}>Товары</div>
               <button
                 type="button"
-                onClick={() => router.push("/biz/scan")}
+                onClick={() => router.push("/biz/offers")}
                 style={{
                   minHeight: 44,
                   padding: "0 4px",
@@ -213,61 +240,56 @@ export default function BizDashboardPage() {
                   fontFamily: fontFn,
                 }}
               >
-                Ввести номер
+                Все товары
               </button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {isLoading && (
+              {offersLoading && (
                 <>
                   <Skeleton w="100%" h={74} radius={14} />
                   <Skeleton w="100%" h={74} radius={14} />
                 </>
               )}
-              {!isLoading && activeReservations.length === 0 && (
-                <div
-                  style={{
-                    minHeight: 72,
-                    padding: "12px 14px",
-                    border: `1px solid ${t.divider}`,
-                    borderRadius: 14,
-                    background: t.bg,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                  }}
-                >
-                  <div
+              {!offersLoading && (!offers || offers.length === 0) && (
+                <EmptyState
+                  icon={Icon.plus(34, t.textTer)}
+                  title="Пока нет товаров"
+                  description="Добавьте первый товар, чтобы он появился в магазине."
+                  compact
+                />
+              )}
+              {!offersLoading &&
+                offers?.slice(0, 3).map((offer) => (
+                  <button
+                    key={offer.id}
+                    type="button"
+                    onClick={() => router.push("/biz/offers")}
                     style={{
-                      width: 42,
-                      height: 42,
+                      width: "100%",
+                      minHeight: 72,
+                      padding: "10px 12px",
+                      border: `1px solid ${t.divider}`,
                       borderRadius: 14,
-                      background: t.surface,
-                      color: t.textTer,
-                      display: "grid",
-                      placeItems: "center",
-                      flexShrink: 0,
+                      background: t.bg,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      cursor: "pointer",
+                      fontFamily: fontFn,
+                      textAlign: "left",
+                      color: t.text,
                     }}
                   >
-                    {Icon.list(22, t.textTer)}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 750, color: t.text }}>Активных заявок нет</div>
-                    <div style={{ marginTop: 3, fontSize: 12, lineHeight: 1.35, color: t.textSec }}>
-                      Новые заявки появятся после публикации товара.
+                    <OfferImagePreview imageUrl={offer.image_url} label="товар" width={52} height={52} radius={12} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 750, overflowWrap: "anywhere" }}>{offer.name}</div>
+                      <div style={{ marginTop: 4, fontSize: 12, color: t.textSec }}>
+                        {availabilityLabel(offer)} · {offer.stock} шт
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
-              {activeReservations.map((order) => {
-                const row = toReservation(order);
-                return (
-                  <ReservationRow
-                    key={row.id}
-                    r={row}
-                    onClick={() => router.push(`/biz/scan?orderId=${row.id}`)}
-                  />
-                );
-              })}
+                    <div style={{ fontSize: 14, fontWeight: 800, color: t.primaryDeep }}>{money(offer.price)}</div>
+                  </button>
+                ))}
             </div>
           </div>
 
@@ -275,11 +297,10 @@ export default function BizDashboardPage() {
             <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", marginBottom: 10 }}>
               Быстрые действия
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
-              <ActionCard icon={Icon.plus} label="Новый товар" onClick={() => router.push("/biz/offers/new")} primary />
-              <ActionCard icon={Icon.check} label="Подтвердить" onClick={() => router.push("/biz/scan")} />
-              <ActionCard icon={Icon.chart} label="Аналитика" onClick={() => router.push("/biz/analytics")} />
-              <ActionCard icon={Icon.list} label="Все заявки" onClick={() => router.push("/biz/orders")} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
+              <ActionCard icon={Icon.plus} label="Добавить товар" onClick={() => router.push("/biz/offers/new")} primary />
+              <ActionCard icon={Icon.bag} label="Мои товары" onClick={() => router.push("/biz/offers")} />
+              <ActionCard icon={Icon.user} label="Профиль магазина" onClick={() => router.push("/biz/profile")} />
             </div>
           </div>
         </div>

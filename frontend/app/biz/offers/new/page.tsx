@@ -4,13 +4,14 @@ import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { tokens, Icon, FONT } from "@/components/ui/primitives";
+import { tokens, FONT } from "@/components/ui/primitives";
 import { AppScreenBiz, AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
 import { OfferImagePicker } from "@/components/biz/OfferImagePicker";
 import { PartnerModerationState } from "@/components/biz/PartnerModerationState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
+import type { OfferAvailability } from "@/lib/api-types";
 
 export default function BizCreateOfferPage() {
   const t = tokens();
@@ -21,25 +22,23 @@ export default function BizCreateOfferPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [discountReason, setDiscountReason] = useState("");
+  const [category, setCategory] = useState("");
+  const [tags, setTags] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [pickupFrom, setPickupFrom] = useState("19:00");
-  const [pickupTo, setPickupTo] = useState("21:00");
   const [price, setPrice] = useState("");
-  const [original, setOriginal] = useState("");
-  const [qty, setQty] = useState(1);
+  const [stock, setStock] = useState("1");
+  const [availability, setAvailability] = useState<OfferAvailability>("IN_STOCK");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   const validate = () => {
-    const oldPrice = Number(original);
     const productPrice = Number(price);
+    const stockCount = Number(stock);
     if (!title.trim()) return "Введите название товара.";
-    if (!pickupFrom.trim() || !pickupTo.trim()) return "Укажите время для связи.";
     if (!Number.isFinite(productPrice) || productPrice <= 0) return "Цена должна быть больше 0.";
-    if (original.trim() && (!Number.isFinite(oldPrice) || oldPrice <= 0)) return "Старая цена должна быть больше 0.";
-    if (!Number.isInteger(qty) || qty < 1) return "Укажите хотя бы 1 товар.";
+    if (!Number.isInteger(stockCount) || stockCount < 0) return "Остаток должен быть целым числом от 0.";
+    if (availability === "IN_STOCK" && stockCount <= 0) return "Для статуса в наличии укажите остаток больше 0.";
     return "";
   };
 
@@ -55,14 +54,13 @@ export default function BizCreateOfferPage() {
     try {
       const payload = {
         type: "SPECIFIC",
-        availability: qty > 0 ? "IN_STOCK" : "OUT_OF_STOCK",
+        availability,
         name: title.trim(),
         description: description.trim(),
-        discount_reason: discountReason.trim(),
-        pickup_time: `${pickupFrom} - ${pickupTo}`,
-        old_price: original.trim() ? Number(original) : null,
+        category: category.trim(),
+        tags: tags.trim(),
         price: Number(price),
-        stock: qty,
+        stock: Number(stock),
       };
       const offer = createdOfferId ? await bizApi.updateOffer(createdOfferId, payload) : await bizApi.createOffer(payload);
       if (!createdOfferId) setCreatedOfferId(offer.id);
@@ -96,140 +94,112 @@ export default function BizCreateOfferPage() {
         <PartnerModerationState profile={profile} context="feature" />
       )}
       {!profileLoading && !profileError && isApproved && (
-      <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
-        <Field label="Название">
-          <input
-            name="offer-title"
-            aria-label="Название"
-            placeholder="Например, товар дня"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            style={inputStyle(t, fontFn)}
-          />
-        </Field>
+        <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
+          <Field label="Название">
+            <input
+              name="offer-title"
+              aria-label="Название"
+              placeholder="Например, керамическая кружка"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              style={inputStyle(t, fontFn)}
+            />
+          </Field>
 
-        <Field label="Описание">
-          <textarea
-            name="offer-description"
-            aria-label="Описание"
-            placeholder="Кратко о том, что внутри"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            rows={3}
-            style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
-          />
-        </Field>
+          <Field label="Описание">
+            <textarea
+              name="offer-description"
+              aria-label="Описание"
+              placeholder="Материал, размер, состояние, условия покупки"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={3}
+              style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
+            />
+          </Field>
 
-        <Field label="Фото">
-          <OfferImagePicker
-            id="offer-photo"
-            file={photoFile}
-            loading={isSubmitting && Boolean(photoFile)}
-            error={error.toLowerCase().includes("image") || error.toLowerCase().includes("фото") ? error : ""}
-            disabled={isSubmitting}
-            onFileChange={setPhotoFile}
-          />
-        </Field>
+          <Field label="Фото">
+            <OfferImagePicker
+              id="offer-photo"
+              file={photoFile}
+              loading={isSubmitting && Boolean(photoFile)}
+              error={error.toLowerCase().includes("image") || error.toLowerCase().includes("фото") ? error : ""}
+              disabled={isSubmitting}
+              onFileChange={setPhotoFile}
+            />
+          </Field>
 
-        <Field label="Комментарий продавца">
-          <textarea
-            name="discount-reason"
-            aria-label="Комментарий продавца"
-            placeholder="Например, особенности товара или условия покупки"
-            value={discountReason}
-            onChange={(event) => setDiscountReason(event.target.value)}
-            rows={2}
-            style={{ ...inputStyle(t, fontFn), resize: "vertical" }}
-          />
-        </Field>
+          <Field label="Категория">
+            <input
+              name="offer-category"
+              aria-label="Категория"
+              placeholder="Например, посуда"
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+              style={inputStyle(t, fontFn)}
+            />
+          </Field>
 
-        <div>
-          <Label>Цены, ₸</Label>
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <div style={{ flex: 1 }}>
+          <Field label="Теги">
+            <input
+              name="offer-tags"
+              aria-label="Теги"
+              placeholder="ручная работа, подарок, дом"
+              value={tags}
+              onChange={(event) => setTags(event.target.value)}
+              style={inputStyle(t, fontFn)}
+            />
+          </Field>
+
+          <Field label="Цена, ₸">
+            <input
+              value={price}
+              name="price"
+              aria-label="Цена"
+              onChange={(event) => setPrice(event.target.value.replace(/\D/g, ""))}
+              inputMode="numeric"
+              style={{
+                ...inputStyle(t, fontFn),
+                border: `1.5px solid ${t.primary}`,
+                color: t.primaryDeep,
+                fontWeight: 750,
+              }}
+            />
+          </Field>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <Field label="Наличие">
+              <select
+                value={availability}
+                name="availability"
+                aria-label="Статус наличия"
+                onChange={(event) => setAvailability(event.target.value as OfferAvailability)}
+                style={inputStyle(t, fontFn)}
+              >
+                <option value="IN_STOCK">В наличии</option>
+                <option value="OUT_OF_STOCK">Нет в наличии</option>
+                <option value="PREORDER">Предзаказ</option>
+                <option value="HIDDEN">Скрыт</option>
+              </select>
+            </Field>
+            <Field label="Остаток">
               <input
-                value={original}
-                name="original-price"
-                aria-label="Обычная цена"
-                onChange={(event) => setOriginal(event.target.value.replace(/\D/g, ""))}
+                value={stock}
+                name="stock"
+                aria-label="Остаток"
+                onChange={(event) => setStock(event.target.value.replace(/\D/g, ""))}
                 inputMode="numeric"
                 style={inputStyle(t, fontFn)}
               />
-              <div style={{ fontSize: 10, color: t.textTer, marginTop: 4 }}>Старая, если есть</div>
-            </div>
-            <div style={{ flex: 1 }}>
-              <input
-                value={price}
-                name="polka-price"
-                aria-label="Цена товара"
-                onChange={(event) => setPrice(event.target.value.replace(/\D/g, ""))}
-                inputMode="numeric"
-                style={{
-                  ...inputStyle(t, fontFn),
-                  border: `1.5px solid ${t.primary}`,
-                  color: t.primaryDeep,
-                  fontWeight: 750,
-                }}
-              />
-              <div style={{ fontSize: 10, color: t.primaryDeep, marginTop: 4, fontWeight: 650 }}>Цена товара</div>
-            </div>
+            </Field>
           </div>
+
+          {error && <div style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
+
+          <PillButtonBiz onClick={handleSave} size="lg" disabled={isSubmitting} style={{ marginTop: 2 }}>
+            {isSubmitting ? "Сохранение..." : "Опубликовать"}
+          </PillButtonBiz>
         </div>
-
-        <div>
-          <Label>Количество</Label>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              justifyContent: "center",
-              padding: 10,
-              background: t.surface,
-              borderRadius: 12,
-              marginTop: 8,
-            }}
-          >
-            <button onClick={() => setQty(Math.max(1, qty - 1))} type="button" style={roundButton(t, false)}>
-              {Icon.minus(18, t.text)}
-            </button>
-            <div style={{ fontSize: 28, fontWeight: 800, color: t.primaryDeep, minWidth: 48, textAlign: "center" }}>
-              {qty}
-            </div>
-            <button onClick={() => setQty(qty + 1)} type="button" style={roundButton(t, true)}>
-              {Icon.plus(18, t.primaryDeep)}
-            </button>
-          </div>
-        </div>
-
-        <Field label="Время для связи">
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="time"
-              name="pickup-from"
-              aria-label="Время для связи от"
-              value={pickupFrom}
-              onChange={(e) => setPickupFrom(e.target.value)}
-              style={inputStyle(t, fontFn)}
-            />
-            <span style={{ color: t.textSec }}>—</span>
-            <input
-              type="time"
-              name="pickup-to"
-              aria-label="Время для связи до"
-              value={pickupTo}
-              onChange={(e) => setPickupTo(e.target.value)}
-              style={inputStyle(t, fontFn)}
-            />
-          </div>
-        </Field>
-
-        {error && <div style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
-
-        <PillButtonBiz onClick={handleSave} size="lg" disabled={isSubmitting} style={{ marginTop: 2 }}>
-          {isSubmitting ? "Сохранение…" : "Опубликовать"}
-        </PillButtonBiz>
-      </div>
       )}
     </AppScreenBiz>
   );
@@ -266,19 +236,5 @@ function inputStyle(t: ReturnType<typeof tokens>, fontFn: string): CSSProperties
     WebkitAppearance: "none",
     appearance: "none",
     outline: "none",
-  };
-}
-
-function roundButton(t: ReturnType<typeof tokens>, primary: boolean): CSSProperties {
-  return {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    border: "none",
-    background: primary ? t.primary : t.bg,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
   };
 }

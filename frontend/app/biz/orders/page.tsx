@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import useSWR from "swr";
 import { tokens, FONT, Icon, Badge } from "@/components/ui/primitives";
@@ -31,7 +30,6 @@ import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 
 export default function BizOrdersPage() {
   const t = tokens();
-  const router = useRouter();
   const fontFn = FONT ? FONT() : "system-ui";
   const { data: profile, isLoading: profileLoading, error: profileError } = useSWR("/partner-api/profile", bizApi.profile);
   const isApproved = profile?.status === "APPROVED";
@@ -50,8 +48,7 @@ export default function BizOrdersPage() {
       <button
         key={id}
         type="button"
-        disabled={!activeOrder}
-        onClick={() => activeOrder && router.push(`/biz/scan?orderId=${id}`)}
+        disabled
         style={{
           width: "100%",
           textAlign: "left",
@@ -62,7 +59,7 @@ export default function BizOrdersPage() {
           display: "flex",
           alignItems: "center",
           gap: 12,
-          cursor: activeOrder ? "pointer" : "default",
+          cursor: "default",
           fontFamily: fontFn,
           opacity: activeOrder ? 1 : 0.78,
           color: t.text,

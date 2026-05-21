@@ -122,6 +122,8 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
                 json={
                     "name": f"API Fields Offer {run_id}",
                     "price": str(Decimal("1600.00")),
+                    "category": "bakery",
+                    "tags": "bread,local",
                     "discount_reason": "End of day surplus",
                     "stock": 2,
                 },
@@ -132,6 +134,8 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
             assert offer_response.json()["price"] == "1600.00"
             assert offer_response.json()["old_price"] is None
             assert offer_response.json()["new_price"] == "1600.00"
+            assert offer_response.json()["category"] == "bakery"
+            assert offer_response.json()["tags"] == "bread,local"
             assert offer_response.json()["discount_reason"] == "End of day surplus"
         finally:
             await cleanup_test_data(phone_prefix)
