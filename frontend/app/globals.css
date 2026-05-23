@@ -251,34 +251,6 @@ html[data-telegram-webapp="true"] .app-shell {
     height: 100%;
   }
 
-  .cart-content {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
-    gap: 24px;
-    align-items: start;
-    max-width: var(--app-content-max-width);
-    margin-right: auto;
-    margin-left: auto;
-    padding: 20px 24px 24px;
-  }
-
-  .cart-items {
-    padding: 0 !important;
-    border: 1px solid #eef2ee;
-    border-radius: 18px;
-    overflow: hidden;
-  }
-
-  .cart-summary {
-    position: sticky;
-    top: 88px;
-    margin-top: 0 !important;
-    border: 1px solid #eef2ee;
-    border-radius: 18px;
-  }
-
-  .orders-list,
-  .biz-orders-content,
   .biz-offers-content {
     max-width: 900px;
     margin-right: auto;

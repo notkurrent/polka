@@ -73,11 +73,6 @@ export interface GridMapProps {
   style?: React.CSSProperties;
 }
 
-export interface QRCodeProps {
-  value?: string;
-  size?: number;
-}
-
 export type IconFn = (size?: number, color?: string, filled?: boolean) => React.ReactNode;
 
 declare global {
@@ -695,51 +690,6 @@ export function GridMap({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Simple QR — SVG, deterministic from a string (non-scannable placeholder)
-// ─────────────────────────────────────────────────────────────
-export function QRCode({ value = "", size = 180 }: QRCodeProps) {
-  // deterministic pseudo-random from string
-  const hash = (s: string) => {
-    let h = 2166136261;
-    for (let i = 0; i < s.length; i++) h = (h ^ s.charCodeAt(i)) * 16777619;
-    return h >>> 0;
-  };
-  const N = 25;
-  const cells: Array<[number, number]> = [];
-  for (let y = 0; y < N; y++) {
-    for (let x = 0; x < N; x++) {
-      const isFinder = (x < 7 && y < 7) || (x > N - 8 && y < 7) || (x < 7 && y > N - 8);
-      if (isFinder) continue;
-      const h = hash(value + "," + x + "," + y);
-      if (h % 100 < 46) cells.push([x, y]);
-    }
-  }
-  const finder = (fx: number, fy: number) => (
-    <g key={`${fx}-${fy}`}>
-      <rect x={fx} y={fy} width="7" height="7" fill="#111714" />
-      <rect x={fx + 1} y={fy + 1} width="5" height="5" fill="#fff" />
-      <rect x={fx + 2} y={fy + 2} width="3" height="3" fill="#111714" />
-    </g>
-  );
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${N} ${N}`}
-      shapeRendering="crispEdges"
-      style={{ background: "#fff", borderRadius: 8, display: "block" }}
-    >
-      {cells.map(([x, y]) => (
-        <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill="#111714" />
-      ))}
-      {finder(0, 0)}
-      {finder(N - 7, 0)}
-      {finder(0, N - 7)}
-    </svg>
-  );
-}
-
 if (typeof window !== "undefined")
   Object.assign(window, {
     StripePlaceholder,
@@ -747,5 +697,4 @@ if (typeof window !== "undefined")
     PriceTag,
     Badge,
     GridMap,
-    QRCode,
   });

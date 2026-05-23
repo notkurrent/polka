@@ -216,8 +216,8 @@ async def seed() -> None:
             await upsert_offer(
                 session,
                 partner=partner,
-                offer_type=OfferType.MAGIC_BOX,
-                name="Утренний magic box",
+                offer_type=OfferType.SPECIFIC,
+                name="Утренний набор",
                 old_price="4200.00",
                 new_price="1600.00",
                 stock=6,
@@ -234,7 +234,7 @@ async def seed() -> None:
             await upsert_offer(
                 session,
                 partner=partner,
-                offer_type=OfferType.MAGIC_BOX,
+                offer_type=OfferType.SPECIFIC,
                 name="Обеденная позиция",
                 old_price="5200.00",
                 new_price="2100.00",

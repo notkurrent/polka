@@ -13,7 +13,9 @@ from app.serializers import build_order_detail_dto
 from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status, restore_order_stock
 from pydantic import BaseModel, Field as PydanticField
 
-router = APIRouter(prefix="/orders", tags=["orders"])
+# Legacy reservation endpoints are kept for existing historical orders and
+# stock-restoration tests. The marketplace-light frontend no longer calls them.
+router = APIRouter(prefix="/orders", tags=["legacy-orders"], include_in_schema=False)
 logger = logging.getLogger(__name__)
 
 
@@ -72,7 +74,7 @@ def order_item_quantities(req: CreateOrderRequest) -> dict[int, int]:
 
 
 @router.post("", response_model=OrderDetailDTO, include_in_schema=False)
-@router.post("/", response_model=OrderDetailDTO)
+@router.post("/", response_model=OrderDetailDTO, include_in_schema=False)
 async def create_order(
     req: CreateOrderRequest,
     current_user: User = Depends(get_current_user),
@@ -156,7 +158,7 @@ async def create_order(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("", response_model=list[OrderDetailDTO], include_in_schema=False)
-@router.get("/", response_model=list[OrderDetailDTO])
+@router.get("/", response_model=list[OrderDetailDTO], include_in_schema=False)
 async def get_my_orders(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
@@ -173,7 +175,7 @@ async def get_my_orders(
     return details
 
 
-@router.get("/{order_id}", response_model=OrderDetailDTO)
+@router.get("/{order_id}", response_model=OrderDetailDTO, include_in_schema=False)
 async def get_order_detail(
     order_id: int,
     current_user: User = Depends(get_current_user),
@@ -192,7 +194,7 @@ async def get_order_detail(
     return build_order_detail_dto(order, item_rows, partner)
 
 
-@router.patch("/{order_id}", response_model=OrderDetailDTO)
+@router.patch("/{order_id}", response_model=OrderDetailDTO, include_in_schema=False)
 async def update_my_order_status(
     order_id: int,
     req: UpdateOrderStatus,
@@ -245,7 +247,7 @@ async def update_my_order_status(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/{order_id}/rating", response_model=Rating)
+@router.post("/{order_id}/rating", response_model=Rating, include_in_schema=False)
 async def create_order_rating(
     order_id: int,
     req: CreateRating,

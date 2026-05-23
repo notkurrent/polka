@@ -15,7 +15,7 @@ export default function BizProfilePublicPage() {
   const { data: profile, isLoading, error } = useSWR("/partner-api/profile", bizApi.profile);
 
   const [mapVisible, setMapVisible] = useState(true);
-  const [acceptOrders, setAcceptOrders] = useState(true);
+  const [showContacts, setShowContacts] = useState(true);
 
   const copyUrl = () => {
     if (!profile) return;
@@ -117,14 +117,14 @@ export default function BizProfilePublicPage() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, flex: 1, fontFamily: FONT() }}>Принимать заявки</div>
+            <div style={{ fontSize: 15, fontWeight: 600, flex: 1, fontFamily: FONT() }}>Показывать контакты</div>
             <div
-              onClick={() => setAcceptOrders(!acceptOrders)}
+              onClick={() => setShowContacts(!showContacts)}
               style={{
                 width: 44,
                 height: 24,
                 borderRadius: 12,
-                background: acceptOrders ? t.primaryDeep : t.divider,
+                background: showContacts ? t.primaryDeep : t.divider,
                 position: "relative",
                 cursor: "pointer",
                 transition: "background 0.2s",
@@ -138,7 +138,7 @@ export default function BizProfilePublicPage() {
                   background: "#fff",
                   position: "absolute",
                   top: 2,
-                  left: acceptOrders ? 22 : 2,
+                  left: showContacts ? 22 : 2,
                   transition: "left 0.2s",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 }}

@@ -439,7 +439,7 @@ export default function AdminPartnersPage() {
           </>
         ) : null}
 
-        {error ? <ErrorState message="Не удалось загрузить заявки." onRetry={() => void mutate()} /> : null}
+        {error ? <ErrorState message="Не удалось загрузить продавцов." onRetry={() => void mutate()} /> : null}
 
         {!isLoading && !error && data?.length === 0 ? (
           <EmptyState

@@ -7,23 +7,10 @@ interface UserLocation {
   address?: string;
 }
 
-export interface CartItem {
-  offerId: string;
-  partnerId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  originalPrice?: number | null;
-  storeName?: string;
-  stock?: number;
-  imageUrl?: string | null;
-}
-
 export type SelectedMode = "buyer" | "business";
 
 interface AppState {
   location: UserLocation | null;
-  cart: CartItem[];
   favorites: string[];
   onboardingDone: boolean;
   selectedMode: SelectedMode | null;
@@ -39,20 +26,14 @@ interface AppState {
   clearSelectedMode: () => void;
   dismissAccountLinkPrompt: () => void;
   dismissAccountCompletionPrompt: () => void;
-  addToCart: (item: CartItem) => void;
-  updateCartQuantity: (offerId: string, quantity: number) => void;
-  removeFromCart: (offerId: string) => void;
-  clearCart: () => void;
-  cartTotal: () => number;
   toggleFavorite: (storeId: string) => void;
   setOnboardingDone: (done: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       location: null,
-      cart: [],
       favorites: [],
       onboardingDone: false,
       selectedMode: null,
@@ -105,43 +86,6 @@ export const useAppStore = create<AppState>()(
         }),
       dismissAccountLinkPrompt: () => set({ accountLinkPromptDismissed: true }),
       dismissAccountCompletionPrompt: () => set({ accountCompletionPromptDismissed: true }),
-      addToCart: (item) =>
-        set((state) => {
-          const quantity = Math.max(1, Math.min(item.quantity, item.stock ?? item.quantity));
-          const normalizedItem = { ...item, quantity };
-          const differentPartner = state.cart.length > 0 && state.cart.some((i) => i.partnerId !== item.partnerId);
-          if (differentPartner) {
-            return { cart: [normalizedItem] };
-          }
-
-          const existing = state.cart.find((i) => i.offerId === item.offerId);
-          if (existing) {
-            return {
-              cart: state.cart.map((i) =>
-                i.offerId === item.offerId
-                  ? { ...i, quantity: Math.min(i.quantity + quantity, i.stock ?? i.quantity + quantity) }
-                  : i,
-              ),
-            };
-          }
-          return { cart: [...state.cart, normalizedItem] };
-        }),
-      updateCartQuantity: (offerId, quantity) =>
-        set((state) => ({
-          cart: state.cart
-            .map((item) =>
-              item.offerId === offerId
-                ? { ...item, quantity: Math.max(0, Math.min(quantity, item.stock ?? quantity)) }
-                : item,
-            )
-            .filter((item) => item.quantity > 0),
-        })),
-      removeFromCart: (offerId) =>
-        set((state) => ({
-          cart: state.cart.filter((i) => i.offerId !== offerId),
-        })),
-      clearCart: () => set({ cart: [] }),
-      cartTotal: () => get().cart.reduce((total, item) => total + item.price * item.quantity, 0),
       toggleFavorite: (storeId) =>
         set((state) => {
           const favs = state.favorites;
@@ -155,7 +99,6 @@ export const useAppStore = create<AppState>()(
       name: "app-storage",
       partialize: (state) => ({
         favorites: state.favorites,
-        cart: state.cart,
         onboardingDone: state.onboardingDone,
         selectedMode: state.selectedMode,
         activeUserId: state.activeUserId,

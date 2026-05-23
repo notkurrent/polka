@@ -66,77 +66,10 @@ export interface PartnerDetail {
   offers: OfferPublic[];
 }
 
-export interface OrderOffer {
-  id: number;
-  name: string;
-  price: number;
-  old_price?: number | null;
-  new_price: number;
-  type: OfferType;
-  availability: OfferAvailability;
-  discount_reason?: string;
-  image_path?: string | null;
-  image_url?: string | null;
-}
-
-export interface OrderPartner {
-  id: number;
-  name: string;
-  address: string;
-  hours: string;
-  map_url?: string | null;
-}
-
-export interface OrderItem {
-  id: number;
-  offer_id: number;
-  title: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  price: number;
-  image_path?: string | null;
-  image_url?: string | null;
-}
-
-export interface OrderDetail {
-  id: number;
-  status: string;
-  code: string;
-  created_at: string;
-  updated_at: string;
-  expires_at?: string;
-  expires_in_seconds?: number;
-  offer: OrderOffer;
-  partner: OrderPartner;
-  total: number;
-  storeName?: string;
-  address?: string;
-  pickup?: string;
-  expiresIn?: number;
-  items?: OrderItem[];
-}
-
-export type OrderSummary = OrderDetail;
-
 export const ALMATY_CENTER = {
   lat: 43.238949,
   lon: 76.889709,
 };
-
-export function statusLabel(status: string) {
-  const normalized = status.toUpperCase();
-  if (normalized === "RESERVED" || normalized === "PENDING") return "Активна";
-  if (normalized === "COMPLETED") return "Закрыта";
-  if (normalized === "EXPIRED") return "Отменен";
-  if (normalized === "CANCELLED") return "Отменен";
-  return status;
-}
-
-export function isActiveOrder(status: string) {
-  const normalized = status.toUpperCase();
-  return normalized === "RESERVED" || normalized === "PENDING";
-}
 
 export function formatDistance(distance?: number | null) {
   if (distance == null) return "рядом";

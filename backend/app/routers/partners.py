@@ -848,7 +848,9 @@ async def delete_partner_offer(
     return {"status": "deleted"}
 
 
-@router.get("/orders")
+# Legacy reservation endpoints are hidden from public API docs. They remain so
+# existing archived order data can still protect product deletion semantics.
+@router.get("/orders", include_in_schema=False)
 async def get_partner_orders(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -896,7 +898,7 @@ def parse_code_payload(req: VerifyOrderCodeRequest) -> tuple[int | None, str]:
     raise HTTPException(status_code=400, detail="Code must contain 4 digits")
 
 
-@router.post("/orders/verify-code", response_model=OrderDetailDTO)
+@router.post("/orders/verify-code", response_model=OrderDetailDTO, include_in_schema=False)
 async def verify_order_code(
     req: VerifyOrderCodeRequest,
     current_user: User = Depends(get_current_user),
@@ -975,7 +977,7 @@ async def verify_order_code(
     return build_order_detail_dto(order, item_rows, partner)
 
 
-@router.patch("/orders/{order_id}/status", response_model=OrderDetailDTO)
+@router.patch("/orders/{order_id}/status", response_model=OrderDetailDTO, include_in_schema=False)
 async def update_order_status(
     order_id: int,
     req: OrderStatusUpdate,

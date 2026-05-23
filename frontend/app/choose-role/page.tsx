@@ -161,7 +161,7 @@ export default function ChooseRolePage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {roleCard({
             title: "Я покупатель",
-            description: "Ищу товары рядом и оставляю заявку продавцу.",
+            description: "Ищу товары рядом и связываюсь с продавцом.",
             icon: Icon.bag(24, t.primaryDeep),
             active: selectedMode === "buyer",
             onClick: chooseBuyer,
@@ -170,8 +170,8 @@ export default function ChooseRolePage() {
             title: "Я бизнес",
             description:
               user?.role === "PARTNER"
-                ? "Перейти в кабинет, товары и заявки."
-                : "Зарегистрировать магазин и начать принимать заявки.",
+                ? "Перейти в кабинет и товары."
+                : "Зарегистрировать магазин и добавить товары.",
             icon: Icon.home(24, t.primaryDeep),
             active: selectedMode === "business",
             onClick: chooseBusiness,

@@ -10,9 +10,9 @@ export default function BizProfileNotificationsPage() {
   const t = tokens();
 
   const [toggles, setToggles] = useState([
-    { id: "newOrder", label: "Новая заявка", enabled: true },
-    { id: "cancelOrder", label: "Заявка отменена", enabled: true },
-    { id: "reviews", label: "Отзывы", enabled: true },
+    { id: "newContact", label: "Новый контакт", enabled: true },
+    { id: "productUpdates", label: "Изменения товаров", enabled: true },
+    { id: "moderation", label: "Модерация профиля", enabled: true },
     { id: "payments", label: "Баланс и платежи", enabled: true },
     { id: "sound", label: "Звуковые уведомления", enabled: false },
   ]);

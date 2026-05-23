@@ -86,10 +86,6 @@ async def get_nearby_offers(
             "десерт": "Кондитерская",
             "магазины": "Магазин",
             "магазин": "Магазин",
-            "сюрприз-пакеты": "MAGIC_BOX",
-            "сюрпризы": "MAGIC_BOX",
-            "сюрприз": "MAGIC_BOX",
-            "magic box": "MAGIC_BOX",
         }
         terms = {search.strip()}
         if normalized in aliases:

@@ -161,7 +161,7 @@ export default function OnboardingScreen() {
                 margin: 0,
               }}
             >
-              Выбирайте товары локальных магазинов и оставляйте заявку продавцу
+              Выбирайте товары локальных магазинов и связывайтесь с продавцом напрямую
             </p>
           </div>
         )}
@@ -226,8 +226,8 @@ export default function OnboardingScreen() {
                 2
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Оставьте заявку</div>
-                <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>Нажмите кнопку, чтобы показать интерес продавцу</div>
+                <div style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Откройте контакты</div>
+                <div style={{ fontSize: 13, color: t.textSec, marginTop: 4 }}>Нажмите кнопку связи в карточке товара</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -297,9 +297,9 @@ export default function OnboardingScreen() {
                   border: `1px solid ${t.divider}`,
                 }}
               >
-                <div style={{ fontSize: 16, fontWeight: 750 }}>Оставляйте заявки</div>
+                <div style={{ fontSize: 16, fontWeight: 750 }}>Пишите продавцу</div>
                 <div style={{ fontSize: 13, color: t.textSec, marginTop: 6, lineHeight: 1.45 }}>
-                  После отправки интерес появится в разделе заявок, чтобы вы могли вернуться к деталям.
+                  Контакты магазина доступны в карточке товара и на витрине продавца.
                 </div>
               </div>
               <div

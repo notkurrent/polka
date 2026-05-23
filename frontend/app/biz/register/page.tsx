@@ -142,10 +142,10 @@ export default function BizRegisterPage() {
           </div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.4, textWrap: "pretty" }}>
-              Заявка отправлена на проверку
+              Профиль отправлен на проверку
             </div>
             <div style={{ fontSize: 13, color: t.textSec, marginTop: 8, lineHeight: 1.5, textWrap: "pretty" }}>
-              Мы проверим данные магазина. После одобрения откроются товары, заявки и кабинет продавца.
+              Мы проверим данные магазина. После одобрения откроются товары, витрина и кабинет продавца.
             </div>
           </div>
           <Badge tone="amber">Статус · на проверке</Badge>
@@ -303,10 +303,10 @@ export default function BizRegisterPage() {
           {loading || logoUploading
             ? profileCreated
               ? "Загружаем логотип…"
-              : "Отправляем заявку…"
+              : "Отправляем на проверку…"
             : profileCreated
               ? "Загрузить логотип и перейти"
-              : "Отправить заявку"}
+              : "Отправить на проверку"}
         </PillButtonBiz>
         <button
           type="button"
