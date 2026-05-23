@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import type { User } from "@/store/auth";
 
 type TelegramWebApp = NonNullable<typeof window.Telegram>["WebApp"];
@@ -70,14 +70,14 @@ export function isTelegramAuthContext() {
   return info.hasInitData || info.isLikelyTelegramWebView;
 }
 
-const subscribeTelegramAuthContext = () => () => undefined;
-
 export function useTelegramAuthPage() {
-  return useSyncExternalStore(
-    subscribeTelegramAuthContext,
-    () => isTelegramAuthContext(),
-    () => null,
-  );
+  const [isTelegramPage, setIsTelegramPage] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setIsTelegramPage(isTelegramAuthContext());
+  }, []);
+
+  return isTelegramPage;
 }
 
 export function authEntryRoute() {

@@ -513,6 +513,26 @@ html[data-telegram-webapp="true"] .app-shell {
   text-align: left;
 }
 
+.store-offer-card-purchase {
+  min-width: 0;
+}
+
+.store-offer-card-price {
+  flex: 1 1 132px;
+}
+
+.store-offer-card-action {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 420px) {
+  .store-offer-card-action {
+    min-width: 104px !important;
+    padding-right: 14px !important;
+    padding-left: 14px !important;
+  }
+}
+
 @media (min-width: 768px) {
   .app-content,
   .biz-content {
@@ -765,9 +785,9 @@ html[data-telegram-webapp="true"] .app-shell {
 
   .biz-offer-row-view {
     display: grid;
-    grid-template-columns: minmax(220px, 1.35fr) minmax(150px, 0.75fr) minmax(110px, 0.55fr) auto;
-    align-items: center;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
   }
 
   .biz-offer-row-meta {
@@ -789,7 +809,8 @@ html[data-telegram-webapp="true"] .app-shell {
   }
 
   .biz-row-actions {
-    justify-content: flex-end;
+    justify-content: flex-start;
+    flex-wrap: wrap;
     margin-top: 0 !important;
   }
 
@@ -1290,6 +1311,16 @@ html[data-telegram-webapp="true"] .app-shell {
 }
 
 @media (min-width: 1024px) {
+  .biz-offer-row-view {
+    grid-template-columns: minmax(220px, 1.35fr) minmax(150px, 0.75fr) minmax(110px, 0.55fr) auto;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .biz-row-actions {
+    justify-content: flex-end;
+  }
+
   .buyer-products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

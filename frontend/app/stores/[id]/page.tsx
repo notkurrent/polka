@@ -492,18 +492,22 @@ export default function StoreScreen({
                       {offer.desc}
                     </div>
                     <div
+                      className="store-offer-card-purchase"
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
                         gap: 10,
+                        flexWrap: "wrap",
                       }}
                     >
                       <div
+                        className="store-offer-card-price"
                         style={{
                           display: "flex",
                           flexDirection: "column",
                           gap: 6,
+                          minWidth: 0,
                         }}
                       >
                         <PriceTag
@@ -516,6 +520,7 @@ export default function StoreScreen({
                         </Badge>
                       </div>
                       <button
+                        className="store-offer-card-action"
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation();
