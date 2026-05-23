@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "../app/globals.css";
 import { TelegramProvider } from "@/components/TelegramProvider";
+import { AppShell } from "@/components/AppShell";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,7 +38,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <TelegramProvider />
-        <div className="app-shell">{children}</div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

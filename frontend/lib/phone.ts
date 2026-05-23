@@ -25,7 +25,7 @@ export function normalizePhoneInput(value: string): string {
 
   let formatted = "+7";
   if (operator) formatted += ` (${operator}`;
-  if (operator.length === 3) formatted += ")";
+  if (operator.length === 3 && first) formatted += ")";
   if (first) formatted += ` ${first}`;
   if (second) formatted += `-${second}`;
   if (third) formatted += `-${third}`;

@@ -23,6 +23,7 @@ export function TabBar() {
 
   return (
     <div
+      className="mobile-tabbar"
       style={{
         position: "fixed",
         bottom: 0,

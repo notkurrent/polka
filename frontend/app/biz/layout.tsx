@@ -1,6 +1,7 @@
 "use client";
 
 import { tokens } from "@/components/ui/primitives";
+import { DesktopBizSidebar } from "@/components/DesktopNavigation";
 import { useBusinessGuard } from "@/hooks/useBusinessGuard";
 
 export default function BizLayout({ children }: { children: React.ReactNode }) {
@@ -11,5 +12,10 @@ export default function BizLayout({ children }: { children: React.ReactNode }) {
     return <div style={{ minHeight: "100dvh", background: t.bg }} />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <DesktopBizSidebar />
+      {children}
+    </>
+  );
 }
