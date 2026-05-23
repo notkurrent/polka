@@ -161,7 +161,7 @@ async def test_order_lifecycle_smoke() -> None:
             offer = await create_offer(
                 client,
                 partner_token,
-                name=f"Smoke Magic Box {run_id}",
+                name=f"Smoke Catalog Product {run_id}",
                 stock=2,
             )
             nearby_response = await client.get(
@@ -318,7 +318,7 @@ async def test_pending_partner_can_not_create_offer() -> None:
                 headers=auth_headers(partner_token),
                 json={
                     "type": "MAGIC_BOX",
-                    "name": f"Blocked Magic Box {run_id}",
+                    "name": f"Blocked Catalog Product {run_id}",
                     "old_price": str(Decimal("4200.00")),
                     "new_price": str(Decimal("1600.00")),
                     "stock": 2,
@@ -435,7 +435,7 @@ async def test_pending_partner_offer_is_hidden_from_buyer() -> None:
                 offer = Offer(
                     partner_id=partner["id"],
                     type=OfferType.MAGIC_BOX,
-                    name=f"Hidden Magic Box {run_id}",
+                    name=f"Hidden Catalog Product {run_id}",
                     old_price=Decimal("4200.00"),
                     new_price=Decimal("1600.00"),
                     stock=2,
@@ -480,7 +480,7 @@ async def test_approved_partner_can_create_offer() -> None:
             offer = await create_offer(
                 client,
                 partner_token,
-                name=f"Approved Magic Box {run_id}",
+                name=f"Approved Catalog Product {run_id}",
                 stock=2,
             )
             assert offer["id"]
@@ -502,7 +502,7 @@ async def test_partner_can_delete_offer_without_orders() -> None:
             offer = await create_offer(
                 client,
                 partner_token,
-                name=f"Delete Magic Box {run_id}",
+                name=f"Delete Catalog Product {run_id}",
                 stock=2,
             )
 
@@ -541,7 +541,7 @@ async def test_partner_delete_offer_with_orders_archives_once_orders_exist() -> 
             offer = await create_offer(
                 client,
                 partner_token,
-                name=f"Archive Magic Box {run_id}",
+                name=f"Archive Catalog Product {run_id}",
                 stock=2,
             )
 
@@ -597,7 +597,7 @@ async def test_expired_reservation_is_closed_and_stock_is_restored() -> None:
             offer = await create_offer(
                 client,
                 partner_token,
-                name=f"Expire Magic Box {run_id}",
+                name=f"Expire Catalog Product {run_id}",
                 stock=1,
             )
 

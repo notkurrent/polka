@@ -180,7 +180,7 @@ if (typeof window !== "undefined")
   (window as Window & { __tokens?: () => Tokens; __FONT_FN?: () => string; __Icon?: IconSet }).__FONT_FN = FONT;
 
 // ─────────────────────────────────────────────────────────────
-// Striped placeholder — for food photos. Russian monospace label.
+// Striped placeholder — for product and shop photos.
 // ─────────────────────────────────────────────────────────────
 export function StripePlaceholder({
   tone = "green",

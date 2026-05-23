@@ -139,7 +139,7 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
                     "price": str(Decimal("1600.00")),
                     "category": "bakery",
                     "tags": "bread,local",
-                    "discount_reason": "End of day surplus",
+                    "discount_reason": "Seasonal batch",
                     "stock": 2,
                 },
             )
@@ -151,7 +151,7 @@ async def test_partner_map_url_and_offer_discount_reason_api() -> None:
             assert offer_response.json()["new_price"] == "1600.00"
             assert offer_response.json()["category"] == "bakery"
             assert offer_response.json()["tags"] == "bread,local"
-            assert offer_response.json()["discount_reason"] == "End of day surplus"
+            assert offer_response.json()["discount_reason"] == "Seasonal batch"
 
             public_partner_response = await client.get(f"/partners/{partner['id']}")
             assert public_partner_response.status_code == 200, public_partner_response.text
@@ -189,16 +189,16 @@ async def test_offer_create_and_update_accept_product_price_without_required_dis
             partner_token, _partner_user = await web_register(
                 client,
                 partner_phone,
-                f"Discount Rule Partner {run_id}",
+                f"Price Rule Partner {run_id}",
             )
             register_response = await client.post(
                 "/partner-api/register",
                 headers=auth_headers(partner_token),
                 json={
-                    "name": f"Discount Rule Bakery {run_id}",
+                    "name": f"Price Rule Bakery {run_id}",
                     "type": "bakery",
                     "address": "проспект Достык, 52, Алматы",
-                    "description": "Discount rule test partner",
+                    "description": "Price rule test partner",
                     "hours": "09:00-21:00",
                     "lat": ALMATY_LAT,
                     "lon": ALMATY_LON,

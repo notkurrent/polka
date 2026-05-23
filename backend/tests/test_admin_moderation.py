@@ -178,7 +178,7 @@ async def test_admin_partner_moderation_api() -> None:
             offer_response = await create_offer_response(
                 client,
                 approved_partner_token,
-                f"Admin Approved Magic Box {run_id}",
+                f"Admin Approved Catalog Product {run_id}",
             )
             assert offer_response.status_code == 200, offer_response.text
 
@@ -196,7 +196,7 @@ async def test_admin_partner_moderation_api() -> None:
             rejected_offer_response = await create_offer_response(
                 client,
                 rejected_partner_token,
-                f"Admin Rejected Magic Box {run_id}",
+                f"Admin Rejected Catalog Product {run_id}",
             )
             assert rejected_offer_response.status_code == 403
         finally:

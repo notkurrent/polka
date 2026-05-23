@@ -3,16 +3,6 @@
 import React from "react";
 import { Icon, tokens, FONT, PillButton, type IconFn, type PillButtonProps } from "@/components/ui/primitives";
 
-export interface BizReservation {
-  id: string;
-  user: string;
-  offer: string;
-  price: string;
-  code: string;
-  status: "active" | "completed" | "cancelled" | "expired";
-  time: string;
-}
-
 export function AppScreenBiz({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div
@@ -205,87 +195,6 @@ export function ActionCard({
         }}
       >
         {label}
-      </div>
-    </button>
-  );
-}
-
-export function ReservationRow({ r, onClick }: { r: BizReservation; onClick: () => void }) {
-  const t = tokens();
-  const fontFn = FONT ? FONT() : "system-ui";
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        width: "100%",
-        background: t.bg,
-        borderRadius: 14,
-        padding: 14,
-        border: `1px solid ${t.divider}`,
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        cursor: "pointer",
-        fontFamily: fontFn,
-        textAlign: "left",
-        color: t.text,
-        touchAction: "manipulation",
-      }}
-    >
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 22,
-          background: t.surface,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 18,
-          fontWeight: 700,
-          color: t.primaryDeep,
-        }}
-      >
-        {r.user.charAt(0)}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 600,
-              letterSpacing: -0.2,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {r.offer}
-          </div>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>{r.price}</div>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-          <div style={{ fontSize: 12, color: t.textSec }}>
-            {r.user} · {r.time}
-          </div>
-          {r.status === "active" ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                color: t.primaryDeep,
-                fontSize: 12,
-                fontWeight: 600,
-              }}
-            >
-              {Icon.clock(12, t.primaryDeep)} Сегодня
-            </div>
-          ) : (
-            <div style={{ fontSize: 12, color: t.textTer }}>Закрыта</div>
-          )}
-        </div>
       </div>
     </button>
   );

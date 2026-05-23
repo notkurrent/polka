@@ -182,7 +182,7 @@ async def test_offer_image_replacement_and_physical_delete_cleanup(monkeypatch) 
         try:
             partner_token, _partner_user = await web_register(client, partner_phone, f"Media Partner {run_id}")
             await register_partner(client, partner_token, f"Media Bakery {run_id}")
-            offer = await create_offer(client, partner_token, f"Media Magic Box {run_id}")
+            offer = await create_offer(client, partner_token, f"Media Catalog Product {run_id}")
 
             first_response = await client.post(
                 f"/partner-api/offers/{offer['id']}/image",
@@ -230,7 +230,7 @@ async def test_offer_archive_with_orders_keeps_storage_image(monkeypatch) -> Non
             buyer_token, _buyer_user = await web_register(client, buyer_phone, f"Media Buyer {run_id}")
             partner_token, _partner_user = await web_register(client, partner_phone, f"Archive Media Partner {run_id}")
             await register_partner(client, partner_token, f"Archive Media Bakery {run_id}")
-            offer = await create_offer(client, partner_token, f"Archive Media Magic Box {run_id}")
+            offer = await create_offer(client, partner_token, f"Archive Media Catalog Product {run_id}")
 
             image_response = await client.post(
                 f"/partner-api/offers/{offer['id']}/image",
@@ -272,7 +272,7 @@ async def test_offer_image_delete_endpoint_clears_path_and_storage(monkeypatch) 
         try:
             partner_token, _partner_user = await web_register(client, partner_phone, f"Delete Image Partner {run_id}")
             await register_partner(client, partner_token, f"Delete Image Bakery {run_id}")
-            offer = await create_offer(client, partner_token, f"Delete Image Magic Box {run_id}")
+            offer = await create_offer(client, partner_token, f"Delete Image Catalog Product {run_id}")
 
             image_response = await client.post(
                 f"/partner-api/offers/{offer['id']}/image",
