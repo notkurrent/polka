@@ -14,13 +14,13 @@ export default function BizProfilePublicPage() {
   const t = tokens();
   const { data: profile, isLoading, error } = useSWR("/partner-api/profile", bizApi.profile);
 
-  const [mapVisible, setMapVisible] = useState(true);
-  const [showContacts, setShowContacts] = useState(true);
+  const [copyDone, setCopyDone] = useState(false);
 
-  const copyUrl = () => {
+  const copyUrl = async () => {
     if (!profile) return;
-    navigator.clipboard.writeText(`${window.location.origin}/stores/${profile.id}`);
-    alert("Ссылка скопирована!");
+    await navigator.clipboard.writeText(`${window.location.origin}/stores/${profile.id}`);
+    setCopyDone(true);
+    window.setTimeout(() => setCopyDone(false), 1800);
   };
 
   return (
@@ -36,7 +36,6 @@ export default function BizProfilePublicPage() {
         {error && <ErrorState message={partnerErrorMessage(error)} />}
         {profile && (
           <>
-        {/* Превью карточки */}
         <div
           style={{
             background: "#fff",
@@ -55,7 +54,6 @@ export default function BizProfilePublicPage() {
           </div>
         </div>
 
-        {/* URL */}
         <div
           style={{
             background: t.surface,
@@ -80,71 +78,8 @@ export default function BizProfilePublicPage() {
               padding: 0,
             }}
           >
-            Копировать
+            {copyDone ? "Скопировано" : "Копировать"}
           </button>
-        </div>
-
-        {/* Toggles */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, flex: 1, fontFamily: FONT() }}>Показывать на карте</div>
-            <div
-              onClick={() => setMapVisible(!mapVisible)}
-              style={{
-                width: 44,
-                height: 24,
-                borderRadius: 12,
-                background: mapVisible ? t.primaryDeep : t.divider,
-                position: "relative",
-                cursor: "pointer",
-                transition: "background 0.2s",
-              }}
-            >
-              <div
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: "#fff",
-                  position: "absolute",
-                  top: 2,
-                  left: mapVisible ? 22 : 2,
-                  transition: "left 0.2s",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, flex: 1, fontFamily: FONT() }}>Показывать контакты</div>
-            <div
-              onClick={() => setShowContacts(!showContacts)}
-              style={{
-                width: 44,
-                height: 24,
-                borderRadius: 12,
-                background: showContacts ? t.primaryDeep : t.divider,
-                position: "relative",
-                cursor: "pointer",
-                transition: "background 0.2s",
-              }}
-            >
-              <div
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: "#fff",
-                  position: "absolute",
-                  top: 2,
-                  left: showContacts ? 22 : 2,
-                  transition: "left 0.2s",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-              />
-            </div>
-          </div>
         </div>
           </>
         )}
