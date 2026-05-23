@@ -12,12 +12,22 @@ interface AppHeaderProps {
   onBack?: () => void;
   hideBack?: boolean;
   size?: "sm" | "lg";
+  className?: string;
 }
 
-export default function AppHeader({ title, sub, left, right, onBack, hideBack, size = "sm" }: AppHeaderProps) {
+export default function AppHeader({
+  title,
+  sub,
+  left,
+  right,
+  onBack,
+  hideBack,
+  size = "sm",
+  className,
+}: AppHeaderProps) {
   const t = tokens();
   const safeBack = useSafeBack();
-  const handleBack = hideBack ? null : (onBack || safeBack);
+  const handleBack = hideBack ? null : onBack || safeBack;
   const isLarge = size === "lg";
 
   useEffect(() => {
@@ -43,6 +53,7 @@ export default function AppHeader({ title, sub, left, right, onBack, hideBack, s
 
   return (
     <div
+      className={className}
       style={{
         paddingTop: `calc(${isLarge ? 16 : 12}px + var(--app-safe-top))`,
         paddingRight: "16px",
@@ -58,7 +69,14 @@ export default function AppHeader({ title, sub, left, right, onBack, hideBack, s
         borderBottom: `1px solid ${t.divider}`,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: isLarge ? 40 : 32 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          minHeight: isLarge ? 40 : 32,
+        }}
+      >
         {handleBack && (
           <button
             type="button"

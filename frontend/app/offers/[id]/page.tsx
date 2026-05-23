@@ -6,20 +6,40 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { OfferAvailability, OfferDetail } from "@/lib/api-types";
 import { useAuth } from "@/hooks/useAuth";
-import { tokens, Icon, FONT, Badge, PillButton, PriceTag } from "@/components/ui/primitives";
+import {
+  tokens,
+  Icon,
+  FONT,
+  Badge,
+  PillButton,
+  PriceTag,
+} from "@/components/ui/primitives";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { primaryContactLink, secondaryContactLinks, trackInquiryClick } from "@/lib/contact-links";
+import {
+  primaryContactLink,
+  secondaryContactLinks,
+  trackInquiryClick,
+} from "@/lib/contact-links";
 
 function availabilityCopy(availability: OfferAvailability, stock: number) {
-  if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
-  if (availability === "PREORDER") return { label: "Под заказ", tone: "amber" as const };
-  return { label: stock <= 2 ? `В наличии: ${stock}` : "В наличии", tone: "green" as const };
+  if (availability === "OUT_OF_STOCK" || stock <= 0)
+    return { label: "Нет в наличии", tone: "neutral" as const };
+  if (availability === "PREORDER")
+    return { label: "Под заказ", tone: "amber" as const };
+  return {
+    label: stock <= 2 ? `В наличии: ${stock}` : "В наличии",
+    tone: "green" as const,
+  };
 }
 
-export default function OfferDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default function OfferDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const t = tokens();
@@ -42,7 +62,9 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
 
   const offer = selectedOfferData?.offer;
   const partner = selectedOfferData?.partner;
-  const availability = offer ? availabilityCopy(offer.availability, offer.stock) : null;
+  const availability = offer
+    ? availabilityCopy(offer.availability, offer.stock)
+    : null;
   const contactLink = useMemo(() => primaryContactLink(partner), [partner]);
   const contactLinks = useMemo(() => secondaryContactLinks(partner), [partner]);
 
@@ -56,7 +78,11 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
           fontFamily: FONT(),
         }}
       >
-        <PillButton variant="outline" full={false} onClick={() => router.back()}>
+        <PillButton
+          variant="outline"
+          full={false}
+          onClick={() => router.back()}
+        >
           Назад
         </PillButton>
         <ErrorState message="Не удалось открыть товар. Вернитесь назад или попробуйте другой товар." />
@@ -76,7 +102,15 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
           alignItems: "center",
         }}
       >
-        <div style={{ width: "100%", padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div
+          style={{
+            width: "100%",
+            padding: 20,
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+          }}
+        >
           <Skeleton w="100%" h={240} radius={0} />
           <Skeleton w="70%" h={24} radius={8} />
           <Skeleton w="45%" h={32} radius={8} />
@@ -100,7 +134,14 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       }}
     >
       <div className="offer-detail-hero" style={{ position: "relative" }}>
-        <OfferImagePreview imageUrl={offer.image_url} label="товар" width="100%" height={240} radius={0} tone="mint" />
+        <OfferImagePreview
+          imageUrl={offer.image_url}
+          label="товар"
+          width="100%"
+          height={240}
+          radius={0}
+          tone="mint"
+        />
         <button
           type="button"
           aria-label="Назад"
@@ -125,8 +166,20 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
       </div>
 
       <div className="offer-detail-body" style={{ padding: "20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <BusinessLogoPreview logoUrl={partner.logo_url} businessName={partner.name} size={40} radius={10} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 14,
+          }}
+        >
+          <BusinessLogoPreview
+            logoUrl={partner.logo_url}
+            businessName={partner.name}
+            size={40}
+            radius={10}
+          />
           <button
             type="button"
             onClick={() => router.push(`/stores/${partner.id}`)}
@@ -142,42 +195,103 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             }}
           >
             <div style={{ fontSize: 13, color: t.textSec }}>Магазин</div>
-            <div style={{ fontSize: 15, fontWeight: 750, overflowWrap: "anywhere" }}>{partner.name}</div>
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 750,
+                overflowWrap: "anywhere",
+              }}
+            >
+              {partner.name}
+            </div>
           </button>
           <Badge tone={availability.tone} size="sm">
             {availability.label}
           </Badge>
         </div>
 
-        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 14px", letterSpacing: 0, overflowWrap: "anywhere" }}>
+        <h1
+          style={{
+            fontSize: 24,
+            fontWeight: 800,
+            margin: "0 0 14px",
+            letterSpacing: 0,
+            overflowWrap: "anywhere",
+          }}
+        >
           {offer.name}
         </h1>
 
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 20 }}>
-          <PriceTag original={offer.old_price ?? null} now={offer.price ?? offer.new_price} size="lg" />
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+            marginBottom: 20,
+          }}
+        >
+          <PriceTag
+            original={offer.old_price ?? null}
+            now={offer.price ?? offer.new_price}
+            size="lg"
+          />
         </div>
 
         {offer.description && (
-          <div style={{ marginBottom: 20, fontSize: 14, color: t.textSec, lineHeight: 1.5, overflowWrap: "anywhere" }}>
+          <div
+            style={{
+              marginBottom: 20,
+              fontSize: 14,
+              color: t.textSec,
+              lineHeight: 1.5,
+              overflowWrap: "anywhere",
+            }}
+          >
             {offer.description}
           </div>
         )}
 
-        <div style={{ background: t.surface, borderRadius: 16, padding: "16px", marginBottom: 18 }}>
-          <div style={{ fontSize: 15, fontWeight: 750, marginBottom: 12 }}>О продавце</div>
+        <div
+          className="offer-seller-card"
+          style={{
+            background: t.surface,
+            borderRadius: 16,
+            padding: "16px",
+            marginBottom: 18,
+          }}
+        >
+          <div style={{ fontSize: 15, fontWeight: 750, marginBottom: 12 }}>
+            О продавце
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               {Icon.pin(16, t.primaryDeep)}
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12, color: t.textSec }}>Адрес</div>
-                <div style={{ fontSize: 13, fontWeight: 650, overflowWrap: "anywhere" }}>{partner.address}</div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 650,
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {partner.address}
+                </div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               {Icon.clock(16, t.primaryDeep)}
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12, color: t.textSec }}>График</div>
-                <div style={{ fontSize: 13, fontWeight: 650, overflowWrap: "anywhere" }}>{partner.hours}</div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 650,
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {partner.hours}
+                </div>
               </div>
             </div>
           </div>
@@ -202,8 +316,18 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
           </button>
         </div>
 
-        <div style={{ background: t.bg, border: `1px solid ${t.divider}`, borderRadius: 16, padding: "16px" }}>
-          <div style={{ fontSize: 15, fontWeight: 750, marginBottom: 8 }}>Контакт продавца</div>
+        <div
+          className="offer-contact-card"
+          style={{
+            background: t.bg,
+            border: `1px solid ${t.divider}`,
+            borderRadius: 16,
+            padding: "16px",
+          }}
+        >
+          <div style={{ fontSize: 15, fontWeight: 750, marginBottom: 8 }}>
+            Контакт продавца
+          </div>
           {contactLinks.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {contactLinks.map((link) => (
@@ -211,7 +335,9 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
                   key={`${link.channel}-${link.href}`}
                   href={link.href}
                   target={link.channel === "phone" ? undefined : "_blank"}
-                  rel={link.channel === "phone" ? undefined : "noopener noreferrer"}
+                  rel={
+                    link.channel === "phone" ? undefined : "noopener noreferrer"
+                  }
                   onClick={() =>
                     trackInquiryClick({
                       partnerId: partner.id,
@@ -220,7 +346,12 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
                       targetUrl: link.href,
                     })
                   }
-                  style={{ color: t.primaryDeep, fontSize: 13, fontWeight: 750, textDecoration: "none" }}
+                  style={{
+                    color: t.primaryDeep,
+                    fontSize: 13,
+                    fontWeight: 750,
+                    textDecoration: "none",
+                  }}
                 >
                   {link.label}
                 </a>
@@ -228,12 +359,14 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             </div>
           ) : (
             <div style={{ fontSize: 13, color: t.textSec, lineHeight: 1.45 }}>
-              Продавец пока не указал прямые контакты. Откройте витрину магазина, чтобы посмотреть адрес и карту.
+              Продавец пока не указал прямые контакты. Откройте витрину
+              магазина, чтобы посмотреть адрес и карту.
             </div>
           )}
         </div>
 
         <div
+          className="offer-detail-cta-bar"
           style={{
             position: "fixed",
             bottom: 0,
@@ -265,7 +398,9 @@ export default function OfferDetailsPage({ params }: { params: Promise<{ id: str
             }}
             disabled={offer.availability === "OUT_OF_STOCK" || offer.stock <= 0}
           >
-            {offer.availability === "OUT_OF_STOCK" || offer.stock <= 0 ? "Нет в наличии" : "Написать продавцу"}
+            {offer.availability === "OUT_OF_STOCK" || offer.stock <= 0
+              ? "Нет в наличии"
+              : "Написать продавцу"}
           </PillButton>
         </div>
       </div>

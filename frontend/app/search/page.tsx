@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { api } from "@/lib/api";
-import { tokens, Icon, FONT, Badge, PriceTag, PillButton } from "@/components/ui/primitives";
+import {
+  tokens,
+  Icon,
+  FONT,
+  Badge,
+  PriceTag,
+  PillButton,
+} from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -14,8 +21,10 @@ import { BUSINESS_CATEGORY_SEARCH_OPTIONS } from "@/lib/business-constants";
 import { OfferImagePreview } from "@/components/biz/OfferImagePicker";
 
 function availabilityCopy(availability: OfferAvailability, stock: number) {
-  if (availability === "OUT_OF_STOCK" || stock <= 0) return { label: "Нет в наличии", tone: "neutral" as const };
-  if (availability === "PREORDER") return { label: "Под заказ", tone: "amber" as const };
+  if (availability === "OUT_OF_STOCK" || stock <= 0)
+    return { label: "Нет в наличии", tone: "neutral" as const };
+  if (availability === "PREORDER")
+    return { label: "Под заказ", tone: "amber" as const };
   return { label: "В наличии", tone: "green" as const };
 }
 
@@ -43,10 +52,14 @@ export default function SearchPage() {
     (url: string) => api.get<NearbyOffer[]>(url),
   );
 
-  const categories = [...BUSINESS_CATEGORY_SEARCH_OPTIONS, { label: "Товары", query: "Товары" }];
+  const categories = [
+    ...BUSINESS_CATEGORY_SEARCH_OPTIONS,
+    { label: "Товары", query: "Товары" },
+  ];
 
   return (
     <div
+      className="buyer-search-screen"
       style={{
         height: "100dvh",
         background: t.bg,
@@ -56,7 +69,7 @@ export default function SearchPage() {
       }}
     >
       <div
-        className="app-content"
+        className="app-content buyer-search-header"
         style={{
           position: "sticky",
           top: 0,
@@ -69,6 +82,7 @@ export default function SearchPage() {
         }}
       >
         <div
+          className="buyer-search-bar"
           style={{
             flex: 1,
             display: "flex",
@@ -119,6 +133,7 @@ export default function SearchPage() {
           )}
         </div>
         <button
+          className="buyer-search-cancel"
           type="button"
           onClick={() => router.back()}
           style={{
@@ -138,8 +153,12 @@ export default function SearchPage() {
       </div>
 
       {!debouncedQuery ? (
-        <div className="app-readable-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div
+          className="app-readable-content buyer-search-idle"
+          style={{ flex: 1, display: "flex", flexDirection: "column" }}
+        >
           <div
+            className="buyer-search-section-label"
             style={{
               fontSize: 11,
               color: t.textSec,
@@ -152,6 +171,7 @@ export default function SearchPage() {
             Популярные категории
           </div>
           <div
+            className="buyer-search-category-row"
             style={{
               display: "flex",
               gap: 6,
@@ -181,6 +201,7 @@ export default function SearchPage() {
             ))}
           </div>
           <div
+            className="buyer-search-empty-panel"
             style={{
               flex: 1,
               minHeight: 260,
@@ -208,16 +229,44 @@ export default function SearchPage() {
             >
               {Icon.search(32, t.textTer)}
             </div>
-            <div style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 750, color: t.text }}>Найдите товар или магазин</div>
-            <div style={{ maxWidth: 300, marginTop: 10, fontSize: 14, lineHeight: 1.5 }}>
-              Введите название магазина, товара или выберите популярную категорию выше.
+            <div
+              style={{
+                fontSize: 20,
+                lineHeight: 1.2,
+                fontWeight: 750,
+                color: t.text,
+              }}
+            >
+              Найдите товар или магазин
+            </div>
+            <div
+              style={{
+                maxWidth: 300,
+                marginTop: 10,
+                fontSize: 14,
+                lineHeight: 1.5,
+              }}
+            >
+              Введите название магазина, товара или выберите популярную
+              категорию выше.
             </div>
           </div>
         </div>
       ) : (
-        <div className="app-readable-content" style={{ flex: 1, overflowY: "auto" }}>
+        <div
+          className="app-readable-content buyer-search-results"
+          style={{ flex: 1, overflowY: "auto" }}
+        >
           {isLoading && (
-            <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div
+              className="buyer-search-loading-list"
+              style={{
+                padding: "16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
               <Skeleton w="100%" h={96} radius={14} />
               <Skeleton w="100%" h={96} radius={14} />
               <Skeleton w="100%" h={96} radius={14} />
@@ -229,6 +278,7 @@ export default function SearchPage() {
           {!isLoading && !error && offers && offers.length > 0
             ? offers.map((item) => (
                 <button
+                  className="buyer-search-result-card"
                   key={item.offer.id}
                   type="button"
                   onClick={() => router.push(`/offers/${item.offer.id}`)}
@@ -246,10 +296,40 @@ export default function SearchPage() {
                     textAlign: "left",
                   }}
                 >
-                  <OfferImagePreview imageUrl={item.offer.image_url} label="товар" width={64} height={64} radius={10} tone="mint" />
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: t.text, overflowWrap: "anywhere" }}>{item.offer.name}</div>
-                    <div style={{ fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>
+                  <OfferImagePreview
+                    imageUrl={item.offer.image_url}
+                    label="товар"
+                    width={64}
+                    height={64}
+                    radius={10}
+                    tone="mint"
+                  />
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: t.text,
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {item.offer.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: t.textSec,
+                        overflowWrap: "anywhere",
+                      }}
+                    >
                       {item.partner.name || item.partner_name}
                     </div>
                     {item.offer.description && (
@@ -270,10 +350,35 @@ export default function SearchPage() {
                       </div>
                     )}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", gap: 8 }}>
-                    <PriceTag now={item.offer.price ?? item.offer.new_price} original={item.offer.old_price ?? null} size="sm" />
-                    <Badge tone={availabilityCopy(item.offer.availability, item.offer.stock).tone} size="sm">
-                      {availabilityCopy(item.offer.availability, item.offer.stock).label}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      justifyContent: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <PriceTag
+                      now={item.offer.price ?? item.offer.new_price}
+                      original={item.offer.old_price ?? null}
+                      size="sm"
+                    />
+                    <Badge
+                      tone={
+                        availabilityCopy(
+                          item.offer.availability,
+                          item.offer.stock,
+                        ).tone
+                      }
+                      size="sm"
+                    >
+                      {
+                        availabilityCopy(
+                          item.offer.availability,
+                          item.offer.stock,
+                        ).label
+                      }
                     </Badge>
                   </div>
                 </button>
