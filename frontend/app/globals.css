@@ -419,6 +419,28 @@ html[data-telegram-webapp="true"] .app-shell {
   box-sizing: border-box;
 }
 
+.buyer-products-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.buyer-products-state {
+  width: 100%;
+}
+
+.buyer-offer-card-body {
+  flex: 1;
+}
+
+.buyer-offer-card-action {
+  margin-top: auto;
+}
+
+.buyer-offer-meta {
+  flex-wrap: wrap;
+}
+
 @media (min-width: 768px) {
   .app-content,
   .biz-content {
@@ -438,18 +460,123 @@ html[data-telegram-webapp="true"] .app-shell {
     max-width: var(--app-content-max-width) !important;
   }
 
-  .buyer-offers-list {
+  .buyer-catalog-screen {
+    background: #fbfcfb !important;
+  }
+
+  .buyer-catalog-header {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+    max-width: var(--app-content-max-width);
+    margin-right: auto;
+    margin-left: auto;
+    padding: 28px 24px 0 !important;
+    border-bottom: none !important;
+    background: transparent !important;
+    box-sizing: border-box;
+  }
+
+  .buyer-catalog-header-inner {
+    align-items: flex-end !important;
+  }
+
+  .buyer-catalog-header-inner > div:first-child > div:first-child {
+    font-size: 26px !important;
+  }
+
+  .buyer-catalog-favorite-shortcut {
+    display: none !important;
+  }
+
+  .buyer-catalog-controls {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    margin-top: 18px !important;
+  }
+
+  .buyer-search-trigger {
+    min-height: 44px;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+  }
+
+  .buyer-filter-row {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .buyer-filter-chip {
+    min-height: 40px !important;
+    padding-right: 13px !important;
+    padding-left: 13px !important;
+  }
+
+  .buyer-account-prompt,
+  .buyer-catalog-section {
+    padding-right: 24px !important;
+    padding-left: 24px !important;
+  }
+
+  .buyer-stores-section {
+    padding-top: 24px !important;
+  }
+
+  .buyer-products-section {
+    padding-top: 26px !important;
+  }
+
+  .buyer-section-heading {
+    margin-bottom: 12px !important;
+  }
+
+  .buyer-store-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .buyer-store-card {
+    width: auto !important;
+    min-height: 96px !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+  }
+
+  .buyer-products-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px !important;
   }
 
-  .buyer-section-title {
-    grid-column: 1 / -1;
+  .buyer-offer-card {
+    --buyer-offer-image-height: 172px;
+    height: 100%;
+    min-height: 382px;
+    border-radius: 14px !important;
+    background: #ffffff !important;
   }
 
-  .buyer-offer-card {
-    height: 100%;
+  .buyer-offer-card-body {
+    min-height: 206px;
+    padding: 13px 14px 14px !important;
+  }
+
+  .buyer-offer-meta {
+    align-items: flex-start !important;
+  }
+
+  .buyer-products-empty {
+    display: grid;
+    min-height: 300px;
+    place-items: center;
   }
 
   .biz-offers-content {
@@ -504,8 +631,12 @@ html[data-telegram-webapp="true"] .app-shell {
 }
 
 @media (min-width: 1024px) {
-  .buyer-offers-list {
+  .buyer-products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .buyer-offer-card {
+    --buyer-offer-image-height: 176px;
   }
 }
 

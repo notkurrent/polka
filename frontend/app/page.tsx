@@ -188,18 +188,17 @@ export default function AppScreenBuyerPage() {
 
   return (
     <div
+      className="buyer-catalog-screen screen-scroll-with-tabbar"
       style={{
-        height: "100vh",
         width: "100%",
-        overflow: "auto",
         background: t.bg,
         fontFamily: fontFn,
         color: t.text,
         WebkitFontSmoothing: "antialiased",
-        paddingBottom: "calc(88px + var(--app-safe-bottom))",
       }}
     >
       <div
+        className="buyer-catalog-header"
         style={{
           paddingTop: "calc(14px + var(--app-safe-top))",
           paddingRight: 16,
@@ -212,12 +211,16 @@ export default function AppScreenBuyerPage() {
           borderBottom: `1px solid ${t.divider}`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div
+          className="buyer-catalog-header-inner"
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}
+        >
           <div>
             <div style={{ fontSize: 28, lineHeight: 1.05, fontWeight: 850, letterSpacing: 0 }}>Каталог</div>
             <div style={{ marginTop: 4, fontSize: 13, color: t.textSec }}>Товары и магазины Polka</div>
           </div>
           <button
+            className="buyer-catalog-favorite-shortcut"
             type="button"
             aria-label="Открыть избранное"
             onClick={() => router.push("/favorites")}
@@ -237,67 +240,76 @@ export default function AppScreenBuyerPage() {
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => router.push("/search")}
-          style={{
-            width: "100%",
-            marginTop: 12,
-            background: t.surface,
-            borderRadius: 12,
-            border: `1px solid ${t.divider}`,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "11px 12px",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-        >
-          {Icon.search(18, t.textTer)}
-          <span style={{ fontSize: 14, color: t.textTer, flex: 1 }}>Искать товары и магазины</span>
-        </button>
-
         <div
+          className="buyer-catalog-controls"
           style={{
-            display: "flex",
-            gap: 6,
-            marginTop: 10,
-            overflowX: "auto",
-            marginLeft: -16,
-            marginRight: -16,
-            padding: "0 16px",
+            marginTop: 12,
           }}
         >
-          {filters.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setFilter(item.id)}
-              style={{
-                flexShrink: 0,
-                minHeight: 44,
-                padding: "6px 14px",
-                borderRadius: 9999,
-                fontSize: 13,
-                fontWeight: 650,
-                fontFamily: fontFn,
-                border: `1px solid ${filter === item.id ? t.primaryDeep : t.divider}`,
-                background: filter === item.id ? t.primaryDeep : "#fff",
-                color: filter === item.id ? "#fff" : t.text,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                letterSpacing: 0,
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
+          <button
+            className="buyer-search-trigger"
+            type="button"
+            onClick={() => router.push("/search")}
+            style={{
+              width: "100%",
+              background: t.surface,
+              borderRadius: 12,
+              border: `1px solid ${t.divider}`,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "11px 12px",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            {Icon.search(18, t.textTer)}
+            <span style={{ fontSize: 14, color: t.textTer, flex: 1 }}>Искать товары и магазины</span>
+          </button>
+
+          <div
+            className="buyer-filter-row"
+            style={{
+              display: "flex",
+              gap: 6,
+              marginTop: 10,
+              overflowX: "auto",
+              marginLeft: -16,
+              marginRight: -16,
+              padding: "0 16px",
+            }}
+          >
+            {filters.map((item) => (
+              <button
+                className="buyer-filter-chip"
+                key={item.id}
+                type="button"
+                onClick={() => setFilter(item.id)}
+                style={{
+                  flexShrink: 0,
+                  minHeight: 44,
+                  padding: "6px 14px",
+                  borderRadius: 9999,
+                  fontSize: 13,
+                  fontWeight: 650,
+                  fontFamily: fontFn,
+                  border: `1px solid ${filter === item.id ? t.primaryDeep : t.divider}`,
+                  background: filter === item.id ? t.primaryDeep : "#fff",
+                  color: filter === item.id ? "#fff" : t.text,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  letterSpacing: 0,
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {isTelegramAccountIncomplete(user) && (!accountCompletionPromptDismissed || !accountLinkPromptDismissed) && (
-        <div style={{ padding: "12px 16px 0" }}>
+        <div className="app-content buyer-account-prompt" style={{ padding: "12px 16px 0" }}>
           <AccountLinkingPrompt
             onDismiss={() => {
               dismissAccountCompletionPrompt();
@@ -307,76 +319,87 @@ export default function AppScreenBuyerPage() {
         </div>
       )}
 
-      <div className="app-content" style={{ padding: "16px 16px 0" }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-          <div style={{ fontSize: 17, fontWeight: 750, letterSpacing: 0 }}>Магазины</div>
-          <div style={{ fontSize: 12, color: t.textSec }}>{stores.length}</div>
-        </div>
-        {isOffersLoading || (!catalogOffers && !error) ? (
-          <div style={{ display: "flex", gap: 10, overflowX: "auto" }}>
-            <Skeleton w={180} h={82} radius={14} />
-            <Skeleton w={180} h={82} radius={14} />
+      {(isOffersLoading || (!catalogOffers && !error) || stores.length > 0) && (
+        <section className="app-content buyer-catalog-section buyer-stores-section" style={{ padding: "16px 16px 0" }}>
+          <div
+            className="buyer-section-heading"
+            style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}
+          >
+            <div style={{ fontSize: 17, fontWeight: 750, letterSpacing: 0 }}>Магазины</div>
+            {stores.length > 0 ? <div style={{ fontSize: 12, color: t.textSec }}>{stores.length}</div> : null}
           </div>
-        ) : stores.length > 0 ? (
-          <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 2 }}>
-            {stores.map((store) => (
-              <button
-                key={store.id}
-                type="button"
-                onClick={() => router.push(`/stores/${store.id}`)}
-                style={{
-                  width: 210,
-                  flexShrink: 0,
-                  minHeight: 88,
-                  padding: 12,
-                  borderRadius: 14,
-                  border: `1px solid ${t.divider}`,
-                  background: t.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  textAlign: "left",
-                  cursor: "pointer",
-                }}
-              >
-                <BusinessLogoPreview logoUrl={store.logoUrl} businessName={store.name} size={48} radius={12} />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 750, overflowWrap: "anywhere" }}>{store.name}</div>
-                  <div style={{ marginTop: 2, fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>{store.category}</div>
-                  <div style={{ marginTop: 5, fontSize: 11, color: t.primaryDeep, fontWeight: 700 }}>
-                    {store.count} товар{store.count === 1 ? "" : "а"}
+          {isOffersLoading || (!catalogOffers && !error) ? (
+            <div className="buyer-store-list" style={{ display: "flex", gap: 10, overflowX: "auto" }}>
+              <Skeleton w={180} h={82} radius={14} />
+              <Skeleton w={180} h={82} radius={14} />
+              <Skeleton w={180} h={82} radius={14} />
+            </div>
+          ) : (
+            <div className="buyer-store-list" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 2 }}>
+              {stores.map((store) => (
+                <button
+                  className="buyer-store-card"
+                  key={store.id}
+                  type="button"
+                  onClick={() => router.push(`/stores/${store.id}`)}
+                  style={{
+                    width: 210,
+                    flexShrink: 0,
+                    minHeight: 88,
+                    padding: 12,
+                    borderRadius: 14,
+                    border: `1px solid ${t.divider}`,
+                    background: t.bg,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    textAlign: "left",
+                    cursor: "pointer",
+                  }}
+                >
+                  <BusinessLogoPreview logoUrl={store.logoUrl} businessName={store.name} size={48} radius={12} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 750, overflowWrap: "anywhere" }}>{store.name}</div>
+                    <div style={{ marginTop: 2, fontSize: 12, color: t.textSec, overflowWrap: "anywhere" }}>{store.category}</div>
+                    <div style={{ marginTop: 5, fontSize: 11, color: t.primaryDeep, fontWeight: 700 }}>
+                      {store.count} товар{store.count === 1 ? "" : "а"}
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-      <div
-        className="app-content buyer-offers-list"
-        style={{ padding: "18px 16px 0", display: "flex", flexDirection: "column", gap: 10 }}
-      >
-        <div className="buyer-section-title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+      <section className="app-content buyer-catalog-section buyer-products-section" style={{ padding: "18px 16px 0" }}>
+        <div
+          className="buyer-section-heading"
+          style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}
+        >
           <div style={{ fontSize: 17, fontWeight: 750, letterSpacing: 0 }}>Товары</div>
           <div style={{ fontSize: 12, color: t.textSec }}>{visibleProducts.length}</div>
         </div>
 
         {error ? (
-          <ErrorState message="Не удалось загрузить каталог. Проверьте соединение и попробуйте ещё раз." />
+          <div className="buyer-products-state">
+            <ErrorState message="Не удалось загрузить каталог. Проверьте соединение и попробуйте ещё раз." />
+          </div>
         ) : (isOffersLoading || (!catalogOffers && !error)) && !error ? (
-          Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${t.divider}` }}>
-              <Skeleton w="100%" h={150} radius={0} />
-              <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-                <Skeleton w={200} h={16} />
-                <Skeleton w={140} h={12} />
-                <Skeleton w={100} h={20} />
+          <div className="buyer-products-grid">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div className="buyer-offer-card" key={index} style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${t.divider}` }}>
+                <Skeleton w="100%" h="var(--buyer-offer-image-height, 150px)" radius={0} />
+                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Skeleton w="80%" h={16} />
+                  <Skeleton w="62%" h={12} />
+                  <Skeleton w={100} h={20} />
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : visibleProducts.length === 0 ? (
-          <div style={{ background: t.bg, borderRadius: 18, border: `1px solid ${t.divider}`, overflow: "hidden" }}>
+          <div className="buyer-products-state buyer-products-empty" style={{ background: t.bg, borderRadius: 18, border: `1px solid ${t.divider}`, overflow: "hidden" }}>
             <EmptyState
               icon={Icon.bag(34, t.textTer)}
               title={filter === "all" ? "Каталог пока пуст" : "В этой категории пока пусто"}
@@ -396,115 +419,126 @@ export default function AppScreenBuyerPage() {
             />
           </div>
         ) : (
-          visibleProducts.map((product) => {
-            const availability = availabilityCopy(product.availability, product.stock);
-            return (
-              <article
-                key={product.id}
-                onClick={() => router.push(`/offers/${product.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") router.push(`/offers/${product.id}`);
-                }}
-                role="button"
-                tabIndex={0}
-                className="buyer-offer-card"
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  background: t.bg,
-                  borderRadius: 18,
-                  overflow: "hidden",
-                  border: `1px solid ${t.divider}`,
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: 0,
-                  color: t.text,
-                }}
-              >
-                <div style={{ position: "relative" }}>
-                  <OfferImagePreview imageUrl={product.imageUrl} label="товар" width="100%" height={150} radius={0} tone="mint" />
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggleFavorite(product.storeId);
-                    }}
-                    aria-label={favorites.includes(product.storeId) ? "Убрать магазин из избранного" : "Добавить магазин в избранное"}
-                    style={{
-                      position: "absolute",
-                      top: 10,
-                      right: 10,
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      background: "rgba(255,255,255,0.92)",
-                      border: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      backdropFilter: "blur(6px)",
-                    }}
-                  >
-                    {Icon.heart(
-                      16,
-                      favorites.includes(product.storeId) ? t.danger : t.text,
-                      favorites.includes(product.storeId),
-                    )}
-                  </button>
-                </div>
+          <div className="buyer-products-grid">
+            {visibleProducts.map((product) => {
+              const availability = availabilityCopy(product.availability, product.stock);
+              return (
+                <article
+                  key={product.id}
+                  onClick={() => router.push(`/offers/${product.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") router.push(`/offers/${product.id}`);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className="buyer-offer-card"
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    background: t.bg,
+                    borderRadius: 18,
+                    overflow: "hidden",
+                    border: `1px solid ${t.divider}`,
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: 0,
+                    color: t.text,
+                  }}
+                >
+                  <div className="buyer-offer-media" style={{ position: "relative" }}>
+                    <OfferImagePreview
+                      imageUrl={product.imageUrl}
+                      label="товар"
+                      width="100%"
+                      height="var(--buyer-offer-image-height, 150px)"
+                      radius={0}
+                      tone="mint"
+                    />
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleFavorite(product.storeId);
+                      }}
+                      aria-label={favorites.includes(product.storeId) ? "Убрать магазин из избранного" : "Добавить магазин в избранное"}
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        width: 44,
+                        height: 44,
+                        borderRadius: "50%",
+                        background: "rgba(255,255,255,0.92)",
+                        border: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        backdropFilter: "blur(6px)",
+                      }}
+                    >
+                      {Icon.heart(
+                        16,
+                        favorites.includes(product.storeId) ? t.danger : t.text,
+                        favorites.includes(product.storeId),
+                      )}
+                    </button>
+                  </div>
 
-                <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                    <BusinessLogoPreview logoUrl={product.logoUrl} businessName={product.storeName} size={38} radius={10} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <h2 style={{ margin: 0, fontSize: 15, fontWeight: 750, letterSpacing: 0, overflowWrap: "anywhere" }}>
-                        {product.title}
-                      </h2>
-                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 2, overflowWrap: "anywhere" }}>
-                        {product.storeName}
+                  <div className="buyer-offer-card-body" style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <BusinessLogoPreview logoUrl={product.logoUrl} businessName={product.storeName} size={38} radius={10} />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <h2 style={{ margin: 0, fontSize: 15, fontWeight: 750, letterSpacing: 0, overflowWrap: "anywhere" }}>
+                          {product.title}
+                        </h2>
+                        <div style={{ fontSize: 12, color: t.textSec, marginTop: 2, overflowWrap: "anywhere" }}>
+                          {product.storeName}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div
-                    style={{
-                      fontSize: 12,
-                      lineHeight: 1.35,
-                      color: t.textSec,
-                      overflow: "hidden",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {product.desc}
-                  </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        lineHeight: 1.35,
+                        color: t.textSec,
+                        overflow: "hidden",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {product.desc}
+                    </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                    <PriceTag original={product.original} now={product.now} size="md" />
-                    <Badge tone={availability.tone} size="sm">
-                      {availability.label}
-                    </Badge>
-                  </div>
+                    <div className="buyer-offer-meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                      <PriceTag original={product.original} now={product.now} size="md" />
+                      <Badge tone={availability.tone} size="sm">
+                        {availability.label}
+                      </Badge>
+                    </div>
 
-                  <PillButton
-                    variant="dark"
-                    size="sm"
-                    onClick={() => router.push(`/offers/${product.id}`)}
-                    disabled={product.availability === "OUT_OF_STOCK" || product.stock <= 0}
-                  >
-                    Связаться
-                  </PillButton>
-                </div>
-              </article>
-            );
-          })
+                    <div className="buyer-offer-card-action">
+                      <PillButton
+                        variant="dark"
+                        size="sm"
+                        onClick={() => router.push(`/offers/${product.id}`)}
+                        disabled={product.availability === "OUT_OF_STOCK" || product.stock <= 0}
+                      >
+                        Связаться
+                      </PillButton>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         )}
         <div style={{ height: 16 }} />
-      </div>
+      </section>
 
       <TabBar />
     </div>
