@@ -19,9 +19,9 @@ export default function BizAnalyticsScreen() {
   const stats = buildBizStats(offers);
 
   return (
-    <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
+    <AppScreenBiz className="biz-analytics-screen" style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Аналитика" />
-      <div className="biz-offers-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="biz-offers-content biz-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         {profileLoading && (
           <>
             <Skeleton w="100%" h={68} radius={12} />
@@ -43,11 +43,11 @@ export default function BizAnalyticsScreen() {
         {isApproved && error && <ErrorState message={partnerErrorMessage(error)} />}
         {isApproved && !isLoading && !error && (
           <>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="biz-stat-grid" style={{ display: "flex", gap: 8 }}>
               <StatTile value={stats.activeOffers} label="В продаже" accent />
               <StatTile value={stats.totalOffers} label="Всего товаров" />
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="biz-stat-grid" style={{ display: "flex", gap: 8 }}>
               <StatTile value={stats.hiddenOffers} label="Скрыто" />
             </div>
 

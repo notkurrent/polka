@@ -3,10 +3,18 @@
 import React from "react";
 import { Icon, tokens, FONT, PillButton, type IconFn, type PillButtonProps } from "@/components/ui/primitives";
 
-export function AppScreenBiz({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+export function AppScreenBiz({
+  children,
+  style,
+  className,
+}: {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  className?: string;
+}) {
   return (
     <div
-      className="screen-scroll-with-tabbar app-screen-biz"
+      className={["screen-scroll-with-tabbar app-screen-biz", className].filter(Boolean).join(" ")}
       style={{
         width: "100%",
         height: "100dvh",
@@ -43,6 +51,7 @@ export function AppHeaderBiz({
   const fontFn = FONT ? FONT() : "system-ui";
   return (
     <div
+      className="biz-page-header"
       style={{
         display: "flex",
         alignItems: "center",
@@ -63,6 +72,7 @@ export function AppHeaderBiz({
     >
       {onBack ? (
         <button
+          className="biz-page-header-back"
           type="button"
           aria-label="Назад"
           onClick={onBack}
@@ -80,13 +90,17 @@ export function AppHeaderBiz({
           {Icon.back(24, t.text)}
         </button>
       ) : (
-        <div style={{ width: 44 }} />
+        <div className="biz-page-header-spacer" style={{ width: 44 }} />
       )}
-      <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: -0.3, flex: 1, textAlign: "center" }}>{title}</div>
+      <div className="biz-page-header-title" style={{ fontSize: 17, fontWeight: 600, letterSpacing: -0.3, flex: 1, textAlign: "center" }}>
+        {title}
+      </div>
       {right ? (
-        <div style={{ width: 44, display: "flex", justifyContent: "flex-end" }}>{right}</div>
+        <div className="biz-page-header-right" style={{ width: 44, display: "flex", justifyContent: "flex-end" }}>
+          {right}
+        </div>
       ) : (
-        <div style={{ width: 44 }} />
+        <div className="biz-page-header-spacer" style={{ width: 44 }} />
       )}
     </div>
   );
@@ -113,6 +127,7 @@ export function StatTile({
   const fontFn = FONT ? FONT() : "system-ui";
   return (
     <div
+      className="biz-stat-tile"
       style={{
         flex: 1,
         background: accent ? t.primarySoft : t.surface,
@@ -148,6 +163,7 @@ export function ActionCard({
   const fontFn = FONT ? FONT() : "system-ui";
   return (
     <button
+      className="biz-action-card"
       type="button"
       onClick={onClick}
       style={{

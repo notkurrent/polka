@@ -222,9 +222,9 @@ export default function BizProfileEditPage() {
   };
 
   return (
-    <AppScreenBiz>
+    <AppScreenBiz className="biz-profile-edit-screen">
       <AppHeaderBiz title="Редактировать" onBack={() => router.back()} />
-      <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 14, fontFamily: fontFn }}>
+      <div className="biz-form-content biz-profile-edit-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 14, fontFamily: fontFn }}>
         {loading ? (
           <>
             <Skeleton w="100%" h={68} radius={12} />
@@ -243,7 +243,7 @@ export default function BizProfileEditPage() {
               />
             </Field>
 
-            <Field label="Логотип бизнеса">
+            <Field label="Логотип бизнеса" className="biz-form-field-wide">
               <BusinessLogoPicker
                 id="biz-profile-logo"
                 businessName={data.name}
@@ -260,7 +260,7 @@ export default function BizProfileEditPage() {
               />
             </Field>
 
-            <div>
+            <div className="biz-form-field-wide">
               <Label>Категория</Label>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
                 {categories.map((opt) => {
@@ -290,7 +290,7 @@ export default function BizProfileEditPage() {
               </div>
             </div>
 
-            <div>
+            <div className="biz-form-field-wide">
               <Label>Адрес</Label>
               <div style={{ marginTop: 6, position: "relative" }}>
                 <input
@@ -440,7 +440,7 @@ export default function BizProfileEditPage() {
               />
             </Field>
 
-            <div>
+            <div className="biz-form-field-wide">
               <Label>Часы работы</Label>
               <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
                 {schedule.map((day, index) => (
@@ -520,7 +520,7 @@ export default function BizProfileEditPage() {
               </div>
             </div>
 
-            <Field label="Описание">
+            <Field label="Описание" className="biz-form-field-wide">
               <textarea
                 value={data.description}
                 name="partner-description"
@@ -532,6 +532,7 @@ export default function BizProfileEditPage() {
             </Field>
 
             <div
+              className="biz-form-message"
               style={{
                 padding: 12,
                 background: t.primarySoft,
@@ -544,7 +545,7 @@ export default function BizProfileEditPage() {
               Геопозицию магазина можно будет уточнить отдельно. Сейчас используется точка по умолчанию для Алматы.
             </div>
 
-            {error && <div style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
+            {error && <div className="biz-form-message" style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
             <PillButtonBiz onClick={save} disabled={saving || logoUploading} size="lg" style={{ marginTop: 8 }}>
               {saving || logoUploading ? "Сохранение…" : "Сохранить"}
             </PillButtonBiz>
@@ -564,9 +565,9 @@ function Label({ children }: { children: ReactNode }) {
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <div>
+    <div className={["biz-form-field", className].filter(Boolean).join(" ")}>
       <Label>{label}</Label>
       <div style={{ marginTop: 6 }}>{children}</div>
     </div>

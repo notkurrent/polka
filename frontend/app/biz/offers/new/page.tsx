@@ -76,7 +76,7 @@ export default function BizCreateOfferPage() {
   };
 
   return (
-    <AppScreenBiz>
+    <AppScreenBiz className="biz-offer-form-screen">
       <AppHeaderBiz title="Новый товар" onBack={() => router.back()} />
       {profileLoading && (
         <div style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
@@ -94,7 +94,7 @@ export default function BizCreateOfferPage() {
         <PartnerModerationState profile={profile} context="feature" />
       )}
       {!profileLoading && !profileError && isApproved && (
-        <div className="biz-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
+        <div className="biz-form-content biz-offer-form-content" style={{ padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 16, fontFamily: fontFn }}>
           <Field label="Название">
             <input
               name="offer-title"
@@ -106,7 +106,7 @@ export default function BizCreateOfferPage() {
             />
           </Field>
 
-          <Field label="Описание">
+          <Field label="Описание" className="biz-form-field-wide">
             <textarea
               name="offer-description"
               aria-label="Описание"
@@ -118,7 +118,7 @@ export default function BizCreateOfferPage() {
             />
           </Field>
 
-          <Field label="Фото">
+          <Field label="Фото" className="biz-form-field-wide">
             <OfferImagePicker
               id="offer-photo"
               file={photoFile}
@@ -167,7 +167,7 @@ export default function BizCreateOfferPage() {
             />
           </Field>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="biz-form-field-wide biz-inventory-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <Field label="Наличие">
               <select
                 value={availability}
@@ -194,7 +194,7 @@ export default function BizCreateOfferPage() {
             </Field>
           </div>
 
-          {error && <div style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
+          {error && <div className="biz-form-message" style={{ color: t.danger, fontSize: 13, fontWeight: 650 }}>{error}</div>}
 
           <PillButtonBiz onClick={handleSave} size="lg" disabled={isSubmitting} style={{ marginTop: 2 }}>
             {isSubmitting ? "Сохранение..." : "Опубликовать"}
@@ -214,9 +214,9 @@ function Label({ children }: { children: ReactNode }) {
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <div>
+    <div className={["biz-form-field", className].filter(Boolean).join(" ")}>
       <Label>{label}</Label>
       <div style={{ marginTop: 8 }}>{children}</div>
     </div>

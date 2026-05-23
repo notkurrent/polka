@@ -24,9 +24,9 @@ export default function BizProfilePublicPage() {
   };
 
   return (
-    <AppScreenBiz>
+    <AppScreenBiz className="biz-public-profile-screen">
       <AppHeaderBiz title="Публичная страница" onBack={() => router.back()} />
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="biz-public-profile-content biz-form-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         {isLoading && (
           <>
             <Skeleton w="100%" h={94} radius={14} />
@@ -37,6 +37,7 @@ export default function BizProfilePublicPage() {
         {profile && (
           <>
         <div
+          className="biz-admin-card"
           style={{
             background: "#fff",
             border: `1px solid ${t.divider}`,

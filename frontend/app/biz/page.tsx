@@ -67,8 +67,9 @@ export default function BizDashboardPage() {
   const needsProfile = profileError && partnerErrorMessage(profileError).includes("зарегистрируйте");
 
   return (
-    <AppScreenBiz style={{ background: t.bg }}>
+    <AppScreenBiz className="biz-dashboard-screen" style={{ background: t.bg }}>
       <div
+        className="biz-dashboard-hero"
         style={{
           paddingTop: "calc(18px + var(--app-safe-top))",
           paddingRight: 20,
@@ -170,7 +171,7 @@ export default function BizDashboardPage() {
       {!needsProfile && !profileError && !profileLoading && isApproved && profile && (
         <div className="biz-dashboard-main">
           {isTelegramAccountIncomplete(user) && (!completionPromptDismissed || !linkPromptDismissed) && (
-            <div style={{ padding: "14px 16px 0" }}>
+            <div className="biz-dashboard-prompt" style={{ padding: "14px 16px 0" }}>
               <AccountLinkingPrompt
                 tone="business"
                 onDismiss={() => {
@@ -181,16 +182,55 @@ export default function BizDashboardPage() {
             </div>
           )}
 
-          <div style={{ padding: "14px 16px 0" }}>
-            <div style={{ display: "flex", gap: 8 }}>
+          <div className="biz-dashboard-status-grid">
+            <div className="biz-admin-card">
+              <div style={{ fontSize: 12, color: t.textSec, fontWeight: 650 }}>Модерация</div>
+              <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: t.text }}>Магазин активен</div>
+                <Badge tone="solid" size="sm">
+                  {partnerStatusLabel(profile.status)}
+                </Badge>
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.45, color: t.textSec }}>
+                Витрина доступна покупателям после публикации товаров.
+              </div>
+            </div>
+            <div className="biz-admin-card">
+              <div style={{ fontSize: 12, color: t.textSec, fontWeight: 650 }}>Подписка</div>
+              <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <Badge tone={profile.subscription_status === "ACTIVE" ? "solid" : "neutral"} size="sm">
+                  {subscriptionPlanLabel(profile.plan)}
+                </Badge>
+                <Badge tone={profile.subscription_status === "SUSPENDED" ? "red" : "neutral"} size="sm">
+                  {subscriptionStatusLabel(profile.subscription_status)}
+                </Badge>
+              </div>
+              <div style={{ marginTop: 8, fontSize: 13, fontWeight: 750, color: t.text }}>
+                {subscriptionLimitText(profile.subscription_status, activeProducts)}
+              </div>
+            </div>
+            <div className="biz-admin-card">
+              <div style={{ fontSize: 12, color: t.textSec, fontWeight: 650 }}>Каталог</div>
+              <div style={{ marginTop: 8, fontSize: 18, fontWeight: 800, color: t.text }}>
+                {activeProducts} в продаже
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.45, color: t.textSec }}>
+                {hiddenProducts > 0 ? `${hiddenProducts} скрыто из покупательской ленты.` : "Скрытых товаров нет."}
+              </div>
+            </div>
+          </div>
+
+          <div className="biz-dashboard-stats" style={{ padding: "14px 16px 0" }}>
+            <div className="biz-stat-grid" style={{ display: "flex", gap: 8 }}>
               <StatTile value={activeProducts} label="В продаже" accent />
               <StatTile value={offers?.length || 0} label="Всего товаров" />
               <StatTile value={hiddenProducts} label="Скрыто" />
             </div>
           </div>
 
-          <div style={{ padding: "16px 16px 0" }}>
+          <div className="biz-dashboard-store-block" style={{ padding: "16px 16px 0" }}>
             <div
+              className="biz-admin-card biz-store-summary"
               style={{
                 border: `1px solid ${t.divider}`,
                 borderRadius: 14,
@@ -260,7 +300,7 @@ export default function BizDashboardPage() {
             </div>
           </div>
 
-          <div style={{ padding: "18px 16px 0" }}>
+          <div className="biz-dashboard-products" style={{ padding: "18px 16px 0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px" }}>Товары</div>
               <button
@@ -281,7 +321,7 @@ export default function BizDashboardPage() {
                 Все товары
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="biz-dashboard-product-list" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {offersLoading && (
                 <>
                   <Skeleton w="100%" h={74} radius={14} />
@@ -331,11 +371,11 @@ export default function BizDashboardPage() {
             </div>
           </div>
 
-          <div style={{ padding: "16px 16px 16px" }}>
+          <div className="biz-dashboard-actions" style={{ padding: "16px 16px 16px" }}>
             <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", marginBottom: 10 }}>
               Быстрые действия
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
+            <div className="biz-action-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
               <ActionCard icon={Icon.plus} label="Добавить товар" onClick={() => router.push("/biz/offers/new")} primary />
               <ActionCard icon={Icon.bag} label="Мои товары" onClick={() => router.push("/biz/offers")} />
               <ActionCard icon={Icon.user} label="Профиль магазина" onClick={() => router.push("/biz/profile")} />

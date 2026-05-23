@@ -118,7 +118,7 @@ export default function BizOffersListScreen() {
   };
 
   return (
-    <AppScreenBiz style={{ background: t.bg, fontFamily: fontFn }}>
+    <AppScreenBiz className="biz-offers-screen" style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz
         title="Мои товары"
         right={
@@ -147,7 +147,20 @@ export default function BizOffersListScreen() {
           ) : undefined
         }
       />
-      <div className="biz-offers-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="biz-offers-content biz-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+        {isApproved && (
+          <div className="biz-desktop-toolbar">
+            <div>
+              <div className="biz-desktop-kicker">Каталог</div>
+              <h1>Мои товары</h1>
+              <p>Управляйте фото, ценой, остатками и видимостью товаров в витрине.</p>
+            </div>
+            <button type="button" onClick={() => router.push("/biz/offers/new")}>
+              {Icon.plus(17, "#fff")}
+              <span>Добавить товар</span>
+            </button>
+          </div>
+        )}
         {profileLoading && (
           <>
             <Skeleton w="100%" h={86} radius={12} />
@@ -172,6 +185,7 @@ export default function BizOffersListScreen() {
         )}
         {isApproved && profile && (
           <div
+            className="biz-admin-card biz-subscription-strip"
             style={{
               border: `1px solid ${t.divider}`,
               borderRadius: 12,
@@ -209,6 +223,7 @@ export default function BizOffersListScreen() {
           return (
             <div
               key={offer.id}
+              className="biz-offer-row"
               style={{
                 background: t.bg,
                 border: `1px solid ${t.divider}`,
@@ -229,7 +244,7 @@ export default function BizOffersListScreen() {
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 {isEditing ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div className="biz-offer-edit-form" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <OfferImagePicker
                       id={`offer-photo-${offer.id}`}
                       file={draftPhoto}
@@ -308,7 +323,7 @@ export default function BizOffersListScreen() {
                         style={inputStyle(t, fontFn)}
                       />
                     </div>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div className="biz-row-actions" style={{ display: "flex", gap: 8 }}>
                       <PillButtonBiz onClick={() => saveEdit(offer.id)} disabled={busyId === offer.id}>
                         {busyId === offer.id ? "Сохраняем..." : "Сохранить"}
                       </PillButtonBiz>
@@ -318,8 +333,35 @@ export default function BizOffersListScreen() {
                     </div>
                   </div>
                 ) : (
-                  <>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <div className="biz-offer-row-view">
+                    <div className="biz-offer-row-info">
+                      <div className="biz-offer-row-title" style={{ fontSize: 14, fontWeight: 750, marginTop: 5 }}>{offer.name}</div>
+                      {offer.description && (
+                        <div style={{ fontSize: 12, color: t.textSec, marginTop: 3, lineHeight: 1.35 }}>
+                          {offer.description}
+                        </div>
+                      )}
+                      {offer.tags && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                          {tagsToArray(offer.tags).map((tag, index) => (
+                            <span
+                              key={`${tag}-${index}`}
+                              style={{
+                                padding: "3px 7px",
+                                borderRadius: 999,
+                                background: t.surface,
+                                color: t.textSec,
+                                fontSize: 11,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="biz-offer-row-meta" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                       <Badge tone={active ? "solid" : "neutral"} size="sm">
                         {availabilityLabel(offer.availability)}
                       </Badge>
@@ -329,36 +371,11 @@ export default function BizOffersListScreen() {
                         </Badge>
                       )}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 750, marginTop: 5 }}>{offer.name}</div>
-                    {offer.description && (
-                      <div style={{ fontSize: 12, color: t.textSec, marginTop: 3, lineHeight: 1.35 }}>
-                        {offer.description}
-                      </div>
-                    )}
-                    {offer.tags && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
-                        {tagsToArray(offer.tags).map((tag, index) => (
-                          <span
-                            key={`${tag}-${index}`}
-                            style={{
-                              padding: "3px 7px",
-                              borderRadius: 999,
-                              background: t.surface,
-                              color: t.textSec,
-                              fontSize: 11,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 7, flexWrap: "wrap" }}>
+                    <div className="biz-offer-row-price" style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 7, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: t.primaryDeep }}>{money(offer.price ?? offer.new_price)}</span>
                       <span style={{ fontSize: 11, color: t.textSec }}>· {offer.stock} шт</span>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                    <div className="biz-row-actions" style={{ display: "flex", gap: 8, marginTop: 10 }}>
                       <button type="button" onClick={() => beginEdit(offer)} style={secondaryButton(t, fontFn)}>
                         Изменить
                       </button>
@@ -371,7 +388,7 @@ export default function BizOffersListScreen() {
                         {busyId === offer.id ? "Удаляем..." : "Удалить"}
                       </button>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
@@ -379,6 +396,7 @@ export default function BizOffersListScreen() {
         })}
         {isApproved && (
           <div
+            className="biz-admin-note"
             style={{
               padding: "14px 16px",
               background: t.primarySoft,

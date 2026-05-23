@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { AppHeaderBiz, PillButtonBiz } from "@/components/biz/BizShared";
+import { AppHeaderBiz, AppScreenBiz, PillButtonBiz } from "@/components/biz/BizShared";
 import { BizTabBar } from "@/components/biz/BizTabBar";
 import { Badge, Icon, StripePlaceholder, tokens, FONT, PillButton } from "@/components/ui/primitives";
 import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
@@ -41,9 +41,9 @@ export default function BizProfileScreen() {
   };
 
   return (
-    <div className="screen-scroll-with-tabbar" style={{ background: t.bg, fontFamily: fontFn }}>
+    <AppScreenBiz className="biz-profile-screen" style={{ background: t.bg, fontFamily: fontFn }}>
       <AppHeaderBiz title="Магазин" />
-      <div className="biz-form-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="biz-profile-content biz-content" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
         {isLoading && (
           <>
             <Skeleton w="100%" h={94} radius={12} />
@@ -54,6 +54,7 @@ export default function BizProfileScreen() {
         {profile && (
           <>
             <div
+              className="biz-admin-card biz-profile-summary"
               style={{
                 background: t.bg,
                 border: `1px solid ${t.divider}`,
@@ -81,7 +82,53 @@ export default function BizProfileScreen() {
                 </div>
               </div>
             </div>
+            <div className="biz-profile-settings-grid">
+              <section className="biz-admin-card biz-profile-section">
+                <div className="biz-section-heading">Основные данные</div>
+                <div className="biz-section-title">{profile.name}</div>
+                <div className="biz-section-copy">{profile.category || "Категория не указана"}</div>
+                {profile.description && <div className="biz-section-copy">{profile.description}</div>}
+                <button type="button" onClick={() => router.push("/biz/profile/edit")} className="biz-text-action">
+                  Редактировать профиль
+                </button>
+              </section>
+
+              <section className="biz-admin-card biz-profile-section">
+                <div className="biz-section-heading">Контакты</div>
+                <div className="biz-section-copy">{profile.phone || "Телефон не указан"}</div>
+                <div className="biz-section-copy">{profile.whatsapp_url || "WhatsApp не указан"}</div>
+                <div className="biz-section-copy">{profile.telegram_url || "Telegram не указан"}</div>
+                <div className="biz-section-copy">{profile.instagram_url || "Instagram не указан"}</div>
+              </section>
+
+              <section className="biz-admin-card biz-profile-section">
+                <div className="biz-section-heading">Фото</div>
+                <div className="biz-section-copy">
+                  {profile.logo_url ? "Логотип загружен." : "Логотип пока не добавлен."}
+                </div>
+                <button type="button" onClick={() => router.push("/biz/profile/edit")} className="biz-text-action">
+                  Управлять фото
+                </button>
+              </section>
+
+              <section className="biz-admin-card biz-profile-section">
+                <div className="biz-section-heading">Публичная ссылка</div>
+                <div className="biz-section-title">{`/stores/${profile.id}`}</div>
+                <div className="biz-section-copy">Ссылка на витрину магазина для покупателей.</div>
+                <button type="button" onClick={() => router.push(`/stores/${profile.id}`)} className="biz-text-action">
+                  Открыть витрину
+                </button>
+              </section>
+
+              <section className="biz-admin-card biz-profile-section">
+                <div className="biz-section-heading">Часы и адрес</div>
+                <div className="biz-section-title">{profile.hours || "Часы не указаны"}</div>
+                <div className="biz-section-copy">{profile.address || "Адрес не указан"}</div>
+                {profile.map_url && <div className="biz-section-copy">{profile.map_url}</div>}
+              </section>
+            </div>
             <div
+              className="biz-profile-menu"
               style={{
                 background: t.bg,
                 border: `1px solid ${t.divider}`,
@@ -149,6 +196,6 @@ export default function BizProfileScreen() {
         )}
       </div>
       <BizTabBar />
-    </div>
+    </AppScreenBiz>
   );
 }
