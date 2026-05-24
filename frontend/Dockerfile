@@ -8,5 +8,6 @@ RUN npm install
 COPY . .
 
 ENV WATCHPACK_POLLING=true
+ENV NEXT_TELEMETRY_DISABLED=1
 
 CMD ["npm", "run", "dev"]
