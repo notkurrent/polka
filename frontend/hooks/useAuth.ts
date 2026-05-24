@@ -8,17 +8,6 @@ import { getTelegramLaunchInfo, isTelegramAuthContext } from "@/lib/auth-routing
 
 type TelegramAuthError = "missing_init_data" | "failed" | "network" | null;
 
-function logTelegramAuthContext(event: string) {
-  const info = getTelegramLaunchInfo();
-  console.info("telegram.auth_context", {
-    event,
-    hasTelegramWebApp: info.hasTelegramWebApp,
-    initDataLength: info.initDataLength,
-    initDataSource: info.initDataSource,
-    platform: info.platform,
-  });
-}
-
 function classifyTelegramAuthError(error: unknown): Exclude<TelegramAuthError, null> {
   if (error instanceof ApiError) {
     return error.status === 401 ? "failed" : "network";
@@ -39,12 +28,10 @@ export const useAuth = () => {
       if (!info.hasInitData && !info.isLikelyTelegramWebView) return false;
 
       if (!info.initData) {
-        logTelegramAuthContext("missing_init_data");
         setTelegramAuthError("missing_init_data");
         return false;
       }
 
-      logTelegramAuthContext("attempt");
       const data = await api.post<{
         access_token: string;
         user: User;

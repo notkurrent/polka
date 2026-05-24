@@ -55,11 +55,6 @@ export function TelegramProvider() {
 
       try {
         root.dataset.telegramWebapp = "true";
-        console.info("telegram.webapp_context", {
-          hasTelegramWebApp: launchInfo.hasTelegramWebApp,
-          initDataLength: launchInfo.initDataLength,
-          platform: launchInfo.platform,
-        });
         // Говорим телеграму, что приложение готово к отображению
         webApp.ready?.();
         applyTelegramSafeAreas();
