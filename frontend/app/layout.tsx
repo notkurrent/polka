@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Zoom-lock временно сохраняется из-за iOS/Telegram input/double-tap zoom; снимать только после device QA.
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
@@ -35,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <TelegramProvider />
         <AppShell>{children}</AppShell>

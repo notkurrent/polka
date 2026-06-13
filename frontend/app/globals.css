@@ -92,32 +92,42 @@ a,
 input,
 textarea,
 select,
+label[for],
 [role="button"] {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible,
-a:focus-visible,
-[role="button"]:focus-visible {
-  outline: 3px solid rgba(26, 58, 36, 0.34);
-  outline-offset: 3px;
-  border-radius: inherit;
-}
-
 input:focus,
 textarea:focus,
-select:focus,
+select:focus {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
-select:focus-visible {
-  outline: none;
+select:focus-visible,
+label[for]:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid rgba(26, 58, 36, 0.34) !important;
+  outline-offset: 3px;
+  border-radius: inherit;
 }
 
 input,
 textarea,
 select {
   caret-color: var(--foreground); /* Цвет каретки, чтобы всегда было видно моргающую палочку */
+}
+
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: max(16px, 1em) !important;
+  }
 }
 
 .auth-underline-input {

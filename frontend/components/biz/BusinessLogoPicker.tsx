@@ -44,7 +44,7 @@ export function BusinessLogoPicker({
 
   const imageUnavailable = !sourceUrl || imageState === "error";
   const statusText = loading
-    ? "Загружаем логотип..."
+    ? "Загружаем логотип…"
     : error || (imageState === "error" ? "Не удалось показать логотип. Можно выбрать другой файл." : "");
 
   return (
@@ -110,7 +110,7 @@ export function BusinessLogoPicker({
               fontFamily: fontFn,
             }}
           >
-            ...
+            …
           </div>
         )}
       </div>
