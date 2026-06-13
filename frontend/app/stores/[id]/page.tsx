@@ -34,6 +34,36 @@ function availabilityCopy(availability: OfferAvailability, stock: number) {
   return { label: "В наличии", tone: "green" as const };
 }
 
+function offerActionStyle(
+  t: ReturnType<typeof tokens>,
+  { disabled = false, link = false } = {},
+) {
+  return {
+    minWidth: 112,
+    minHeight: 44,
+    padding: "0 16px",
+    borderRadius: 9999,
+    border: `1.5px solid ${t.primary}`,
+    background: "#fff",
+    color: t.primaryDeep,
+    fontSize: 14,
+    fontWeight: 650,
+    fontFamily: FONT(),
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.58 : 1,
+    position: "relative" as const,
+    zIndex: 2,
+    ...(link
+      ? {
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          textDecoration: "none",
+        }
+      : null),
+  };
+}
+
 export default function StoreScreen({
   params,
 }: {
@@ -524,22 +554,7 @@ export default function StoreScreen({
                           className="store-offer-card-action"
                           type="button"
                           disabled
-                          style={{
-                            minWidth: 112,
-                            minHeight: 44,
-                            padding: "0 16px",
-                            borderRadius: 9999,
-                            border: `1.5px solid ${t.primary}`,
-                            background: "#fff",
-                            color: t.primaryDeep,
-                            fontSize: 14,
-                            fontWeight: 650,
-                            fontFamily: FONT(),
-                            cursor: "not-allowed",
-                            opacity: 0.58,
-                            position: "relative",
-                            zIndex: 2,
-                          }}
+                          style={offerActionStyle(t, { disabled: true })}
                         >
                           Написать
                         </button>
@@ -557,22 +572,7 @@ export default function StoreScreen({
                             });
                             window.location.href = contactLink.href;
                           }}
-                          style={{
-                            minWidth: 112,
-                            minHeight: 44,
-                            padding: "0 16px",
-                            borderRadius: 9999,
-                            border: `1.5px solid ${t.primary}`,
-                            background: "#fff",
-                            color: t.primaryDeep,
-                            fontSize: 14,
-                            fontWeight: 650,
-                            fontFamily: FONT(),
-                            cursor: "pointer",
-                            opacity: 1,
-                            position: "relative",
-                            zIndex: 2,
-                          }}
+                          style={offerActionStyle(t)}
                         >
                           Написать
                         </button>
@@ -580,26 +580,7 @@ export default function StoreScreen({
                         <Link
                           className="store-offer-card-action"
                           href={`/offers/${offer.id}`}
-                          style={{
-                            minWidth: 112,
-                            minHeight: 44,
-                            padding: "0 16px",
-                            borderRadius: 9999,
-                            border: `1.5px solid ${t.primary}`,
-                            background: "#fff",
-                            color: t.primaryDeep,
-                            fontSize: 14,
-                            fontWeight: 650,
-                            fontFamily: FONT(),
-                            cursor: "pointer",
-                            opacity: 1,
-                            position: "relative",
-                            zIndex: 2,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            textDecoration: "none",
-                          }}
+                          style={offerActionStyle(t, { link: true })}
                         >
                           Написать
                         </Link>
