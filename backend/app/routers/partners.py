@@ -15,6 +15,7 @@ from sqlmodel import select
 
 from app.database import get_session
 from app.dependencies import get_current_user
+from app.rate_limit import sensitive_rate_limit
 from app.models import (
     Inquiry,
     Offer,
@@ -471,7 +472,11 @@ async def get_partner_detail(
     )
 
 
-@public_router.post("/{partner_id}/inquiries", response_model=InquiryDTO)
+@public_router.post(
+    "/{partner_id}/inquiries",
+    response_model=InquiryDTO,
+    dependencies=[Depends(sensitive_rate_limit("partners.inquiries.create"))],
+)
 async def create_partner_inquiry(
     partner_id: int,
     req: InquiryCreateDTO,
@@ -510,7 +515,11 @@ async def create_partner_inquiry(
     )
 
 
-@router.post("/register", response_model=PartnerProfileDTO)
+@router.post(
+    "/register",
+    response_model=PartnerProfileDTO,
+    dependencies=[Depends(sensitive_rate_limit("partner_api.register"))],
+)
 async def register_partner(
     req: PartnerRegister,
     current_user: User = Depends(get_current_user),
@@ -898,7 +907,12 @@ def parse_code_payload(req: VerifyOrderCodeRequest) -> tuple[int | None, str]:
     raise HTTPException(status_code=400, detail="Code must contain 4 digits")
 
 
-@router.post("/orders/verify-code", response_model=OrderDetailDTO, include_in_schema=False)
+@router.post(
+    "/orders/verify-code",
+    response_model=OrderDetailDTO,
+    include_in_schema=False,
+    dependencies=[Depends(sensitive_rate_limit("partner_api.orders.verify_code"))],
+)
 async def verify_order_code(
     req: VerifyOrderCodeRequest,
     current_user: User = Depends(get_current_user),

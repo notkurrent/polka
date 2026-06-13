@@ -8,6 +8,7 @@ import random
 from app.database import get_session
 from app.models import Order, OrderItem, OrderStatus, Offer, OfferAvailability, Partner, PartnerStatus, Rating, User
 from app.dependencies import get_current_user
+from app.rate_limit import sensitive_rate_limit
 from app.schemas import OrderDetailDTO
 from app.serializers import build_order_detail_dto
 from app.order_lifecycle import ACTIVE_ORDER_STATUSES, expire_stale_orders, normalize_order_status, restore_order_stock
@@ -73,8 +74,8 @@ def order_item_quantities(req: CreateOrderRequest) -> dict[int, int]:
     return quantities
 
 
-@router.post("", response_model=OrderDetailDTO, include_in_schema=False)
-@router.post("/", response_model=OrderDetailDTO, include_in_schema=False)
+@router.post("", response_model=OrderDetailDTO, include_in_schema=False, dependencies=[Depends(sensitive_rate_limit("orders.create"))])
+@router.post("/", response_model=OrderDetailDTO, include_in_schema=False, dependencies=[Depends(sensitive_rate_limit("orders.create"))])
 async def create_order(
     req: CreateOrderRequest,
     current_user: User = Depends(get_current_user),

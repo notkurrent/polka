@@ -76,6 +76,23 @@ def get_media_max_upload_bytes() -> int:
     return max(value, 1)
 
 
+def parse_int_env(name: str, default: int, minimum: int) -> int:
+    raw = os.getenv(name, str(default))
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return max(value, minimum)
+
+
+def get_sensitive_rate_limit_max_requests() -> int:
+    return parse_int_env("SENSITIVE_RATE_LIMIT_MAX_REQUESTS", 60, 1)
+
+
+def get_sensitive_rate_limit_window_seconds() -> int:
+    return parse_int_env("SENSITIVE_RATE_LIMIT_WINDOW_SECONDS", 60, 1)
+
+
 def get_admin_phone_allowlist() -> list[str]:
     return parse_csv_env("ADMIN_PHONE_ALLOWLIST", [])
 

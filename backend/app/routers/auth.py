@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from app.config import is_production
 from app.dependencies import get_current_user
+from app.rate_limit import sensitive_rate_limit
 from app.utils.auth import (
     create_access_token,
     create_refresh_token,
@@ -116,7 +117,7 @@ def telegram_init_data_status(init_data: str) -> dict[str, object]:
     }
 
 
-@router.post("/telegram")
+@router.post("/telegram", dependencies=[Depends(sensitive_rate_limit("auth.telegram"))])
 async def telegram_auth(req: TelegramAuthRequest, session: AsyncSession = Depends(get_session)):
     init_data_status = telegram_init_data_status(req.initData)
     if not verify_telegram_web_app_data(req.initData):
@@ -154,7 +155,10 @@ async def telegram_auth(req: TelegramAuthRequest, session: AsyncSession = Depend
     return auth_response(user)
 
 
-@router.post("/telegram/link-web-account")
+@router.post(
+    "/telegram/link-web-account",
+    dependencies=[Depends(sensitive_rate_limit("auth.telegram.link_web_account"))],
+)
 async def link_telegram_web_account(
     req: LinkTelegramRequest,
     current_user: User = Depends(get_current_user),
@@ -203,7 +207,10 @@ async def link_telegram_web_account(
     return auth_response(target_user)
 
 
-@router.post("/telegram/complete-account")
+@router.post(
+    "/telegram/complete-account",
+    dependencies=[Depends(sensitive_rate_limit("auth.telegram.complete_account"))],
+)
 async def complete_telegram_account(
     req: CompleteTelegramAccountRequest,
     current_user: User = Depends(get_current_user),
@@ -259,7 +266,7 @@ async def complete_telegram_account(
     )
 
 
-@router.post("/web/register")
+@router.post("/web/register", dependencies=[Depends(sensitive_rate_limit("auth.web.register"))])
 async def register_web(req: RegisterRequest, session: AsyncSession = Depends(get_session)):
     phone = normalize_phone(req.phone)
     name = req.name.strip() or "Пользователь"
@@ -300,7 +307,7 @@ async def register_web(req: RegisterRequest, session: AsyncSession = Depends(get
     return auth_response(user)
 
 
-@router.post("/web/login")
+@router.post("/web/login", dependencies=[Depends(sensitive_rate_limit("auth.web.login"))])
 async def login_web(req: LoginRequest, session: AsyncSession = Depends(get_session)):
     phone = normalize_phone(req.phone)
 
@@ -318,24 +325,26 @@ async def login_web(req: LoginRequest, session: AsyncSession = Depends(get_sessi
     return auth_response(user)
 
 
-@router.post("/password/forgot")
+@router.post("/password/forgot", dependencies=[Depends(sensitive_rate_limit("auth.password.forgot"))])
 async def forgot_password(req: ForgotPasswordRequest):
     normalize_phone(req.phone)
     return {"message": "Если аккаунт существует, мы покажем доступный способ восстановления."}
 
 
 @router.post("/web/send-otp", deprecated=True)
-async def send_otp(req: SendOtpRequest):
+async def send_otp(req: SendOtpRequest, request: Request):
     if is_production():
         raise HTTPException(status_code=404, detail="Not found")
+    sensitive_rate_limit("auth.web.send_otp")(request)
     # Deprecated mock OTP endpoint kept temporarily for existing frontend flows.
     return {"message": "OTP sent", "mock_code": "1111"}
 
 
 @router.post("/web/verify", deprecated=True)
-async def verify_otp(req: VerifyOtpRequest, session: AsyncSession = Depends(get_session)):
+async def verify_otp(req: VerifyOtpRequest, request: Request, session: AsyncSession = Depends(get_session)):
     if is_production():
         raise HTTPException(status_code=404, detail="Not found")
+    sensitive_rate_limit("auth.web.verify_otp")(request)
     if req.code != "1111":
         logger.info("auth.web_otp_invalid phone_suffix=%s", req.phone[-4:])
         raise HTTPException(status_code=400, detail="Invalid OTP code")
