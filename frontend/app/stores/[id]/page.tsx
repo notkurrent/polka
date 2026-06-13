@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
@@ -438,13 +439,6 @@ export default function StoreScreen({
               return (
                 <article
                   key={offer.id}
-                  onClick={() => router.push(`/offers/${offer.id}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ")
-                      router.push(`/offers/${offer.id}`);
-                  }}
-                  role="button"
-                  tabIndex={0}
                   className="store-offer-card"
                   style={{
                     background: t.bg,
@@ -455,8 +449,14 @@ export default function StoreScreen({
                     gap: 12,
                     alignItems: "center",
                     cursor: "pointer",
+                    position: "relative",
                   }}
                 >
+                  <Link
+                    href={`/offers/${offer.id}`}
+                    aria-label={`Открыть товар ${offer.title}`}
+                    style={{ position: "absolute", inset: 0, zIndex: 1, borderRadius: "inherit" }}
+                  />
                   <OfferImagePreview
                     imageUrl={offer.imageUrl}
                     label="товар"
@@ -519,12 +519,36 @@ export default function StoreScreen({
                           {availability.label}
                         </Badge>
                       </div>
-                      <button
-                        className="store-offer-card-action"
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (contactLink && partner) {
+                      {unavailable ? (
+                        <button
+                          className="store-offer-card-action"
+                          type="button"
+                          disabled
+                          style={{
+                            minWidth: 112,
+                            minHeight: 44,
+                            padding: "0 16px",
+                            borderRadius: 9999,
+                            border: `1.5px solid ${t.primary}`,
+                            background: "#fff",
+                            color: t.primaryDeep,
+                            fontSize: 14,
+                            fontWeight: 650,
+                            fontFamily: FONT(),
+                            cursor: "not-allowed",
+                            opacity: 0.58,
+                            position: "relative",
+                            zIndex: 2,
+                          }}
+                        >
+                          Написать
+                        </button>
+                      ) : contactLink && partner ? (
+                        <button
+                          className="store-offer-card-action"
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
                             trackInquiryClick({
                               partnerId: partner.id,
                               offerId: Number(offer.id),
@@ -532,28 +556,54 @@ export default function StoreScreen({
                               targetUrl: contactLink.href,
                             });
                             window.location.href = contactLink.href;
-                            return;
-                          }
-                          router.push(`/offers/${offer.id}`);
-                        }}
-                        disabled={unavailable}
-                        style={{
-                          minWidth: 112,
-                          minHeight: 44,
-                          padding: "0 16px",
-                          borderRadius: 9999,
-                          border: `1.5px solid ${t.primary}`,
-                          background: "#fff",
-                          color: t.primaryDeep,
-                          fontSize: 14,
-                          fontWeight: 650,
-                          fontFamily: FONT(),
-                          cursor: unavailable ? "not-allowed" : "pointer",
-                          opacity: unavailable ? 0.58 : 1,
-                        }}
-                      >
-                        Написать
-                      </button>
+                          }}
+                          style={{
+                            minWidth: 112,
+                            minHeight: 44,
+                            padding: "0 16px",
+                            borderRadius: 9999,
+                            border: `1.5px solid ${t.primary}`,
+                            background: "#fff",
+                            color: t.primaryDeep,
+                            fontSize: 14,
+                            fontWeight: 650,
+                            fontFamily: FONT(),
+                            cursor: "pointer",
+                            opacity: 1,
+                            position: "relative",
+                            zIndex: 2,
+                          }}
+                        >
+                          Написать
+                        </button>
+                      ) : (
+                        <Link
+                          className="store-offer-card-action"
+                          href={`/offers/${offer.id}`}
+                          style={{
+                            minWidth: 112,
+                            minHeight: 44,
+                            padding: "0 16px",
+                            borderRadius: 9999,
+                            border: `1.5px solid ${t.primary}`,
+                            background: "#fff",
+                            color: t.primaryDeep,
+                            fontSize: 14,
+                            fontWeight: 650,
+                            fontFamily: FONT(),
+                            cursor: "pointer",
+                            opacity: 1,
+                            position: "relative",
+                            zIndex: 2,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            textDecoration: "none",
+                          }}
+                        >
+                          Написать
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </article>

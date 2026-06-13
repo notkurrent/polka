@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
@@ -219,11 +220,10 @@ export default function AppScreenBuyerPage() {
             <div style={{ fontSize: 28, lineHeight: 1.05, fontWeight: 850, letterSpacing: 0 }}>Каталог</div>
             <div style={{ marginTop: 4, fontSize: 13, color: t.textSec }}>Товары и магазины Polka</div>
           </div>
-          <button
+          <Link
             className="buyer-catalog-favorite-shortcut"
-            type="button"
+            href="/favorites"
             aria-label="Открыть избранное"
-            onClick={() => router.push("/favorites")}
             style={{
               width: 44,
               height: 44,
@@ -234,10 +234,11 @@ export default function AppScreenBuyerPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              textDecoration: "none",
             }}
           >
             {Icon.heart(18, t.primaryDeep)}
-          </button>
+          </Link>
         </div>
 
         <div
@@ -246,10 +247,9 @@ export default function AppScreenBuyerPage() {
             marginTop: 12,
           }}
         >
-          <button
+          <Link
             className="buyer-search-trigger"
-            type="button"
-            onClick={() => router.push("/search")}
+            href="/search"
             style={{
               width: "100%",
               background: t.surface,
@@ -261,11 +261,13 @@ export default function AppScreenBuyerPage() {
               padding: "11px 12px",
               cursor: "pointer",
               textAlign: "left",
+              color: "inherit",
+              textDecoration: "none",
             }}
           >
             {Icon.search(18, t.textTer)}
             <span style={{ fontSize: 14, color: t.textTer, flex: 1 }}>Искать товары и магазины</span>
-          </button>
+          </Link>
 
           <div
             className="buyer-filter-row"
@@ -337,11 +339,10 @@ export default function AppScreenBuyerPage() {
           ) : (
             <div className="buyer-store-list" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 2 }}>
               {stores.map((store) => (
-                <button
+                <Link
                   className="buyer-store-card"
                   key={store.id}
-                  type="button"
-                  onClick={() => router.push(`/stores/${store.id}`)}
+                  href={`/stores/${store.id}`}
                   style={{
                     width: 210,
                     flexShrink: 0,
@@ -355,6 +356,8 @@ export default function AppScreenBuyerPage() {
                     gap: 10,
                     textAlign: "left",
                     cursor: "pointer",
+                    color: "inherit",
+                    textDecoration: "none",
                   }}
                 >
                   <BusinessLogoPreview logoUrl={store.logoUrl} businessName={store.name} size={48} radius={12} />
@@ -365,7 +368,7 @@ export default function AppScreenBuyerPage() {
                       {store.count} товар{store.count === 1 ? "" : "а"}
                     </div>
                   </div>
-                </button>
+                </Link>
               ))}
             </div>
           )}
@@ -425,12 +428,6 @@ export default function AppScreenBuyerPage() {
               return (
                 <article
                   key={product.id}
-                  onClick={() => router.push(`/offers/${product.id}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") router.push(`/offers/${product.id}`);
-                  }}
-                  role="button"
-                  tabIndex={0}
                   className="buyer-offer-card"
                   style={{
                     width: "100%",
@@ -444,8 +441,14 @@ export default function AppScreenBuyerPage() {
                     flexDirection: "column",
                     padding: 0,
                     color: t.text,
+                    position: "relative",
                   }}
                 >
+                  <Link
+                    href={`/offers/${product.id}`}
+                    aria-label={`Открыть товар ${product.title}`}
+                    style={{ position: "absolute", inset: 0, zIndex: 1, borderRadius: "inherit" }}
+                  />
                   <div className="buyer-offer-media" style={{ position: "relative" }}>
                     <OfferImagePreview
                       imageUrl={product.imageUrl}
@@ -476,6 +479,7 @@ export default function AppScreenBuyerPage() {
                         justifyContent: "center",
                         cursor: "pointer",
                         backdropFilter: "blur(6px)",
+                        zIndex: 2,
                       }}
                     >
                       {Icon.heart(
@@ -521,15 +525,53 @@ export default function AppScreenBuyerPage() {
                       </Badge>
                     </div>
 
-                    <div className="buyer-offer-card-action">
-                      <PillButton
-                        variant="dark"
-                        size="sm"
-                        onClick={() => router.push(`/offers/${product.id}`)}
-                        disabled={product.availability === "OUT_OF_STOCK" || product.stock <= 0}
-                      >
-                        Связаться
-                      </PillButton>
+                    <div className="buyer-offer-card-action" style={{ position: "relative", zIndex: 2 }}>
+                      {product.availability === "OUT_OF_STOCK" || product.stock <= 0 ? (
+                        <PillButton variant="dark" size="sm" disabled>
+                          Связаться
+                        </PillButton>
+                      ) : (
+                        <Link
+                          href={`/offers/${product.id}`}
+                          onMouseDown={(event) => {
+                            event.currentTarget.style.transform = "scale(0.97)";
+                          }}
+                          onMouseUp={(event) => {
+                            event.currentTarget.style.transform = "scale(1)";
+                          }}
+                          onMouseLeave={(event) => {
+                            event.currentTarget.style.transform = "scale(1)";
+                          }}
+                          style={{
+                            minHeight: 44,
+                            height: 44,
+                            padding: "0 16px",
+                            width: "auto",
+                            background: t.primaryDeep,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 9999,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            fontFamily: FONT(),
+                            cursor: "pointer",
+                            opacity: 1,
+                            letterSpacing: 0,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 8,
+                            transition: "transform 0.1s ease, opacity 0.2s ease",
+                            touchAction: "manipulation",
+                            WebkitTapHighlightColor: "transparent",
+                            textDecoration: "none",
+                            position: "relative",
+                            zIndex: 2,
+                          }}
+                        >
+                          Связаться
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </article>

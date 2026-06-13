@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import React from "react";
-import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 import type { PartnerDetail } from "@/lib/api-types";
@@ -18,7 +18,6 @@ import { BusinessLogoPreview } from "@/components/biz/BusinessLogoPicker";
 export default function FavoritesScreen() {
   const t = tokens();
   const fontFn = FONT ? FONT() : "system-ui";
-  const router = useRouter();
   const { favorites, toggleFavorite } = useAppStore();
 
   const {
@@ -126,10 +125,9 @@ export default function FavoritesScreen() {
                 )
               : null;
             return (
-              <div
+              <article
                 className="store-offer-card buyer-favorite-store-card"
                 key={partner.id}
-                onClick={() => router.push(`/stores/${partner.id}`)}
                 style={{
                   background: t.bg,
                   border: `1px solid ${t.divider}`,
@@ -139,8 +137,14 @@ export default function FavoritesScreen() {
                   gap: 12,
                   alignItems: "center",
                   cursor: "pointer",
+                  position: "relative",
                 }}
               >
+                <Link
+                  href={`/stores/${partner.id}`}
+                  aria-label={`Открыть магазин ${partner.name}`}
+                  style={{ position: "absolute", inset: 0, zIndex: 1, borderRadius: "inherit" }}
+                />
                 <BusinessLogoPreview
                   logoUrl={partner.logo_url}
                   businessName={partner.name}
@@ -188,6 +192,8 @@ export default function FavoritesScreen() {
                   </div>
                 </div>
                 <button
+                  type="button"
+                  aria-label="Убрать магазин из избранного"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleFavorite(String(partner.id));
@@ -200,11 +206,13 @@ export default function FavoritesScreen() {
                     alignItems: "center",
                     justifyContent: "center",
                     padding: 8,
+                    position: "relative",
+                    zIndex: 2,
                   }}
                 >
                   {Icon.heart(18, t.danger, true)}
                 </button>
-              </div>
+              </article>
             );
           })}
         </div>

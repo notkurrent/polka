@@ -1,11 +1,11 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
 
 export function TabBar() {
   const pathname = usePathname();
-  const router = useRouter();
   const t = tokens();
   const fontFn = FONT ? FONT() : "system-ui";
 
@@ -54,12 +54,11 @@ export function TabBar() {
         const IconFn = Icon[tab.icon];
 
         return (
-          <button
+          <Link
             key={tab.id}
-            type="button"
+            href={tab.route}
             aria-label={tab.label}
             aria-current={on ? "page" : undefined}
-            onClick={() => router.push(tab.route)}
             style={{
               flex: 1,
               minHeight: 52,
@@ -76,13 +75,14 @@ export function TabBar() {
               borderRadius: 14,
               position: "relative",
               touchAction: "manipulation",
+              textDecoration: "none",
             }}
           >
             <div style={{ position: "relative" }}>
               {tab.icon === "heart" && on ? IconFn(22, t.danger, true) : IconFn(22, c)}
             </div>
             <span style={{ fontSize: 10, fontWeight: on ? 700 : 500 }}>{tab.label}</span>
-          </button>
+          </Link>
         );
       })}
     </div>
