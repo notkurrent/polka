@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from app.config import is_production
 from app.dependencies import get_current_user
 from app.utils.auth import (
     create_access_token,
@@ -325,12 +326,16 @@ async def forgot_password(req: ForgotPasswordRequest):
 
 @router.post("/web/send-otp", deprecated=True)
 async def send_otp(req: SendOtpRequest):
+    if is_production():
+        raise HTTPException(status_code=404, detail="Not found")
     # Deprecated mock OTP endpoint kept temporarily for existing frontend flows.
     return {"message": "OTP sent", "mock_code": "1111"}
 
 
 @router.post("/web/verify", deprecated=True)
 async def verify_otp(req: VerifyOtpRequest, session: AsyncSession = Depends(get_session)):
+    if is_production():
+        raise HTTPException(status_code=404, detail="Not found")
     if req.code != "1111":
         logger.info("auth.web_otp_invalid phone_suffix=%s", req.phone[-4:])
         raise HTTPException(status_code=400, detail="Invalid OTP code")

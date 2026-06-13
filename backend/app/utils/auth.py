@@ -11,6 +11,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_LENGTH = 128
+TELEGRAM_INIT_DATA_MAX_AGE = timedelta(hours=24)
+TELEGRAM_INIT_DATA_MAX_CLOCK_SKEW = timedelta(minutes=5)
 
 
 def validate_password(password: str) -> None:
@@ -47,7 +49,14 @@ def verify_telegram_web_app_data(init_data: str) -> bool:
     """Verifies the initData from Telegram Mini App."""
     try:
         parsed_data = dict(urllib.parse.parse_qsl(init_data))
-        if "hash" not in parsed_data:
+        if "hash" not in parsed_data or "auth_date" not in parsed_data:
+            return False
+
+        auth_date = datetime.fromtimestamp(int(parsed_data["auth_date"]), timezone.utc)
+        now = datetime.now(timezone.utc)
+        if auth_date - now > TELEGRAM_INIT_DATA_MAX_CLOCK_SKEW:
+            return False
+        if now - auth_date > TELEGRAM_INIT_DATA_MAX_AGE:
             return False
 
         hash_value = parsed_data.pop("hash")
