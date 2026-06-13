@@ -10,7 +10,7 @@ from sqlmodel import select
 from app.database import AsyncSessionLocal
 from app.main import app
 from app.models import Partner, User
-from app.routers import partners as partner_router
+from app.routers import partner_api as partner_router
 
 
 ALMATY_LAT = 43.238949

@@ -14,7 +14,7 @@ from sqlmodel import select
 from app.database import AsyncSessionLocal
 from app.main import app
 from app.models import Offer, OfferType, Order, OrderItem, Partner, PartnerStatus, Rating, User
-from app.routers import partners as partner_router
+from app.routers import partner_api as partner_router
 from app.services.media_storage import (
     MediaImageKind,
     MediaValidationError,
