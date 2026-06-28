@@ -3,7 +3,8 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTelegramAuthPage } from "@/lib/auth-routing";
-import { tokens, Icon, FONT, PillButton } from "@/components/ui/primitives";
+import { tokens, FONT, PillButton } from "@/components/ui/primitives";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -33,20 +34,7 @@ export default function LandingPage() {
       >
         {/* logo */}
         <div className="landing-logo">
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: t.primary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {Icon.leaf(20, t.primaryDeep)}
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3 }}>Polka</div>
+          <BrandLogo size={40} />
         </div>
 
         {/* hero */}

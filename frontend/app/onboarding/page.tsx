@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { tokens, Icon, PillButton, FONT } from "@/components/ui/primitives";
 import { useAppStore } from "@/store/app";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -120,14 +121,16 @@ export default function OnboardingScreen() {
               style={{
                 width: 80,
                 height: 80,
-                borderRadius: "50%",
-                background: t.primarySoft,
+                borderRadius: 20,
+                background: "#fff",
+                border: `1px solid ${t.divider}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                boxShadow: "0 10px 28px rgba(17, 23, 20, 0.08)",
               }}
             >
-              {Icon.leaf(40, t.primaryDeep)}
+              <BrandLogo size={62} showText={false} />
             </div>
             <h1
               style={{

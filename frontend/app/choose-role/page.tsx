@@ -8,6 +8,7 @@ import { isTelegramAccountIncomplete } from "@/lib/account-linking";
 import { useAppStore } from "@/store/app";
 import { AccountLinkingPrompt } from "@/components/account/AccountLinkingPrompt";
 import { tokens, Icon, FONT } from "@/components/ui/primitives";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function ChooseRolePage() {
   const router = useRouter();
@@ -134,20 +135,7 @@ export default function ChooseRolePage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: t.primary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {Icon.leaf(20, t.primaryDeep)}
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: 0 }}>Polka</div>
+          <BrandLogo size={40} />
         </div>
 
         <div style={{ marginTop: 44, marginBottom: 24 }}>

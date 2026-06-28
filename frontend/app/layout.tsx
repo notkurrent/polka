@@ -28,6 +28,10 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Полка - локальные магазины и товары",
   description: "Лёгкий маркетплейс для каталога локальных магазинов и прямого контакта с продавцами в Алматы.",
+  icons: {
+    icon: "/brand/polka-logo-square.png",
+    apple: "/brand/polka-logo-square.png",
+  },
 };
 
 export default function RootLayout({

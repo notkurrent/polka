@@ -267,20 +267,6 @@ body {
     min-width: 0;
   }
 
-  .desktop-nav-brand-mark {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    background: #1c492b;
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 850;
-    letter-spacing: 0;
-  }
-
   .desktop-nav-brand-name {
     color: #111714;
     font-size: 17px;

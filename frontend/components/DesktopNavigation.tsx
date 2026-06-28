@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, tokens, FONT, type IconFn } from "@/components/ui/primitives";
+import { BrandLogo } from "@/components/BrandLogo";
 
 type NavItem = {
   label: string;
@@ -36,13 +37,8 @@ export function shouldShowDesktopBuyerNav(pathname: string) {
   return pathname === "/" || buyerRoutePrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
-function BrandMark({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className="desktop-nav-brand" aria-label="Polka">
-      <span className="desktop-nav-brand-mark">P</span>
-      {!compact && <span className="desktop-nav-brand-name">Polka</span>}
-    </div>
-  );
+function BrandMark() {
+  return <BrandLogo className="desktop-nav-brand" size={36} />;
 }
 
 export function DesktopBuyerNav() {
@@ -88,7 +84,7 @@ export function DesktopBizSidebar() {
   return (
     <aside className="desktop-biz-sidebar" aria-label="Навигация продавца" style={{ fontFamily: fontFn }}>
       <Link href="/biz" className="desktop-biz-brand-link" aria-label="Polka бизнес">
-        <BrandMark compact />
+        <BrandLogo size={36} showText={false} />
         <div className="desktop-biz-brand-copy">
           <span className="desktop-nav-brand-name">Polka</span>
           <span>Кабинет продавца</span>
