@@ -25,6 +25,7 @@ import {
   secondaryContactLinks,
   trackInquiryClick,
 } from "@/lib/contact-links";
+import { hapticNotification } from "@/lib/haptics";
 
 function availabilityCopy(availability: OfferAvailability, stock: number) {
   if (availability === "OUT_OF_STOCK" || stock <= 0)
@@ -121,11 +122,14 @@ export default function StoreScreen({
 
   const copyStoreLink = async () => {
     if (!partner || typeof window === "undefined") return;
-    await navigator.clipboard.writeText(
-      `${window.location.origin}/stores/${partner.id}`,
-    );
-    setCopyDone(true);
-    window.setTimeout(() => setCopyDone(false), 1800);
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/stores/${partner.id}`);
+      hapticNotification("success");
+      setCopyDone(true);
+      window.setTimeout(() => setCopyDone(false), 1800);
+    } catch {
+      hapticNotification("error");
+    }
   };
 
   if (!id || isLoading) {
@@ -230,6 +234,7 @@ export default function StoreScreen({
           type="button"
           aria-label={fav ? "Убрать из избранного" : "Добавить в избранное"}
           onClick={() => id && toggleFavorite(id)}
+          data-haptic="selection"
           style={{
             position: "absolute",
             top: "calc(var(--app-safe-top) + 12px)",

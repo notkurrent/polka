@@ -138,7 +138,8 @@ select {
 .auth-underline-input:focus,
 .auth-underline-input:focus-visible {
   border-bottom-color: var(--auth-input-focus);
-  outline: none;
+  outline: none !important;
+  outline-offset: 0;
 }
 
 .auth-underline-input::placeholder {

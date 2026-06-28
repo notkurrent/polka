@@ -9,6 +9,7 @@ import { useAppStore } from "@/store/app";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
 import { authEntryRoute, useTelegramAuthPage } from "@/lib/auth-routing";
+import { hapticNotification } from "@/lib/haptics";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import type { User } from "@/store/auth";
 
@@ -50,8 +51,10 @@ export default function LoginPage() {
       });
       setAuth(resp.user, resp.access_token);
       setSelectedMode(null);
+      hapticNotification("success");
       router.replace("/choose-role");
     } catch (e) {
+      hapticNotification("error");
       setError(getApiErrorMessage(e, "Неверный телефон или пароль"));
     } finally {
       setIsSubmitting(false);

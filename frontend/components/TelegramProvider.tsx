@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { getTelegramLaunchInfo } from "@/lib/auth-routing";
+import { handleTmaHapticClick } from "@/lib/haptics";
 
 type Insets = {
   top?: number;
@@ -93,6 +94,7 @@ export function TelegramProvider() {
         // Убираем "резинку" (bounce effect) при скролле на iOS
         document.body.style.overscrollBehaviorY = "none";
 
+        document.addEventListener("click", handleTmaHapticClick, true);
         webApp.onEvent?.("safeAreaChanged", applyTelegramSafeAreas);
         webApp.onEvent?.("contentSafeAreaChanged", applyTelegramSafeAreas);
         webApp.onEvent?.("viewportChanged", applyTelegramSafeAreas);
@@ -101,6 +103,7 @@ export function TelegramProvider() {
       }
 
       cleanup = () => {
+        document.removeEventListener("click", handleTmaHapticClick, true);
         webApp.offEvent?.("safeAreaChanged", applyTelegramSafeAreas);
         webApp.offEvent?.("contentSafeAreaChanged", applyTelegramSafeAreas);
         webApp.offEvent?.("viewportChanged", applyTelegramSafeAreas);

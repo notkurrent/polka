@@ -198,6 +198,7 @@ export default function FavoritesScreen() {
                     e.stopPropagation();
                     toggleFavorite(String(partner.id));
                   }}
+                  data-haptic="selection"
                   style={{
                     border: "none",
                     background: "transparent",

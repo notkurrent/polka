@@ -287,6 +287,7 @@ export default function AppScreenBuyerPage() {
                 key={item.id}
                 type="button"
                 onClick={() => setFilter(item.id)}
+                data-haptic="selection"
                 style={{
                   flexShrink: 0,
                   minHeight: 44,
@@ -464,6 +465,7 @@ export default function AppScreenBuyerPage() {
                         event.stopPropagation();
                         toggleFavorite(product.storeId);
                       }}
+                      data-haptic="selection"
                       aria-label={favorites.includes(product.storeId) ? "Убрать магазин из избранного" : "Добавить магазин в избранное"}
                       style={{
                         position: "absolute",

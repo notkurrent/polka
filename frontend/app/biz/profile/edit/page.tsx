@@ -10,6 +10,7 @@ import { bizApi, partnerErrorMessage, type AddressSuggestion } from "@/lib/biz-a
 import { BUSINESS_CATEGORIES, DEFAULT_BUSINESS_CATEGORY } from "@/lib/business-constants";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { BusinessLogoPicker } from "@/components/biz/BusinessLogoPicker";
+import { hapticNotification } from "@/lib/haptics";
 
 type ScheduleDay = {
   short: string;
@@ -169,14 +170,17 @@ export default function BizProfileEditPage() {
 
   const save = async () => {
     if (!data.name.trim() || !data.address.trim()) {
+      hapticNotification("error");
       setError("Название и адрес обязательны.");
       return;
     }
     if (!selectedAddress || selectedAddress.label !== data.address.trim()) {
+      hapticNotification("error");
       setError("Выберите адрес из подсказок, чтобы сохранить реальную точку в Алматы.");
       return;
     }
     if (!schedule.some((day) => day.enabled)) {
+      hapticNotification("error");
       setError("Выберите хотя бы один рабочий день.");
       return;
     }
@@ -206,6 +210,7 @@ export default function BizProfileEditPage() {
           setLogoUrl(updatedProfile.logo_url || null);
           setLogoFile(null);
         } catch (uploadError) {
+          hapticNotification("warning");
           setLogoError(partnerErrorMessage(uploadError));
           setError("Данные сохранены, но логотип не загрузился. Выберите другой файл и попробуйте снова.");
           return;
@@ -213,8 +218,10 @@ export default function BizProfileEditPage() {
           setLogoUploading(false);
         }
       }
+      hapticNotification("success");
       router.push("/biz/profile");
     } catch (err) {
+      hapticNotification("error");
       setError(partnerErrorMessage(err));
     } finally {
       setSaving(false);
@@ -270,6 +277,7 @@ export default function BizProfileEditPage() {
                       key={opt}
                       type="button"
                       onClick={() => setData({ ...data, category: opt })}
+                      data-haptic="selection"
                       style={{
                         minHeight: 44,
                         padding: "0 12px",
@@ -462,6 +470,7 @@ export default function BizProfileEditPage() {
                       aria-pressed={day.enabled}
                       aria-label={`${day.name}: ${day.enabled ? "рабочий день" : "выходной"}`}
                       onClick={() => toggleDay(index)}
+                      data-haptic="selection"
                       style={{
                         width: 44,
                         height: 28,

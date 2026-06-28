@@ -64,10 +64,11 @@ export default function ChooseRolePage() {
     active: boolean;
     onClick: () => void;
   }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
+      <button
+        type="button"
+        onClick={onClick}
+        data-haptic="selection"
+        style={{
         width: "100%",
         minHeight: 104,
         padding: "16px",

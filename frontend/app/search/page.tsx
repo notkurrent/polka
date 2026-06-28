@@ -184,6 +184,7 @@ export default function SearchPage() {
                 key={c.label}
                 onClick={() => setQuery(c.query)}
                 type="button"
+                data-haptic="selection"
                 style={{
                   minHeight: 44,
                   padding: "8px 14px",

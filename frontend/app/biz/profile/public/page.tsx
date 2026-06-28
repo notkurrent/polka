@@ -8,6 +8,7 @@ import { StripePlaceholder, tokens, FONT } from "@/components/ui/primitives";
 import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { hapticNotification } from "@/lib/haptics";
 
 export default function BizProfilePublicPage() {
   const router = useRouter();
@@ -18,9 +19,14 @@ export default function BizProfilePublicPage() {
 
   const copyUrl = async () => {
     if (!profile) return;
-    await navigator.clipboard.writeText(`${window.location.origin}/stores/${profile.id}`);
-    setCopyDone(true);
-    window.setTimeout(() => setCopyDone(false), 1800);
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/stores/${profile.id}`);
+      hapticNotification("success");
+      setCopyDone(true);
+      window.setTimeout(() => setCopyDone(false), 1800);
+    } catch {
+      hapticNotification("error");
+    }
   };
 
   return (

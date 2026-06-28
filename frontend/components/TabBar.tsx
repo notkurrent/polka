@@ -59,6 +59,7 @@ export function TabBar() {
             href={tab.route}
             aria-label={tab.label}
             aria-current={on ? "page" : undefined}
+            data-haptic="selection"
             style={{
               flex: 1,
               minHeight: 52,

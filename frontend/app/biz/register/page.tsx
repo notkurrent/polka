@@ -11,6 +11,7 @@ import { useAppStore } from "@/store/app";
 import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
 import { BUSINESS_CATEGORIES, DEFAULT_BUSINESS_CATEGORY } from "@/lib/business-constants";
 import { BusinessLogoPicker } from "@/components/biz/BusinessLogoPicker";
+import { hapticNotification } from "@/lib/haptics";
 
 export default function BizRegisterPage() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function BizRegisterPage() {
 
   const handleSubmit = async () => {
     if (!data.name.trim() || !data.type.trim() || !data.address.trim()) {
+      hapticNotification("error");
       setError("Заполните название, категорию и адрес.");
       return;
     }
@@ -66,6 +68,7 @@ export default function BizRegisterPage() {
         try {
           await bizApi.uploadLogo(logoFile);
         } catch (uploadError) {
+          hapticNotification("warning");
           setLogoError(partnerErrorMessage(uploadError));
           setError("Заявка создана, но логотип не загрузился. Выберите другой файл или перейдите в кабинет.");
           return;
@@ -76,8 +79,10 @@ export default function BizRegisterPage() {
       const me = await api.get<User>("/users/me");
       setUser(me);
       setSelectedMode("business");
+      hapticNotification("success");
       setSubmitted(true);
     } catch (e) {
+      hapticNotification("error");
       const message = partnerErrorMessage(e);
       setError(message);
       if (message.includes("уже создан")) {
@@ -197,6 +202,7 @@ export default function BizRegisterPage() {
                       key={opt}
                       type="button"
                       onClick={() => setData({ ...data, [f.id]: opt })}
+                      data-haptic="selection"
                       style={{
                         minHeight: 44,
                         padding: "7px 12px",

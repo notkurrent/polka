@@ -12,6 +12,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { bizApi, partnerErrorMessage } from "@/lib/biz-api";
 import type { OfferAvailability } from "@/lib/api-types";
+import { hapticNotification } from "@/lib/haptics";
 
 export default function BizCreateOfferPage() {
   const t = tokens();
@@ -45,6 +46,7 @@ export default function BizCreateOfferPage() {
   const handleSave = async () => {
     const validationError = validate();
     if (validationError) {
+      hapticNotification("error");
       setError(validationError);
       return;
     }
@@ -67,8 +69,10 @@ export default function BizCreateOfferPage() {
       if (photoFile) {
         await bizApi.uploadOfferImage(offer.id, photoFile);
       }
+      hapticNotification("success");
       router.push("/biz/offers");
     } catch (err) {
+      hapticNotification("error");
       setError(partnerErrorMessage(err));
     } finally {
       setIsSubmitting(false);

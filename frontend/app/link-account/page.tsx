@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ApiError, api, getApiErrorMessage } from "@/lib/api";
 import { accountDestination } from "@/lib/account-linking";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
+import { hapticNotification } from "@/lib/haptics";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import { useAppStore } from "@/store/app";
 import { useAuthStore, type User } from "@/store/auth";
@@ -58,8 +59,10 @@ export default function LinkAccountPage() {
         password,
       });
       setAuth(response.user, response.access_token);
+      hapticNotification("success");
       router.replace(accountDestination(response.user, selectedMode, onboardingDone));
     } catch (err) {
+      hapticNotification("error");
       setError(errorMessage(err));
     } finally {
       setIsSubmitting(false);

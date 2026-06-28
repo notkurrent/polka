@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ApiError, api, getApiErrorMessage } from "@/lib/api";
 import { accountDestination } from "@/lib/account-linking";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
+import { hapticNotification } from "@/lib/haptics";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import { useAppStore } from "@/store/app";
 import { useAuthStore, type User } from "@/store/auth";
@@ -54,12 +55,14 @@ export default function CompleteAccountPage() {
   const finish = (response: AuthResponse) => {
     setAuth(response.user, response.access_token);
     setSuccessUser(response.user);
+    hapticNotification("success");
     setMode("success");
   };
 
   const handleComplete = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canComplete) {
+      hapticNotification("error");
       setError(validationError || "Заполните все поля");
       return;
     }
@@ -74,12 +77,15 @@ export default function CompleteAccountPage() {
       finish(response);
     } catch (err) {
       if (err instanceof ApiError && err.code === "PHONE_BELONGS_TO_WEB_ACCOUNT") {
+        hapticNotification("warning");
         setMode("conflict");
         setLinkPassword("");
         setError("");
       } else if (err instanceof ApiError && err.code === "TELEGRAM_ACCOUNT_REQUIRED") {
+        hapticNotification("error");
         setError("Откройте эту страницу из Telegram Mini App.");
       } else {
+        hapticNotification("error");
         setError(getApiErrorMessage(err, "Не удалось добавить телефон и пароль. Проверьте данные и попробуйте ещё раз."));
       }
     } finally {
@@ -100,6 +106,7 @@ export default function CompleteAccountPage() {
       });
       finish(response);
     } catch (err) {
+      hapticNotification("error");
       if (err instanceof ApiError && (err.code === "INVALID_PHONE_OR_PASSWORD" || err.status === 401)) {
         setError("Неверный пароль от существующего аккаунта.");
       } else if (err instanceof ApiError && err.code === "WEB_ACCOUNT_ALREADY_LINKED") {

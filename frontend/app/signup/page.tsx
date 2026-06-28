@@ -6,6 +6,7 @@ import { tokens, FONT, PillButton } from "@/components/ui/primitives";
 import AppHeader from "@/components/AppHeader";
 import { ApiError, api, getApiErrorMessage } from "@/lib/api";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
+import { hapticNotification, hapticSelection } from "@/lib/haptics";
 import { useTelegramAuthPage } from "@/lib/auth-routing";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 import { useAuthStore, type User } from "@/store/auth";
@@ -53,13 +54,16 @@ export default function SignupPage() {
   const handleNext = () => {
     setError("");
     if (step === 0 && name.trim().length < 2) {
+      hapticNotification("error");
       setError("Введите имя");
       return;
     }
     if (step === 1 && !isPhoneComplete(phone)) {
+      hapticNotification("error");
       setError("Введите номер телефона полностью");
       return;
     }
+    hapticSelection();
     setStep((current) => Math.min(current + 1, 2));
   };
 
@@ -70,6 +74,7 @@ export default function SignupPage() {
       return;
     }
     if (!canSubmit) {
+      hapticNotification("error");
       setError(validationError || "Заполните все поля");
       return;
     }
@@ -85,8 +90,10 @@ export default function SignupPage() {
       });
       setAuth(response.user, response.access_token);
       setSelectedMode(null);
+      hapticNotification("success");
       router.replace("/choose-role");
     } catch (err) {
+      hapticNotification("error");
       if (err instanceof ApiError && err.status === 409) {
         if (err.code === "ACCOUNT_EXISTS_WITHOUT_PASSWORD") {
           setError("Этот номер уже связан с Telegram. Откройте Mini App и задайте пароль в профиле.");

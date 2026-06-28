@@ -14,6 +14,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { bizApi, money, partnerErrorMessage, subscriptionPlanLabel, subscriptionStatusLabel } from "@/lib/biz-api";
 import type { OfferAvailability, OfferPublic } from "@/lib/api-types";
+import { hapticNotification } from "@/lib/haptics";
 
 export default function BizOffersListScreen() {
   const router = useRouter();
@@ -71,6 +72,7 @@ export default function BizOffersListScreen() {
   const saveEdit = async (id: number) => {
     const validationError = validateDraft();
     if (validationError) {
+      hapticNotification("error");
       setMessage(validationError);
       return;
     }
@@ -95,8 +97,10 @@ export default function BizOffersListScreen() {
       setEditingId(null);
       setDraftPhoto(null);
       setDeleteDraftPhoto(false);
+      hapticNotification("success");
       await mutate();
     } catch (err) {
+      hapticNotification("error");
       setMessage(partnerErrorMessage(err));
     } finally {
       setBusyId(null);
@@ -109,8 +113,10 @@ export default function BizOffersListScreen() {
     try {
       await bizApi.deleteOffer(id);
       setPendingDelete(null);
+      hapticNotification("success");
       await mutate();
     } catch (err) {
+      hapticNotification("error");
       setMessage(partnerErrorMessage(err));
     } finally {
       setBusyId(null);

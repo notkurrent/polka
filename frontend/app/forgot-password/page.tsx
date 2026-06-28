@@ -6,6 +6,7 @@ import AppHeader from "@/components/AppHeader";
 import { FONT, PillButton, tokens } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import { AUTH_UNDERLINE_INPUT_CLASS, authUnderlineInputStyle } from "@/lib/auth-input";
+import { hapticNotification } from "@/lib/haptics";
 import { isPhoneComplete, normalizePhoneInput } from "@/lib/phone";
 
 interface ForgotPasswordResponse {
@@ -30,6 +31,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canSubmit) {
+      hapticNotification("error");
       setError("Введите номер телефона полностью");
       return;
     }
@@ -42,8 +44,10 @@ export default function ForgotPasswordPage() {
       await api.post<ForgotPasswordResponse>("/auth/password/forgot", {
         phone: normalizePhoneInput(phone),
       });
+      hapticNotification("success");
       setResult(PASSWORD_RESET_NOTICE);
     } catch {
+      hapticNotification("warning");
       setResult(PASSWORD_RESET_NOTICE);
     } finally {
       setIsSubmitting(false);

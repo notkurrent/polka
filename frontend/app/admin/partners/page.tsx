@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useAdminGuard } from "@/hooks/useAdminGuard";
 import { adminApi, type AdminPartner, type AdminPartnerAction, type AdminSubscriptionUpdate } from "@/lib/admin-api";
 import { partnerStatusLabel, subscriptionPlanLabel, subscriptionStatusLabel } from "@/lib/biz-api";
+import { hapticNotification } from "@/lib/haptics";
 import type { PartnerStatus, SubscriptionPlan, SubscriptionStatus } from "@/lib/api-types";
 
 const STATUSES: PartnerStatus[] = ["PENDING", "APPROVED", "REJECTED", "SUSPENDED"];
@@ -340,8 +341,10 @@ export default function AdminPartnersPage() {
     try {
       await adminApi.moderatePartner(partner.id, action, note);
       await mutate();
+      hapticNotification("success");
       return true;
     } catch (err) {
+      hapticNotification("error");
       setMessage(err instanceof Error ? err.message : "Не удалось выполнить действие");
       return false;
     } finally {
@@ -355,8 +358,10 @@ export default function AdminPartnersPage() {
     try {
       await adminApi.updateSubscription(partner.id, body);
       await mutate();
+      hapticNotification("success");
       return true;
     } catch (err) {
+      hapticNotification("error");
       setMessage(err instanceof Error ? err.message : "Не удалось сохранить подписку");
       return false;
     } finally {
